@@ -1,0 +1,52 @@
+# Citation metadata for this repository (https://citation-file-format.github.io/).
+# `version`, `date-released` and `doi` name the v1.0 release and its Zenodo
+# deposit (the DOI was reserved before the release was tagged, so that the
+# paper's Data/artifact availability statement and this file carry the same
+# identifiers); the deposit is published on the day of the TQE submission.
+cff-version: 1.2.0
+message: >-
+  If you use this code or these result files, please cite the paper (preferred
+  citation below) and the archived release of this repository.
+type: software
+title: >-
+  Reproduction package for "Measuring Metric and Sampling Distortions in
+  Penalty-Encoded QAOA Portfolio Benchmarks"
+authors:
+  - family-names: Tobita
+    given-names: Hiroaki
+    affiliation: Advanced Institute of Industrial Technology, Tokyo
+    email: tobita-hiroaki@aiit.ac.jp
+repository-code: https://github.com/tobitaQ/qaoa-portfolio-penalty-benchmark
+license: MIT
+license-url: https://github.com/tobitaQ/qaoa-portfolio-penalty-benchmark/blob/main/LICENSE
+keywords:
+  - QAOA
+  - portfolio optimization
+  - QUBO
+  - penalty method
+  - benchmark reproducibility
+  - Amazon Braket
+abstract: >-
+  Code, the derived input statistics of the two price windows (annualised
+  mean returns and covariance of the fifty-ticker universe), per-run and
+  per-instance result files, figure scripts and table-checking scripts for the
+  paper. The MIT licence covers the source code; the author-generated result
+  files and the derived statistics are released under CC BY 4.0; the market-data
+  snapshots they were computed from are third-party data and are not
+  redistributed (see data/README.md).
+version: "1.0"
+date-released: 2026-09-14
+doi: 10.5281/zenodo.22743582
+preferred-citation:
+  type: article
+  title: >-
+    Measuring Metric and Sampling Distortions in Penalty-Encoded QAOA Portfolio
+    Benchmarks
+  authors:
+    - family-names: Tobita
+      given-names: Hiroaki
+      affiliation: Advanced Institute of Industrial Technology, Tokyo
+  year: 2026
+  notes: >-
+    Submitted to IEEE Transactions on Quantum Engineering; the manuscript of
+    the same version is in the Zenodo deposit named above.

@@ -1,0 +1,1 @@
+{"braketSchemaHeader": {"name": "braket.task_result.program_set_task_result", "version": "1"}, "taskMetadata": "metadata.json", "programResults": ["programs/0/results.json"], "s3Location": ["amazon-braket-qfr-000000000000-us-east-1", "ionq/3792bbb3-8d18-4e00-b345-79a96cc0a267"]}

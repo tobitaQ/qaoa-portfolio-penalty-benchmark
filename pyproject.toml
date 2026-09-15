@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "quantum-finance-research"
+version = "1.0"
+description = "Quantum portfolio optimization on AWS Braket"
+requires-python = ">=3.11"
+authors = [{ name = "Hiroaki Tobita", email = "tobita-hiroaki@aiit.ac.jp" }]
+license = { text = "MIT" }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]

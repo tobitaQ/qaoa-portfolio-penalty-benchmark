@@ -1,0 +1,17 @@
+ref,short,year,post_standard,in_tally,exclusion_reason,reports_gap,quality_metric,billed_cost,repeats_per_config,domain_metric,observes_degeneracy,penalty_value_stated,reports_expectation
+12,Rosenberg et al.,2016,no,yes,,no,binary success rate over perturbations of Q,no,no,no,yes,no,no
+13,Venturelli & Kondratyev,2019,no,yes,,no,binary hit/miss vs best known folded into TTS,no,partial,no,no,no,no
+22,Hodson et al.,2019,no,yes,,yes,relative distance to the brute-force optimum (within 5%),no,no,yes,no,no,no
+25,Hegade et al.,2021,no,yes,,no,success probability of the ground state,no,no,no,no,no,no
+10,Baker & Radha,2022,no,yes,,no,Wasserstein distance (chosen instead of the approximation ratio),no,yes,no,no,yes,no
+14,Mugel et al.,2022,no,yes,,no,none - Sharpe/profit/compute time compared directly,no,no,yes,no,no,no
+9,Brandhofer et al.,2022,no,yes,,yes,approximation ratio normalised over the feasible set only,no,partial,no,yes,yes,yes
+8,Stopfer & Wagner,2025,yes,yes,,yes,objective regret vs an offline reference,no,no,no,no,yes,no
+27,Innan et al.,2025,yes,yes,,no,none - raw objective with the constant ignored,no,yes,yes,yes,yes,yes
+15,Uotila et al.,2025,yes,yes,,yes,min-max normalised over the compared methods; the set includes an exact eigensolver so the best endpoint is the optimum,no,no,no,yes,yes,partial
+11,Lozano,2026,yes,yes,,no,realized Sharpe with 95% bootstrap CI,no,partial,yes,no,yes,no
+23,Oralkhan & Zhaxalykov,2026,yes,yes,,no,feasibility rate and fidelity-like measures,no,yes,no,no,no,no
+26,Wu & Wang,2026,yes,yes,,no,arctan-compressed unnormalised energy,no,no,yes,no,yes,yes
+24,Mancilla et al.,2026,yes,yes,,no,none - raw final cost,no,no,yes,no,yes,partial
+-,arXiv:2410.05932,2024,no,no,quantum-inspired penalty estimation with no quantum device or simulator run,no,solution accuracy,no,no,yes,no,yes,no
+21,Lozano (operational audit),2026,yes,no,proposes a reporting protocol for others to follow - read with the standards,yes,"regularised objective gap gF = (fS-f*)/max(1,|f*|)",yes,yes,yes,no,yes,no

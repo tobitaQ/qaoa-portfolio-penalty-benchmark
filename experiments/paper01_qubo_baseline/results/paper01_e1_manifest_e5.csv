@@ -1,0 +1,4 @@
+n_assets,n_select,instances_planned,instances_with_reference,instances_a_crit_zero,seeds,penalty_conditions_nominal,runs_nominal,penalty_conditions_run,runs_expected,runs_done,runs_ok,runs_failed,failure_kinds,runs_without_feasible_shot,runs_best_shot_infeasible,feasible_set_size,reference_seconds_total,runtime_s_median,gpu_hours_total
+12,2,30,10,3,42 43 44 45 46,6,900,2,100,100,100,0,,0,0,66,0.02058383636176586,10.213845760561526,0.2877346574773805
+16,3,30,10,0,42 43 44 45 46,6,900,2,100,100,100,0,,11,13,560,0.2725299568846822,17.850196911022067,0.4923528217304394
+20,4,30,10,0,42 43 44 45 46,6,900,2,100,100,100,0,,0,0,4845,3.389617845416069,29.83149762498215,0.8429955014785648

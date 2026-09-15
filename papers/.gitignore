@@ -1,0 +1,7 @@
+# LaTeX build products. paper01.pdf is kept: it is the artifact a reader wants,
+# and it is regenerated deterministically from the committed .tex.
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz

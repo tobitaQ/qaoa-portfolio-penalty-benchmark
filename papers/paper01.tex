@@ -1,0 +1,765 @@
+\documentclass[journal]{IEEEtran}
+
+% ToUnicode maps for every glyph, so the PDF's text layer carries the angle
+% brackets, ell, epsilon and "not equal" instead of what the font's encoding
+% slot happens to be called. Without this, pdfTeX 1.40.20 (TeX Live 2019)
+% extracted the bra-ket of H as "hHi" and not-equal as "6="; 1.40.26 did so
+% on its own. With it the
+% two builds' text layers are identical, and the PDF can be built anywhere.
+\input{glyphtounicode}
+\pdfgentounicode=1
+
+% T1 rather than the OT1 default: OT1 has no > or < glyph and sets them as
+% inverted question marks, which is how "A > x" reached the page wrong.
+% It also lets TeX hyphenate the accented names in the bibliography.
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+\usepackage{amssymb}
+
+% The draft's tables are wide; IEEEtran's two-column measure needs the small
+% face and the ability to break a long table across columns.
+\usepackage{array}
+\newcolumntype{R}{>{\raggedleft\arraybackslash}X}
+
+\begin{document}
+
+\title{Measuring Metric and Sampling Distortions in Penalty-Encoded QAOA Portfolio Benchmarks}
+
+\author{Hiroaki~Tobita%
+\thanks{H. Tobita is with the Advanced Institute of Industrial Technology,
+Tokyo, Japan (e-mail: tobita-hiroaki@aiit.ac.jp).}}
+
+\maketitle
+
+
+
+\begin{abstract}
+Penalty-encoded quantum optimization benchmarks can conflate solution quality with normalization and finite-shot selection. We quantify both for cardinality-constrained portfolio optimization with the quantum approximate optimization algorithm, against exact optima from feasible-set enumeration. A penalty-encoded quadratic unconstrained binary optimization energy carries a constant shift, so a gap taken on it divides by a formulation choice: re-scoring one fixed portfolio as only the penalty weight varies moves its offset-normalized gap from 33.6\% to 0.22\% while a feasible-range gap stays at 37.8\%, and the deflation reaches 121--279$\times$ at 16--30 assets. A cross of 30 instances $\times$ 5 initial angles $\times$ 6 penalty settings at 12, 16 and 20 assets (2,565 runs) moves the reported gap and the sampler in opposite directions: a margin-based weight worsens the gap in 29 of 30 instances at 20 assets while raising, in all 30, the probability that 1,000 shots hold a feasible solution within 1\% of the feasible range (+0.086, 95\% confidence interval 0.071--0.116); a second price window reproduced both directions. At the heuristic weight the optimised sampler, conditioned on feasibility, is close to uniform (total variation $\leq$ 0.04 in 450 runs) and never exceeds uniform feasible sampling in success probability. At fixed angles, double-precision implementations agreed on the output distribution to 2.6$\cdot$10$^{-14}$ in total variation, while independent resampling of one distribution at 20 assets returned nine or ten distinct portfolios in ten batches. Reports should separate objective quality, feasibility, acquisition probability and execution conditions.
+\end{abstract}
+
+\begin{IEEEkeywords}
+benchmark testing, cloud computing, constrained optimization, portfolio optimization, quadratic unconstrained binary optimization (QUBO), quantum approximate optimization algorithm (QAOA), quantum computing, reproducibility of results
+\end{IEEEkeywords}
+
+
+\section{Introduction}
+
+
+Portfolio selection under a cardinality constraint --- choose exactly K of N candidate assets to optimize a risk/return trade-off \cite{ref1} --- is NP-hard \cite{ref2} and a canonical target for quantum optimization via its quadratic unconstrained binary optimization (QUBO)/Ising encoding \cite{ref3}, \cite{ref4}, surveyed in \cite{ref5}--\cite{ref7}. The encoding used here is the textbook quadratic penalty \cite{ref3}, the algorithm is the quantum approximate optimization algorithm (QAOA) \cite{ref4}, and the runtime results agree with the closest prior benchmark \cite{ref8} rather than competing with it. The question is what the numbers such a benchmark publishes measure.
+
+
+We study a controlled failure mode in evaluating penalty-encoded QAOA: a quality score taken on the energies the solver returns can improve while the probability of acquiring a useful feasible solution decreases. A penalty-encoded QUBO's energies carry the constant $-$A$\cdot$K$^{2}$ that the cardinality term contributes to every feasible assignment, so an optimality gap taken on them divides by a number the formulation chose. We call that the \textit{offset-normalized gap}, $g_{\mathrm{off}}$. It is the gap this implementation first reported, and it is measured here on our own runs; the fourteen published QAOA and annealing portfolio benchmarks we read (Supplementary Sec. S-I) mostly report no gap at all, and none of the four that do uses this denominator. Two further conventions are examined with it: the \textit{best-of-shots} rule, which returns the lowest-energy bitstring of a batch (here the lowest-energy \textit{feasible} one, Sec.~III-C) and says nothing about how often a batch contains a usable solution; and the run's \textit{execution conditions} --- initial angles, backend, precision, sampler --- which are usually fixed at one value and not reported as factors. That an offset-sensitive score is sensitive to the penalty weight is known \cite{ref9}, \cite{ref10}, \cite{ref11}. We provide a crossed quantification of it: how large the effect is on our instances, how it interacts with the acquisition probability, and under which conditions it holds. Rather than proposing a new normalization, we measure the discrepancy across instances, initializations and penalty settings, against exact optima from feasible-set enumeration, scored by an evaluator blind to the QUBO matrix. Three contributions follow; the second is the central one, the first its starting point.
+
+
+\textbf{C1 --- The compression caused by the metric, quantified.} Re-scoring \textit{fixed} feasible solutions as only the penalty weight A changes (E0) separates what the number does from what the solver does: the same median-rank portfolio at N = 20 reports a 33.6\% offset-normalized gap at 1.1$\cdot$$A_{\mathrm{crit}}$ and 0.22\% at the baseline heuristic weight, while a gap normalised by the objective's spread over the feasible set stays at 37.8\%. The deflation of the offset-normalized gap at the heuristic weight is 121--279$\times$ on the reference instances at N = 16--30 (57--279$\times$ over N = 8--30), rises with N, and no instance of thirty drawn per size escapes it (Sec.~V-A).
+
+
+\textbf{C2 --- Solution quality separated from acquisition probability.} A cross of 30 instances $\times$ 5 initial-angle seeds $\times$ 6 penalty settings at N $\in$ {12, 16, 20} (E1, 2,565 runs), each run scored both on its exact final state (feasibility and acquisition probabilities) and on the best feasible sample of its 1,000-shot batch (gaps), shows the offset-normalized gap and the sampler moving in opposite directions: the margin weight of \cite{ref9} worsens the reported gap in 29 of 30 instances at N = 20 while raising the probability that 1,000 shots hold a feasible solution within 1\% of the feasible range in 30 of 30 (+0.086, 95\% CI [+0.071, +0.116]). Re-using the same states (E2), the optimised sampler's one-shot success probability at the primary threshold ($\tau$ = 1\% of the feasible range) exceeds that of a uniform draw from the feasible set in 0 of 450 heuristic-weight runs, so at no shot budget; its distribution conditioned on feasibility is close to uniform on the feasible set (median total variation 0.002, maximum 0.04). Two optimizer settings (E3) and a second price window (E5) bound where those conclusions hold (Sec.~V-B, Sec.~V-C). The value of the cross is the judgement it changes, not its size: one weight change reads as a loss on the reported gap and a gain on acquisition, and the conditional decomposition separates that gain into feasible mass and preference within the feasible set, which dominate at different sizes (Sec.~V-B).
+
+
+\textbf{C3 --- A reproducible evaluation procedure and its record.} Every run is tied to its inputs ($\mu$ and $\Sigma$ sliced from one price snapshot pinned by value), formulation constants, initial and final angles, evaluation and gradient counts, shots, exact-state scores, wall-clock and, on metered backends, task counts and dollars; a manifest states what was planned, what collapsed, what ran and what failed (Table~\ref{tab:II}). With the angles held fixed (E4-A), the double-precision implementations --- local CPU, local GPU and a managed cloud simulator --- agree on the feasible-outcome probabilities to 2.6$\cdot$10$^{-14}$ in total variation and the single-precision arm to 6.1$\cdot$10$^{-7}$, while ten 1,000-shot batches of one state return nine or ten distinct selected portfolios at N = 20 on every backend (Sec.~V-D).
+
+
+The critique is of the encoding and the reporting conventions in this configuration, not of QAOA: a classical annealer run on the same penalty-encoded QUBO reproduces the pattern (Sec.~V-A). Runtime is reported as context for the evaluated implementation --- simulated QAOA had no speed advantage at any size we could run --- not as evidence about quantum advantage, and the value of the measurement does not depend on it.
+
+
+\section{Related Work}
+
+
+\textbf{QUBO portfolio benchmarks.} Mean--variance selection \cite{ref1} with a cardinality constraint is NP-hard \cite{ref2}; the standard route to a quantum device is the QUBO/Ising encoding catalogued by Lucas \cite{ref3} with the constraint absorbed into a quadratic penalty. Rosenberg et al. \cite{ref12} applied it to a multi-period trading trajectory on a quantum annealer; Venturelli and Kondratyev \cite{ref13} seed reverse annealing with a greedy solution, and note that enforcing the cardinality penalty needs a large P that ``is typically associated with precision issues'' --- a hardware-side argument for keeping the penalty scale out of the number being scored; Mugel et al. \cite{ref14} compared annealers, gate-based devices and tensor networks on 52 assets. The closest benchmark to this paper is Stopfer and Wagner \cite{ref8}, who evaluate annealing and QAOA against mixed-integer programming and classical heuristics on 250 real-market instances of up to 1,000 assets, restrict the quantum methods to at most 30 assets, and find that classical solvers reach optimality within seconds; our runtime results agree (Sec.~V-A). Uotila et al. \cite{ref15} run 100 DJIA instances against an exact eigensolver and report QAOA meeting both quality and feasibility criteria on 3 of 100, observing QUBO and HUBO spectra that agree to 10$^{-9}$--10$^{-11}$ while ``the allocations start differing substantially''. Brandhofer et al. \cite{ref9} define the approximation ratio over the feasible set alone, ``independent of the particular method used to enforce the constraint'', and reject the dominate-the-objective penalty rule as ``unnecessarily large''; Sec.~V-A is a measurement of what those two corrections are worth, not a rediscovery of them. Baker and Radha \cite{ref10} report, in a QAOA portfolio case study, run-to-run fluctuation exceeding finite-shot noise and reject the approximation ratio as ``sensitive to \ldots{} the constraint enforcement scheme chosen''; the constant offset carrying that sensitivity is written as c = AK$^{2}$ in \cite{ref11}. How to set the penalty weight is a studied question: Verma and Lewis \cite{ref16} give exact weights that make the unconstrained optima coincide with the feasible ones, Ayodele \cite{ref17} compares static rules, and Montanez-Barrera et al. \cite{ref18} introduce an unbalanced penalty formulation for inequality constraints that avoids additional slack variables; how a constraint is encoded and whether candidates are re-scored on the original objective are separate choices.
+
+
+\textbf{What benchmarks report, and what is proposed.} Three documents propose what a benchmark in this field should report; none is a formal standard. Abbas et al. \cite{ref19} prescribe a range-normalized approximation ratio ($C_{\mathrm{max}}$ $-$ $\langle$C$\rangle$)/($C_{\mathrm{max}}$ $-$ $C_{\mathrm{min}}$) and require mean-sample and best-sample ratios listed separately, since the best sample ``may improve with a higher number of shots''. The Quantum Optimization Benchmark Library \cite{ref20} mandates run, feasible-run and successful-run counts with a success threshold, warns that ``the objective values of two QUBOs representing the same problem using different penalty factors cannot be directly compared'', and prescribes scoring on the original problem; its smallest portfolio instance has 710 binary variables, beyond any statevector simulator, which is why we do not benchmark on it. Lozano \cite{ref21} proposes a four-metric protocol for hybrid portfolio benchmarks, the only one to require billed device time, with a gap regularized by max(1, $|$f*$|$) on the original constrained objective. We adopt the reporting fields of \cite{ref19}, \cite{ref20} where they apply. A census of fourteen QAOA and annealing portfolio benchmarks --- \cite{ref8}--\cite{ref15}, \cite{ref22}--\cite{ref27}, selected by a stated protocol (Supplementary Sec. S-I, Table~S1) --- is background for the measurements: ten of the fourteen report no optimality gap, the four that do use four different normalizations, none reports task counts or billed cost, and none of the seven published after \cite{ref19}, \cite{ref20} cites either. Not citing a proposal is what the census counts; it is not evidence that any paper uses the denominator studied here. Barkoutsos et al. \cite{ref28} aggregate the shot distribution by conditional value-at-risk because its mean and minimum are unstable summaries; best-of-shots is the extreme case of that family.
+
+
+\textbf{Initialization, sampling and the simulation stack.} QAOA's weak point is the classical outer loop: Zhou et al. \cite{ref29} introduced the INTERP and FOURIER initialization heuristics; Sack and Serbyn \cite{ref30} showed random initialization prone to local minima; barren plateaus \cite{ref31} and the NP-hardness of training \cite{ref32} make no initialization universally safe. Guerreschi and Matsuura \cite{ref33} concluded that hundreds of qubits would be needed before QAOA on Max-Cut could outrun a classical solver, the precedent for the negative runtime result reported here. Amazon Braket \cite{ref34} exposes simulators and hardware behind one API with per-task and per-shot pricing; Oralkhan and Zhaxalykov \cite{ref23} use it to compare algorithms across trapped-ion and superconducting backends. Our simulation backends are PennyLane \cite{ref35} with the Lightning CPU/GPU statevector devices, the latter on NVIDIA cuQuantum \cite{ref36}, with gradients by adjoint differentiation \cite{ref37}. Reproducibility in computer-systems research depends on recording the exact inputs \cite{ref38}--\cite{ref40}; a cloud quantum experiment adds a billable environment to that list, which Sec.~VI treats as part of the method.
+
+
+\textbf{Position of this work.} The formulation, the algorithm and the runtime conclusion are standard; what is added is the measurement: a crossed design (instance $\times$ seed $\times$ penalty) evaluated on both exact final-state probabilities and best-feasible sample quality, with exact references, explicit sampling controls and a recorded execution environment, reported because it contradicts what a single-seed, single-instance, single-weight run would have let us claim.
+
+
+\section{Formulation and Evaluation Quantities}
+
+
+\subsection{The penalty encoding}
+
+
+Let x $\in$ $\{0,1\}$$^{N}$ be a binary selection vector, $\mu$ $\in$ $\mathbb{R}$$^{N}$ the vector of annualized expected returns, and $\Sigma$ $\in$ $\mathbb{R}$$^{N\times N}$ the annualized covariance matrix. With risk-aversion $\lambda$ $\in$ [0,1] and target cardinality K, the cardinality-constrained mean--variance problem
+
+
+\begin{equation*}
+\min\; \lambda\, x^{\mathsf{T}}\Sigma x - (1-\lambda)\, \mu^{\mathsf{T}}x\quad \text{subject to}\quad \sum_i x_i = K
+\end{equation*}
+
+
+is cast as an unconstrained QUBO via a quadratic penalty. We keep four quantities apart, because the paper's central measurement is about which of them a reported number divides by:
+
+
+\begin{equation*}
+f(x) = \lambda\, x^{\mathsf{T}}\hat{\Sigma} x - (1-\lambda)\, \hat{\mu}^{\mathsf{T}}x\quad\text{(the portfolio objective),}
+\end{equation*}
+
+
+\begin{equation*}
+V(x) = \Bigl(\sum_i x_i - K\Bigr)^2\quad\text{(the constraint violation),}
+\end{equation*}
+
+
+\begin{equation*}
+\begin{aligned} H_A(x) &= f(x) + A\, V(x) \\ &\qquad\text{(the penalised objective the QUBO encodes),}\end{aligned}
+\end{equation*}
+
+
+\begin{equation*}
+\begin{aligned} E_A(x) &= H_A(x) - A K^2 \\ &\qquad\text{(what $x^{\mathsf{T}}Qx$ returns once the expansion's}\\ &\qquad\text{constant is dropped).}\end{aligned}
+\end{equation*}
+
+
+Let F be the feasible set, the assignments with $\Sigma$$_i$ x$_i$ = K. On F the penalty vanishes, so $H_{A}$(x) = f(x) and $E_{A}$(x) = f(x) $-$ A$\cdot$K$^{2}$: the $-$A$\cdot$K$^{2}$ is a constant the expansion sheds into an offset, not a penalty paid by feasible solutions. Every energy the results report is $E_{A}$, and every gap denominated by
+
+$|$$E_{A}$*$|$ therefore carries that constant. The QAOA circuit sees a fifth quantity, the Ising form of $H_{A}$ rescaled by its largest coefficient (below); we write $\langle$$H_{\mathrm{norm}}$$\rangle$ for its expectation and never interchange it with $H_{A}$ or $E_{A}$, nor compare it between runs at different A.
+
+
+$\mu$ and $\Sigma$ are normalized by their max-abs value ($\hat{\mu}$, $\hat{\Sigma}$ $\in$ [$-$1,1]) so the penalty A has a dataset-independent meaning. Two consequences are stated now because Sec.~V-A reads a financial metric off the same x: the portfolio evaluated there is the equal-weight one, w = x/K, and because $\mu$ and $\Sigma$ are scaled separately, the relative weight of return and risk in f is not the one $\lambda$ = 0.5 would give on the raw financial units --- f is what is optimized, and the Sharpe ratio is measured afterwards on the raw series. And because w = x/K, the objective on a feasible x reads f = $\lambda$K$^{2}$$\cdot$w$^{\mathsf{T}}$$\hat{\Sigma}$w $-$ (1$-$$\lambda$)K$\cdot$$\hat{\mu}$$^{\mathsf{T}}$w, so a fixed $\lambda$ weighs risk against return differently at each K: the sizes are not the same financial risk preference. We use $\lambda$ = 0.5 throughout. Expanding the penalty yields an upper-triangular QUBO matrix Q with
+
+
+\begin{itemize}
+\item diagonal:  $Q_{ii}$ = $\lambda$$\cdot$$\hat{\Sigma}_{ii}$ $-$ (1$-$$\lambda$)$\cdot$$\hat{\mu}_{i}$ + A$\cdot$(1 $-$ 2K),
+\item off-diagonal:  $Q_{ij}$ = 2$\lambda$$\cdot$$\hat{\Sigma}_{ij}$ + 2A,
+\end{itemize}
+
+
+and a constant offset A$\cdot$K$^{2}$. For QAOA the QUBO is mapped to an Ising Hamiltonian by $x_{i}$ = (1 $-$ $z_{i}$)/2, giving linear (h) and quadratic (J) coefficients plus a constant. This layer is device-independent and is unchanged whether the solver is classical or quantum.
+
+
+\textit{The circuit, stated once.} With $s_{H}$ = max(max\_i $|$$h_{i}$$|$, max\_{i$<$j} $|$$J_{ij}$$|$) and the normalised cost Hamiltonian
+
+
+\begin{equation*}
+H_C = \frac{1}{s_H}\Bigl(\sum_i h_i Z_i + \sum_{i<j} J_{ij} Z_i Z_j\Bigr),\qquad H_M = -\sum_i X_i,
+\end{equation*}
+
+
+the state at depth p is
+
+
+\begin{equation*}
+|\psi(\gamma,\beta)\rangle = \prod_{\ell=p}^{1} e^{-i\beta_\ell H_M} e^{-i\gamma_\ell H_C}\, H^{\otimes N}|0\rangle^{\otimes N},
+\end{equation*}
+
+
+layers applied cost-first, and the objective minimised is $\langle$$\psi$($\gamma$, $\beta$)$|$ $H_{C}$ $|$$\psi$($\gamma$, $\beta$)$\rangle$ = $\langle$$H_{\mathrm{norm}}$$\rangle$. Terms with $|$coefficient$|$ $\leq$ 10$^{-12}$ are dropped before the circuit is built. Each exponential is one Trotter step of the exact commuting decomposition (every term of $H_{C}$ is diagonal, and $H_{M}$'s terms commute among themselves), giving p$\cdot$[C(N,2) + 2N] parameterised rotations. Angles are drawn once per run as $\gamma$\_$\ell$, $\beta$\_$\ell$ \~{} U(0, $\pi$) from the run's seed and are unbounded during optimisation. We use p = 2 for E1--E5 (the depth sweep of Supplementary Sec. S-VI is the exception), so there are four variational parameters. The rescaling by $s_{H}$ leaves argmin unchanged and reported energies use the original Q, but it is not neutral to the search: on the circuit it is the reparameterisation $\gamma$ $\rightarrow$ $\gamma$/$s_{H}$, so the same initial-angle range explores a different region of the landscape than the unnormalised problem would (Sec.~VI-C).
+
+
+\subsection{Penalty weights}
+
+
+Three reference weights recur. The heuristic the formulation uses, and the one we call $A_{\mathrm{heur}}$, is the ``make the penalty dominate the objective'' rule
+
+
+\begin{equation*}
+\begin{aligned} A_{\mathrm{heur}} &= 2 s_{\mathrm{obj}} N + 1,\\ s_{\mathrm{obj}} &= \max\bigl(\lambda \max|\hat{\Sigma}|,\, (1-\lambda)\max|\hat{\mu}|\bigr);\end{aligned}
+\end{equation*}
+
+
+because the normalization makes max$|$$\hat{\Sigma}$$|$ = max$|$$\hat{\mu}$$|$ = 1, at $\lambda$ = 0.5 this is $A_{\mathrm{heur}}$ = N + 1 for every instance in this paper. It is the baseline penalty of this implementation. The \textit{idea} of making the penalty dominate the objective is common; this particular formula is not a field standard and we do not treat it as one. The experiments vary it against reference weights computed from the instance ($A_{\mathrm{crit}}$, $A_{\mathrm{margin}}$), not against competing conventions.
+
+
+$A_{\mathrm{crit}}$ is the smallest A at which the constrained optimum x* is a global minimizer of $H_{A}$: with $a_{m}$ the minimum of f over assignments of cardinality m,
+
+
+\begin{equation*}
+A_{\mathrm{crit}} = \max\Bigl(0,\; \max_{m \neq K} \frac{f^{*} - a_m}{(m-K)^2}\Bigr).
+\end{equation*}
+
+
+If the inner maximum is positive, an infeasible assignment ties x* at A = $A_{\mathrm{crit}}$ and any larger A separates them strictly; if it is zero, some infeasible assignment already ties x* at A = 0; if it is negative (the clamp is active), x* is strictly better than every infeasible assignment at A = 0 and no tie occurs at any A $\geq$ 0. All nine of the thirty N = 12 instances with $A_{\mathrm{crit}}$ = 0 are the third case, with inner maxima from $-$9.0$\cdot$10$^{-2}$ to $-$5.9$\cdot$10$^{-4}$, so for them the multiples of $A_{\mathrm{crit}}$ collapse to the single condition A = 0. Ties are decided at OPT\_TOL = 10$^{-9}$ relative to $\Delta_{F}$, not by floating-point equality. For N $\leq$ 20 we compute $a_{m}$ exactly over all 2$^{N}$ assignments; for N $>$ 20 we bound the cardinalities far from K and call the result $A_{\mathrm{safe}}$, an upper bound on $A_{\mathrm{crit}}$.
+
+
+$A_{\mathrm{margin}}$ follows Brandhofer et al. \cite{ref9} and places the best infeasible assignment at the midpoint between f* and the feasible-set mean $\bar{f}_{F}$,
+
+
+\begin{equation*}
+T = \frac{f^{*} + \bar{f}_F}{2},\quad A_{\mathrm{margin}} = \max\Bigl(0,\; \max_{m \neq K} \frac{T - a_m}{(m-K)^2}\Bigr) + \epsilon_A,
+\end{equation*}
+
+
+with $\epsilon_{A}$ = 10$^{-6}$ recorded per instance. At $A_{\mathrm{margin}}$ every infeasible assignment costs at least T $-$ f* more than x* does, up to $\epsilon_{A}$; the best infeasible assignment sits at T (before $\epsilon_{A}$ is added) when the inner maximum is nonnegative; when it is negative every infeasible assignment already exceeds T at A = 0. Both $A_{\mathrm{crit}}$ and $A_{\mathrm{margin}}$ use exact information about the instance; they are reference conditions, not a procedure we claim scales. Computing them took 0.06 s, 0.8 s and 10.3 s per thirty instances at N = 12, 16 and 20.
+
+
+\subsection{Evaluation quantities}
+
+
+All scores are computed by an evaluator that reads x, $\hat{\mu}$, $\hat{\Sigma}$, $\lambda$, K and A and never reads Q; on every one of the 2$^{N}$ states at N = 8 and N = 12 it agrees with the QUBO path on $H_{A}$, $E_{A}$, the Ising coefficients and the bit order (E0, Sec.~IV-C). With f* = min\_F f, $f_{F}$$^{max}$ = max\_F f and the feasible-range spread $\Delta_{F}$ = $f_{F}$$^{max}$ $-$ f*, the quantities are those of Table~\ref{tab:I}.
+
+
+Every score in Sec.~V is one of these, computed by the evaluator from x, $\hat{\mu}$, $\hat{\Sigma}$, $\lambda$, K and A.
+
+
+\begin{table*}[!t]
+\centering
+\scriptsize
+\caption{The evaluation quantities.}
+\label{tab:I}
+\begin{tabular}{p{0.141\textwidth}p{0.335\textwidth}p{0.434\textwidth}}
+\toprule
+Quantity & Definition & Role \\
+\midrule
+Offset-normalized gap $g_{\mathrm{off}}$ & (f(x) $-$ f*) / $|$f* $-$ A$\cdot$K$^{2}$$|$, feasible x & the gap taken on the solver's own energies; analysed, not used for judgement \\
+Feasible-range gap $g_{F}$ & (f(x) $-$ f*) / $\Delta_{F}$ & primary quality of a feasible solution; free of the constant and of A \\
+Feasible probability $P_{F}$ & Pr[x $\in$ F] under the sampler's exact distribution & the chance one shot is usable \\
+Quality-hit probability $P_{\tau}$ & Pr[x $\in$ F and $g_{F}$(x) $\leq$ $\tau$] & the unconditional one-shot success probability \\
+S-shot success $Q_{\tau}$(S) & 1 $-$ (1 $-$ $P_{\tau}$)$^{S}$ for i.i.d. shots & success at a fixed measurement budget \\
+Rank & 1 + number of feasible solutions with f strictly below f(x) & position in F; implies neither a small objective difference nor a similar portfolio \\
+Deflation D(A) & $|$f* $-$ A$\cdot$K$^{2}$$|$ / $\Delta_{F}$ = $g_{F}$ / $g_{\mathrm{off}}$ & how many times smaller the offset-normalized number reads \\
+Conditional distance $D_{cond}$ & $\tfrac{1}{2}$ $\Sigma$\_{x$\in$F} $|$ p(x)/$P_{F}$ $-$ 1/$|$F$|$ $|$ & how far the sampler, conditioned on feasibility, is from uniform on F \\
+Domain metric & return, volatility and Sharpe ratio of w = x/K on the raw series & auxiliary; not what the QUBO optimizes \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+
+The primary threshold is $\tau$ = 0.01 of the feasible range; the exact optimum and $\tau$ = 0.05 are sensitivity settings. $\tau$ = 1\% of $\Delta_{F}$ is not the 0.1\% of $|$E*$|$ that the earlier tables used as a success line; the two are compared as two decision rules in Sec.~V-B, not treated as equivalent. Two denominators can vanish. $\Delta_{F}$ = 0 makes $g_{F}$ undefined by definition (the within-$\tau$ test then counts the whole feasible set as qualifying). $|$f* $-$ A$\cdot$K$^{2}$$|$ = 0 makes $g_{\mathrm{off}}$ undefined; D(A) is then 0 as a formula, but the evaluator guards both and returns them as undefined together, a choice of implementation rather than of definition --- none of the settings in Table~\ref{tab:II} reaches it. $P_{F}$ = 0 makes $D_{cond}$ undefined. The identity D(A) = $g_{F}$ / $g_{\mathrm{off}}$ holds for non-optimal x; at the optimum both gaps are 0. Runs in which any of these occurs are counted rather than dropped.
+
+
+Under i.i.d. shots $Q_{\tau}$(S) is a formula in $P_{\tau}$, so shot budgets are compared without re-running QAOA; on hardware, whose shots may be correlated, it is a model. Two consequences follow. It is monotone in $P_{\tau}$ at every S, so one sampler exceeding another at several budgets is one comparison reported at several operating points, decided on $P_{\tau}$. And $Q_{\tau}$(S) is the probability that a batch contains at least one qualifying feasible solution; under the output rule used here it is also the probability of \textit{returning} one. The rule selects the lowest-$E_{A}$ shot among the feasible shots (ties to the lowest basis index), a batch with no feasible shot is a counted outcome rather than a missing value, and $g_{F}$ is not defined for an infeasible x. Because $E_{A}$ and f induce the same ordering on F, the returned shot has $g_{F}$ $\leq$ $\tau$ exactly when the batch holds a feasible shot with $g_{F}$ $\leq$ $\tau$; an infeasible shot of lower $E_{A}$ cannot displace it, so the equivalence survives the weak penalty weights at which the batch minimum is infeasible. It need not hold for a rule that selects the minimum-energy shot without first checking feasibility (\texttt{tests/test\_run\_e1\_cross.py} pins each case). Within one instance at one A, $g_{\mathrm{off}}$ and $g_{F}$ are positive multiples of each other and preserve the order of solutions; what D(A) changes is every comparison across A, across N and against a threshold.
+
+
+Two identities relate the conditional quantities. With $u_{\tau}$ = $|$$F_{\tau}$$|$ / $|$F$|$ the share of the feasible set within $\tau$ and $q_{\tau}$ = $P_{\tau}$ / $P_{F}$ the sampler's conditional hit rate, $|$$q_{\tau}$ $-$ $u_{\tau}$$|$ $\leq$ $D_{cond}$, and the sampler's one-shot success relative to uniform feasible sampling factors as $P_{\tau}$ / $P_{\tau}$$^{uniform-F}$ = $P_{F}$ $\cdot$ $R_{\tau}$ with $R_{\tau}$ = $q_{\tau}$ / $u_{\tau}$: the first factor is the chance of landing in F, the second the preference for good solutions within it. $D_{cond}$ has no direction --- it does not say whether mass moved toward or away from $F_{\tau}$ --- and a small $D_{cond}$ does not guarantee that $R_{\tau}$ is close to one when $u_{\tau}$ is small ($|$$R_{\tau}$ $-$ 1$|$ $\leq$ $D_{cond}$ / $u_{\tau}$), so comparisons against uniform-F are made on $P_{\tau}$ directly and $D_{cond}$ and $R_{\tau}$ are read as their explanation.
+
+
+\section{Experimental Protocol}
+
+
+\subsection{Data and problem instances}
+
+
+Nikkei 225 constituents via \texttt{yfinance}, a three-year window pinned in code to 2023-08-06 -- 2026-08-05 (731 trading days), annualized returns and covariance. For each N the target cardinality is K = max(2, $\lfloor$N/5$\rfloor$). The universe is a fixed list of fifty Nikkei 225 constituents chosen by the author for liquidity and availability on \texttt{yfinance}, not by a numerical ranking rule, written into the source code in the order listed there before any experiment was run; every one of the fifty has a complete daily series in both windows (731 and 735 trading days), so no ticker was excluded for missing data. Instances are subsets of that universe drawn from a single cached price snapshot: instance 0 is the \textit{reference instance}, the subset the single-instance tables use (the first N tickers in the listed order); instance i $\geq$ 1 is an N-subset drawn without replacement from the fifty by a generator seeded with i --- one stream per index, reused at every size, so instances with the same index at different N are not independent draws (they share 4--7 tickers where independent draws would share 3.8--6.4 in expectation) while instances with different indices are independent draws of subsets from the fixed snapshot, not independent market observations; there is no exclusion between instances and no de-duplication; every instance's sorted ticker list and a digest of it are recorded with its results (\texttt{paper01\_e1\_reference.csv}). All E0--E4 instances share one market period and one asset class, so the spread across them measures subset sensitivity, not robustness across market periods; Supplementary Table~S19 repeats the main contrast without instance 0. E5 repeats a pre-fixed block on the adjacent, non-overlapping window 2020-08-05 -- 2023-08-05 (735 trading days) from a second cached snapshot of the same fifty tickers.
+
+
+\subsection{Solvers and backends}
+
+
+\begin{itemize}
+\item \textbf{Classical reference.} Exact enumeration of the \textit{feasible} set for N $\leq$ 30 (C(N, K) candidates --- 5.9$\cdot$10$^{5}$ instead of 1.07$\cdot$10$^{9}$ at N = 30 --- a proven optimum in 5.7 s); the reference solver uses simulated annealing \cite{ref41} only at N = 50 (the annealing arms of Sec.~V-A are controls, not the reference). Every gap reported for N $\leq$ 30 is measured against a proven optimum.
+\item \textbf{QAOA baseline.} Depth p = 2, ADAM \cite{ref42} with step 0.1 for 50 steps from uniform random initial angles in [0, $\pi$) drawn from a named seed, gradients by adjoint differentiation \cite{ref37}, 1,000 final measurement shots, on \texttt{lightning.gpu} at single precision. It is the \textit{baseline} of E3 and of the single-seed measurements in the Supplementary Material, not a claim about the best QAOA.
+\item \textbf{Simulation host.} RTX A6000 (48 GB VRAM, driver 570.133), Python 3.11, PennyLane 0.45.1 \cite{ref35}, pennylane-lightning-gpu 0.45, custatevec-cu12 1.14 \cite{ref36}. Every number in Sec.~V comes from this host unless a table says otherwise; numbers from a second machine are never mixed into a table (the same deterministic classical solver's Sharpe ratio differs by 3.4$\cdot$10$^{-16}$ between the Linux host and an Apple-silicon laptop, a BLAS difference).
+\item \textbf{Cloud and hardware backends.} The identical code, selected only by a backend name, on AWS Braket SV1 (managed statevector simulator, double precision, us-east-1) and, for the final sampling task only, on IonQ Forte-1 (the optimisation loop never runs on hardware).
+\end{itemize}
+
+
+\subsection{The experiments}
+
+
+Four factors are varied, and they answer different questions. An \textit{instance} is a ticker subset, so the spread over instances measures problem dependence within one universe and one period; an \textit{initial-angle seed} repeats the same problem from a different initialisation; a \textit{penalty setting} changes the weight A of the same problem, which moves both the reported metric and the distribution the sampler draws from; the \textit{second price window} (E5) re-runs the same subsets on a different input period. Thirty instances $\times$ five seeds are thus thirty problems each run five times, not 150 problems, and are aggregated as such (Sec.~IV-E).
+
+
+\textbf{E0 --- evaluator and re-scoring.} The evaluator of Sec.~III-C was checked against the QUBO path on every one of the 2$^{N}$ states at N = 8 and N = 12 ($H_{A}$ = $E_{A}$ + A$\cdot$K$^{2}$ on all states, $H_{A}$ = f on F, the same per-cardinality minima, ties and worst feasible value, the same bit order; the exact $A_{\mathrm{crit}}$ never above the bounded $A_{\mathrm{safe}}$). Then, without re-running QAOA, fixed feasible solutions of each reference instance --- the optimum, the solutions of rank 2, 5, 10, 50, 100 and 1,000, the median-rank solution, the worst feasible solution and the single-seed QAOA solution of Supplementary Table~S2 --- were scored under $g_{\mathrm{off}}$, $g_{F}$ and the all-states approximation ratio of \cite{ref19} as only A takes the values 1.1, 2, 5 and 10 $\times$ $A_{\mathrm{crit}}$, $A_{\mathrm{margin}}$ and $A_{\mathrm{heur}}$ (354 rows).
+
+
+\textbf{E1 --- instance $\times$ seed $\times$ penalty cross.} N $\in$ {12, 16, 20}; 30 instances per size; initial-angle seeds 42--46; six penalty settings {1.1, 2, 5, 10} $\times$ $A_{\mathrm{crit}}$, $A_{\mathrm{margin}}$, $A_{\mathrm{heur}}$; the baseline solver; 1,000 shots. For every run the initial and final angles, the optimisation trajectory, the exact probabilities of every feasible bitstring under the initial and the final state, the per-cardinality mass and the shot counts are retained (Sec.~IV-D). The nominal design is 2,700 runs; the nine N = 12 instances with $A_{\mathrm{crit}}$ = 0 collapse their four multiples into one condition A = 0, so 2,565 were expected and 2,565 completed (Table~\ref{tab:II}). Instance 0 at $A_{\mathrm{heur}}$ reproduces an earlier five-seed sweep and the seed-42 $A_{\mathrm{heur}}$ arm an earlier 90-run instance sweep, to the bitstring (energies within 4$\cdot$10$^{-16}$ relative, the ulp of the two evaluators), so those sweeps are not reported separately.
+
+
+\textbf{E2 --- what the best shot means.} From the retained states of every E1 run, four samplers are compared at S $\in$ {10, 100, 1000, 10000}: the optimised QAOA state; the \textit{unoptimised} state at the same initial angles; the uniform distribution over all 2$^{N}$ bitstrings; and the uniform distribution over F. $P_{F}$, $P_{\tau}$ and $D_{cond}$ are read off the exact state and $Q_{\tau}$(S) follows by the formula. The uniform-over-F sampler draws K distinct assets uniformly without optimising the objective --- a control that uses the constraint directly and is matched to QAOA on the number of candidates generated, not on computational cost; exact enumeration is used to score its success probability, not to define it. No optimisation is re-run.
+
+
+\textbf{E3 --- optimizer controls.} A block fixed before any E3 result was seen --- instances 0--9, seeds 42--46, {$A_{\mathrm{heur}}$, $A_{\mathrm{margin}}$}, at each N; 300 runs --- was re-run under two other settings: \textbf{A}, ADAM with step 0.03 for 100 steps; \textbf{B}, SciPy's L-BFGS-B \cite{ref43}, \cite{ref44} on the analytic expectation with adjoint gradients, stopped at SciPy's own criteria or at 100 gradient evaluations, whichever comes first. Each run pairs with its E1 baseline on (N, instance, A, seed) and the same initial angles, so $\langle$$H_{\mathrm{norm}}$$\rangle$ is comparable within a pair. Neither setting is proposed as a better QAOA; the block asks whether the baseline's results are an artefact of one weak setting.
+
+
+\textbf{E4-A --- the same angles on four backends.} Twelve circuits fixed before any E4-A result was seen --- N $\in$ {12, 16, 20} $\times$ instances {0, 1} $\times$ seeds {42, 43} at $A_{\mathrm{heur}}$, the final angles of the stored E1 runs --- are evaluated without optimisation on \texttt{lightning.gpu} at double precision (the reference), \texttt{lightning.gpu} at single precision (the precision of every E1 run), \texttt{lightning.qubit} at double precision on one thread, and SV1 at double precision. Each arm returns the exact probabilities of the output distribution (the full 2$^{N}$ vector locally; on SV1, which refuses the \texttt{Probability} result type at zero shots, the feasible-set amplitudes from one analytic task) and ten independent batches of 1,000 shots, each a separate circuit execution and, on SV1, a separate task. Locally the sampler is re-seeded per batch through the device's own generator (Sec.~VI-C); SV1's sampler cannot be seeded. The design answers two questions --- whether the output distribution at fixed angles is the same, and what repeated sampling from it returns --- and not whether an optimisation run on SV1 reaches the same angles.
+
+
+\textbf{E5 --- the E1 block on a second price window.} The E3 block (300 runs) was re-run with the baseline solver on the window that immediately precedes the paper's, from a second cached snapshot of the same fifty tickers under the same instance-drawing rule; the feasible set, $A_{\mathrm{crit}}$, $A_{\mathrm{margin}}$ and the uniform-sampler baselines are recomputed for the new window, which was fixed before any E5 result was seen. The question is whether the direction of the main contrast, the deflation, the disagreement of the two success rules and the E2 conclusion depend on the market period the instances were drawn from. It is a check under a second input condition, not a backtest.
+
+
+\textbf{Earlier single-seed series.} The single-instance benchmark at N = 8--30, the depth sweep and the steps $\times$ p $\times$ seed grid, the SV1 cross-backend, matched-precision and repeat runs, the four IonQ Forte-1 tasks and the classical annealing arms are single-seed or single-instance measurements, read as such; their tables are in the Supplementary Material and the main text keeps a paragraph on each.
+
+
+\subsection{Reproducibility of the inputs, and the record}
+
+
+All conditions are in code, seeds are named and the window is pinned. Four prerequisites were learned by losing results to them. (i) Prices are pinned by \textit{value}, not by date: \texttt{yfinance} revises adjusted closes between calls, so the raw series are cached at full precision and read back with round-trip parsing (two fifty-ticker snapshots, $\approx$1.2 MB). The snapshots are third-party data and are not redistributed; what the released package carries is the only thing the pipeline reads from them, the annualised mean-return vector and covariance matrix of each fifty-ticker window ($\mu$, $\Sigma$; $\approx$54 kB per window), and every instance's $\mu$ and $\Sigma$ are a slice of those, bit for bit, so every number reproduces from a clone with no network access. (ii) Every instance slices one snapshot, so no two sizes see different revisions of a price. (iii) Statistics are computed on a C-contiguous float64 copy, because \texttt{DataFrame.cov()} sums in memory-layout order. (iv) \texttt{lightning.qubit} is run at \texttt{OMP\_NUM\_THREADS=1}, without which it drifts by \~{}10$^{-13}$ between runs; \texttt{lightning.gpu} is bitwise reproducible regardless. Figures are regenerated from the committed CSVs with timestamps suppressed. The failures behind each rule --- including the 10$^{-10}$-level input changes that single-precision QAOA amplified into different solutions --- are in Supplementary Sec. S-IX.
+
+
+Every run is recorded as one CSV row (initial and final angles, evaluation counts, shot counts, exact-state scores, wall-clock and, on metered backends, task identifiers) and every instance as one row with its reference solution, $A_{\mathrm{crit}}$, $A_{\mathrm{margin}}$ and the uniform-sampler baselines. What E1 retains per run is not the full state vector --- 2,565 dense initial and final vectors at these sizes would occupy about 16 GB --- but the exact probability of every feasible bitstring under the initial and the final state, the per-cardinality mass, the angles, the trajectory and the shot counts ($\approx$100 MB compressed), from which every E2 quantity, including $D_{cond}$, is recomputed; the full vector for any run is reconstructed from its recorded angles and seed in seconds.
+
+
+\subsection{Statistics}
+
+
+The unit of generalisation is the instance; initial-angle seeds are repeats within an instance; shots and offline draws are neither. A paired contrast (treatment $-$ control on the same instance, seed and, for E3, initial angles) is first reduced to one value per instance by the median over seeds, and the instance-level values are then bootstrapped by resampling instances (2,000 draws, percentile 95\% interval), with the number of instances on which the treatment was better, tied or worse. Two conditions on what the intervals estimate are stated rather than left to be inferred. Because the thirty subsets share one market period, every interval is conditional on that universe, window and drawing rule. And because every instance uses the same five seeds, the instance-level value is a contrast \textit{summarised by the median over that fixed set of initial angles}: resampling instances propagates the uncertainty in which subsets were drawn, not in which angles were. Supplementary Table~S19 shows what that costs --- at each of the two larger sizes one of the five seeds reverses the sign of the main contrast on its own, while dropping any one seed leaves it unchanged --- so a claim about initialisations drawn from a wider distribution would need a design that samples them. The primary contrast is $A_{\mathrm{margin}}$ against $A_{\mathrm{heur}}$; the primary acquisition quantity is $Q_{0.01}$(1000); $P_{F}$, $g_{F}$ of the best feasible shot, the rate of exact optima and wall-clock are reported beside it, and 5 $\times$ $A_{\mathrm{crit}}$ against $A_{\mathrm{heur}}$ is a secondary contrast on the instances with $A_{\mathrm{crit}}$ $>$ 0. All other cuts are exploratory. Failed runs, runs without a feasible shot, and runs whose lowest-energy shot is infeasible are counted, not dropped; a contrast on $g_{F}$ is formed only where both sides have a feasible shot, and the number of such pairs is printed next to the estimate. The design was not sized from a minimum detectable effect: the instance count was fixed by the compute budget of the cross rather than by a power calculation --- thirty subsets per size with five seeds and six penalty settings is 2,565 runs, 13.9 h on one GPU --- and the resolution it affords is shown with every contrast as ``better in k of 30''; five seeds show that a within-instance tail exists, not its probability.
+
+
+\subsection{What ran}
+
+
+E1 rows: nominal is the full cross; ``expected'' applies the $A_{\mathrm{crit}}$ = 0 collapse (nine N = 12 instances run three conditions rather than six); ``failed'' counts execution failures (a run that raised or wrote no result), not optimizer stopping reasons --- an L-BFGS-B line-search failure is a recorded termination, not a failed run (Supplementary Sec. S-VI). ``No feasible shot'' counts completed runs whose 1,000 shots held no feasible bitstring; ``min-energy shot infeasible'' counts runs whose lowest-energy shot violated the constraint although a feasible shot may exist. Time is wall-clock on the host of Sec.~IV-B (E1 includes 0.06, 0.82 and 10.3 s of reference enumeration per size); metered charges are AWS list price as billed, and a ``---'' in that column is an unmetered local run, not a zero cost. The earlier single-seed series are listed in Supplementary Table~S33.
+
+
+\begin{table*}[!t]
+\centering
+\scriptsize
+\caption{What ran, and what it cost.}
+\label{tab:II}
+\begin{tabular}{p{0.196\textwidth}p{0.117\textwidth}p{0.048\textwidth}p{0.078\textwidth}p{0.117\textwidth}rrr}
+\toprule
+Experiment & Runs nominal / expected / done / failed & No feasible shot & Min-energy shot infeasible & Environment (precision) & Time & Metered tasks & Metered charge \\
+\midrule
+E1, N = 12 (K = 2, $|$F$|$ = 66; 9 of 30 instances with $A_{\mathrm{crit}}$ = 0) & 900 / 765 / 765 / 0 & 0 & 8 & lightning.gpu (single) & 2.20 h & --- & --- \\
+E1, N = 16 (K = 3, $|$F$|$ = 560) & 900 / 900 / 900 / 0 & 56 & 124 & lightning.gpu (single) & 4.23 h & --- & --- \\
+E1, N = 20 (K = 4, $|$F$|$ = 4,845) & 900 / 900 / 900 / 0 & 1 & 95 & lightning.gpu (single) & 7.43 h & --- & --- \\
+E0 re-scoring (354 rows) and E2 (from E1 states) & 0 new runs & --- & --- & CPU (double) & minutes & --- & --- \\
+E3, ADAM 0.03 $\times$ 100 & 300 / 300 / 300 / 0 & 7 & 8 & lightning.gpu (single) & 3.2 h & --- & --- \\
+E3, L-BFGS-B $\leq$ 100 gradients & 300 / 300 / 300 / 0 & 10 & 12 & lightning.gpu (single) & 2.3 h & --- & --- \\
+E5, second window & 300 / 300 / 300 / 0 & 11 & 13 & lightning.gpu (single) & 1.6 h & --- & --- \\
+E4-A, local arms (3 arms $\times$ 12 circuits $\times$ 11) & 396 / 396 / 396 / 0 & 46 batches & --- & lightning.gpu / .qubit (double, single) & 3 min & --- & --- \\
+E4-A, SV1 (12 circuits $\times$ 11 + 2 pilot) & 134 / 134 / 134 / 0 & 14 batches & --- & Braket SV1 (double) & 21 min & 134 & \$0.50 \\
+IonQ Forte-1, 100 shots per task & 4 / 4 / 4 / 0 & 0 & --- & Forte-1 & --- & 4 & \$33.20 \\
+Earlier SV1 series (Supplementary Sec. S-VII) & 30 & --- & --- & Braket SV1 (double) & --- & $\approx$1,300 & $\approx$\$4.2 \\
+Deployment and smoke test & --- & --- & --- & SV1 & --- & 1 & \$0.004 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+
+The Braket total is \$37.90 against a \$50 budget.
+
+
+\section{Results}
+
+
+The sections follow the question rather than the order the experiments were run: what the metric measures (Sec.~V-A), what the sampler delivers and how the penalty weight moves the two apart (Sec.~V-B), whether the optimizer setting is responsible (Sec.~V-C), and what the backend and the hardware add (Sec.~V-D). Sec.~V-A is re-scoring and enumeration --- no QAOA is re-run for it; Sec.~V-B and Sec.~V-C are the cross and its controls; Sec.~V-D is fixed-angle evidence from four backends and single-seed evidence from metered ones, read as such.
+
+
+\subsection{The metric: what a reported gap denominates}
+
+
+\textbf{Scale and reference.} The single-instance, single-seed benchmark (N = 8--30, seed 42; Supplementary Table~S2) locates the simulator envelope: classical runtime is flat in the seconds range while QAOA grows from 30 s at N = 20 to 3.14 h at N = 30, N = 30 at single precision uses 41.3 of 49 GB of VRAM, double precision does not fit, and N = 50 (2$^{50}$ $\times$ 8 B $\approx$ 9 PB for a dense statevector) is beyond any memory this study could reach. Its reported gaps are 0.000\% at N $\leq$ 16 and 0.024--0.053\% at N = 20--30, every row feasible. The rest of this section measures what those numbers denominate.
+
+
+\textbf{The same solutions, three denominators (E0; Fig.~\ref{fig:1}).} Fig.~\ref{fig:1} (left) takes one fixed feasible portfolio of the reference N = 20 instance --- the one of median rank, 2,423 of 4,845 --- and scores it as only A changes. Its feasible-range gap $g_{F}$ is 37.8\% at every A, because neither f(x) nor $\Delta_{F}$ depends on A. Its offset-normalized gap falls from 33.6\% at 1.1$\cdot$$A_{\mathrm{crit}}$ to 3.9\% at 10$\cdot$$A_{\mathrm{crit}}$ and to 0.22\% at $A_{\mathrm{heur}}$, and the all-states approximation gap 1 $-$ AR of \cite{ref19} falls from 1.36\% to 0.014\% over the same range. Nothing about the portfolio changed. Fig.~\ref{fig:1} (middle) is the deflation D(A) = $|$f* $-$ A$\cdot$K$^{2}$$|$/$\Delta_{F}$ for every size: below 1 near $A_{\mathrm{crit}}$ at N $\leq$ 12, linear in A, and 57$\times$, 81$\times$, 121$\times$, 174$\times$, 207$\times$, 240$\times$ and 279$\times$ at the $A_{\mathrm{heur}}$ of N = 8 to 30 (Supplementary Table~S3). The mechanism is the one Sec.~III states: for feasible x the numerator f $-$ f* is independent of A while the denominator $|$f* $-$ A$\cdot$K$^{2}$$|$ is not, so two studies using the same formulation with different penalty weights report gaps differing by roughly the ratio of their weights for identical portfolios. With A = N + 1 and K = $\lfloor$N/5$\rfloor$ the constant grows as $\Theta$(N$^{3}$), while the objective's measured spread over F rises only from 1.27 at N = 16 to 4.00 at N = 30 against A$\cdot$K$^{2}$ rising from 153 to 1,116: the same solution quality reads as a smaller number at larger N.
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{figures/fig_e0_rescore.pdf}
+\caption{E0. (a) The median-rank feasible solution of   the reference N = 20 instance scored three ways as only A changes: the offset-normalized gap   $g_{\mathrm{off}}$ = (f $-$ f*)/$|$f* $-$ AK$^{2}$$|$, the all-states range gap 1 $-$ AR = (E $-$ E*)/($C_{\mathrm{max}}$ $-$ E*) of \cite{ref19},   and the feasible-range gap $g_{F}$ = (f $-$ f*)/$\Delta_{F}$. (b) The deflation D(A) = $g_{F}$/$g_{\mathrm{off}}$ per size on   the reference instances, with $A_{\mathrm{heur}}$ marked by a star; N $>$ 20 uses $A_{\mathrm{safe}}$ and is drawn hollow.   (c) D($A_{\mathrm{heur}}$) over thirty instances per size (box = IQR, whisker = range), with the reference   instance marked.}
+\label{fig:1}
+\end{figure*}
+
+
+
+\textbf{Over thirty instances (Fig.~\ref{fig:1}, right; Supplementary Table~S9).} The median deflation at $A_{\mathrm{heur}}$ rises monotonically with N --- 68$\times$, 118$\times$, 162$\times$, 184$\times$, 239$\times$ and 282$\times$ at N = 12 to 30 --- and no instance at any size escapes it: the smallest value observed anywhere is 36$\times$ at N = 12 and the largest 411$\times$ at N = 30. The heuristic weight sits a median 103--179$\times$ above the threshold at every size --- the exact $A_{\mathrm{crit}}$ at N $\leq$ 20 (over the 21 N = 12 instances with $A_{\mathrm{crit}}$ $>$ 0) and the upper bound $A_{\mathrm{safe}}$ at N $>$ 20, so that $A_{\mathrm{heur}}$/$A_{\mathrm{safe}}$ is a lower bound on the true overshoot there --- so the overshoot is a property of the rule rather than of one covariance matrix; on the reference instance it is 148--1213$\times$, because that instance's $A_{\mathrm{crit}}$ is unusually small at N $\leq$ 12 and overshoot is a ratio against a threshold that can be near zero. The reference instance is near the median in deflation at every size, and below the median at every size in the Sharpe spread its 0.1\% band contains (next paragraph), so the single-instance results understate rather than exaggerate the effect.
+
+
+\textbf{Feasible solutions admitted by an offset-normalized threshold.} Exact enumeration makes the set a reported gap admits countable. On the reference instances a 0.1\% offset-normalized band holds 30 of 560 feasible portfolios at N = 16 (5.4\%), 368 of 4,845 at N = 20 (7.6\%) and 146,484 of 593,775 at N = 30 (24.7\%), and the band is a step function of the threshold with no broad stable plateau over the evaluated range: at N = 30 it holds 1.5\% of the feasible set at 0.05\% and 94.7\% at 0.2\% (Supplementary Tables~S4--S5). These solutions are not near-degenerate in any penalty-independent sense: at a deflation of 279$\times$ a 0.1\% offset-normalized band admits solutions up to 28\% of $\Delta_{F}$ from the optimum, and they are admitted because the threshold was set on a compressed scale. The single-seed QAOA solutions at N = 20--30, reported at 0.024--0.053\%, sit at 5.7--9.2\% of $\Delta_{F}$ and at ranks 43 to 844 in the feasible set; a fixed universe-wide normalization instead of the per-instance one of Sec.~III widens rather than narrows the band (Supplementary Table~S6).
+
+
+The domain metric is reported as an auxiliary consequence rather than a solver error, since the Sharpe ratio is not what the QUBO optimizes (Sec.~III-A). Similar values of the optimized objective did not guarantee similar Sharpe ratios: the N = 30 band spans Sharpe ratios from 0.172 to 1.695, the single-seed N = 24--30 QAOA solutions have Sharpe ratios 15--22\% below the optimum's at gaps of 0.024--0.031\%, and among the 47 sub-optimal solutions of the seed-42 instance sweep at N $\leq$ 20, 17 have a Sharpe ratio \textit{above} the exact optimum's while the worst deviations reach $-$61\% (Supplementary Sec. S-IV, Fig.~S7). The deviations are of both signs, and the reported gap does not carry the sign.
+
+
+\textbf{The prescribed all-states ratio.} Applied literally to this QUBO, the range-normalized ratio of \cite{ref19} removes the offset but inherits the scale: $C_{\mathrm{max}}$ over all 2$^{N}$ assignments is attained by a violating assignment and grows with A, while the spread over F does not, so every feasible solution's ratio tends to 1 as A grows. At $A_{\mathrm{heur}}$ the QAOA solution and the \textit{worst} feasible portfolio score 1.000000 and 0.999560 at N = 16 and 0.999982 and 0.999777 at N = 30 (Supplementary Table~S8). \cite{ref19} calibrates the metric on unconstrained instances and does not say which range a constrained problem should use; the rank within F, in neither proposal, is what this paper reports beside the gap.
+
+
+\textbf{The pattern does not need a quantum sampler.} Simulated annealing on the \textit{feasible set} (cardinality-preserving swaps, five seeds $\times$ 30 instances $\times$ 6 sizes, 900 runs) reaches the exact optimum in 895 of 900 runs at a median 3.4 s, so it leaves the metric nothing to hide. The same annealer on the penalty-encoded Q with single-bit flips, five seeds at N $\in$ {12, 16, 20}, reproduces the QAOA arm's pattern: every run feasible, offset-normalized gaps of 0.00--0.59\%, Sharpe ratios up to 64\% below the optimum's, ranks as deep as 4,307 of 4,845 (Supplementary Table~S11). The combination of the encoding's offset with an offset-sensitive score is what produces the pattern, and a classical solver scored the same way inherits it. The two arms are not on matched budgets (50 ADAM steps against 50,000 annealing moves), so this is a check on whether the reporting critique needs an imperfect solver, not a verdict on which method is better; the seed-42 QAOA arm over the same thirty instances reaches the exact optimum in 26, 17 and 0 of 30 at N = 12, 16 and 20 (Supplementary Table~S12), and the configuration measured here trails the classical baseline on quality as on runtime.
+
+
+\subsection{The sampler: what the penalty weight does to the metric and to the shots (E1, E2, E5)}
+
+
+Sec.~V-A fixed the solution and moved A. The cross moves A with the solver running, over thirty instances and five initial-angle seeds per size, evaluating acquisition probabilities from each final state and solution quality from its best feasible sample. Fig.~\ref{fig:2} shows the four quantities of Sec.~III-C against the penalty setting, and Table~\ref{tab:III} the paired contrasts of Sec.~IV-E.
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{figures/fig_e1_penalty.pdf}
+\caption{E1. Four panels against the penalty setting   (A = 0 for the $A_{\mathrm{crit}}$ = 0 instances, then 1.1/2/5/10 $\times$ $A_{\mathrm{crit}}$, $A_{\mathrm{margin}}$, $A_{\mathrm{heur}}$), one series per N:   (a) $g_{\mathrm{off}}$ and (b) $g_{F}$ of the best feasible shot (symlog, every run as a faint point, exact hits on   the zero line), (c) $P_{F}$ of the optimised state, and (d) $Q_{\tau}$(1000) at $\tau$ = 1\%. Markers are   instance-level medians, bars the IQR over instances; the gap panels draw only runs with a feasible   shot. The share of runs at exactly zero gap, per setting and size over these E1 runs, is   Supplementary Table~S37.}
+\label{fig:2}
+\end{figure*}
+
+
+
+Paired $A_{\mathrm{margin}}$ $-$ $A_{\mathrm{heur}}$ on the same instance and seed, reduced to an instance median, then bootstrapped over instances (95\% percentile interval); ``better'' counts instances on which $A_{\mathrm{margin}}$ is better, with ties in parentheses. Gaps are of the best \textit{feasible} shot and are formed only where both sides have one (pairs shown); $P_{F}$, $P_{\tau}$ and $Q_{\tau}$(1000) are exact-state quantities and exist for every run. Levels are medians over runs at each setting; contrasts are medians of within-instance median paired differences, so a difference of levels need not equal the paired contrast.
+
+
+\begin{table*}[!t]
+\centering
+\scriptsize
+\caption{Main effects of the penalty setting.}
+\label{tab:III}
+\begin{tabular}{rp{0.260\textwidth}rrp{0.224\textwidth}p{0.133\textwidth}}
+\toprule
+N & Quantity & $A_{\mathrm{heur}}$ level & $A_{\mathrm{margin}}$ level & Paired median diff [95\% CI] & Better (tied) of 30 \\
+\midrule
+12 & $P_{F}$ & 0.179 & 0.328 & +0.006 [+0.005, +0.012] & 28 \\
+12 & $P_{\tau}$ & 2.6$\cdot$10$^{-3}$ & 7.6$\cdot$10$^{-3}$ & +2.1$\cdot$10$^{-3}$ [+1.3$\cdot$10$^{-3}$, +3.3$\cdot$10$^{-3}$] & 27 \\
+12 & $Q_{\tau}$(1000) & 0.928 & 0.9995 & +0.011 [+0.005, +0.034] & 27 \\
+12 & $g_{\mathrm{off}}$ (\%) & 0.000 & 0.000 & 0 [0, 0] & 0 (29) \\
+12 & $g_{F}$ (\%) & 0.00 & 0.00 & 0 [0, 0] & 1 (28) \\
+16 & $P_{F}$ & 0.229 & 0.301 & +0.0007 [+0.0004, +0.0010] & 27 \\
+16 & $P_{\tau}$ & 4.1$\cdot$10$^{-4}$ & 7.7$\cdot$10$^{-4}$ & +8.2$\cdot$10$^{-5}$ [+6.9$\cdot$10$^{-5}$, +1.4$\cdot$10$^{-4}$] & 30 \\
+16 & $Q_{\tau}$(1000) & 0.336 & 0.536 & +0.040 [+0.031, +0.061] & 30 \\
+16 & $g_{\mathrm{off}}$ (\%), 129 pairs & 0.0143 & 0.5437 & \textbf{+0.44 [+0.18, +0.75]} (worse) & 4 (3) \\
+16 & $g_{F}$ (\%), 129 pairs & 1.70 & 1.49 & 0.00 [$-$0.43, 0.00] & 13 (8) \\
+20 & $P_{F}$ & 0.167 & 0.303 & +0.034 [+0.017, +0.056] & 30 \\
+20 & $P_{\tau}$ & 6.1$\cdot$10$^{-5}$ & 1.1$\cdot$10$^{-4}$ & +9.2$\cdot$10$^{-5}$ [+7.6$\cdot$10$^{-5}$, +1.4$\cdot$10$^{-4}$] & 30 \\
+20 & $Q_{\tau}$(1000) & 0.059 & 0.108 & \textbf{+0.086 [+0.071, +0.116]} & 30 \\
+20 & $g_{\mathrm{off}}$ (\%), 149 pairs & 0.039 & 0.964 & \textbf{+0.81 [+0.64, +1.11]} (worse) & 1 (0) \\
+20 & $g_{F}$ (\%), 149 pairs & 6.23 & 4.22 & \textbf{$-$1.61 [$-$3.11, $-$0.67]} & 24 (1) \\
+20 & Rank of best feasible shot, 149 pairs & 23 & 10.5 & $-$11.8 [$-$17.5, $-$3.0] & 24 (1) \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+
+\textit{The offset-normalized gap and the sampler move in opposite directions.} Replacing $A_{\mathrm{heur}}$ by $A_{\mathrm{margin}}$ makes $g_{\mathrm{off}}$ \textbf{worse} in 29 of 30 instances at N = 20 (median +0.81 percentage points) and 23 of 30 at N = 16, while it makes every acquisition quantity better: $P_{F}$, $P_{\tau}$ and $Q_{\tau}$(1000) in 30 of 30 instances at N = 20 and in 27--30 of 30 at the other sizes, and the feasible-range gap of the best feasible shot better in 24 of 30 at N = 20 (median $-$1.6 points of $\Delta_{F}$) and unchanged in the median at N = 16 (better in 13, tied in 8, worse in 9). The secondary contrast, 5$\cdot$$A_{\mathrm{crit}}$ against $A_{\mathrm{heur}}$ on the instances with $A_{\mathrm{crit}}$ $>$ 0, agrees on $Q_{\tau}$(1000) (better in 29 of 30 at N = 16, +0.094 [+0.069, +0.113]; 30 of 30 at N = 20, +0.019 [+0.002, +0.045]) and on the direction of $g_{\mathrm{off}}$, and is mixed on the best feasible shot's $g_{F}$ (worse in 17 of 30 at N = 16, better in 23 of 30 at N = 20): which weight yields the best single shot and which the highest $Q_{\tau}$(1000) are different questions.
+
+
+\textit{The gap's movement is the denominator's.} The paired ratio of offset-normalized gaps factors, pair by pair, into a solution part (f(x\_A$_2$) $-$ f*)/(f(x\_A$_1$) $-$ f*) and a denominator part $|$f* $-$ A$_1$K$^{2}$$|$/$|$f* $-$ A$_2$K$^{2}$$|$; the identity does not survive a median, so the decomposition is taken in the geometric mean over the same pairs. At N = 20, on the 128 pairs with a positive gap on both sides, the $A_{\mathrm{margin}}$ run reports a gap 27.8$\times$ the $A_{\mathrm{heur}}$ run's in the geometric mean (29.0$\times$ in the median), of which 36.6$\times$ is the denominator and 0.76$\times$ is the solution --- which is \textit{better}, on 59\% of pairs. The reported gap moves because the denominator moves, with the solution pulling the other way (all sizes: Supplementary Table~S13).
+
+
+\textit{Two success rules disagree, and the disagreement belongs to the weight.} Under the offset-normalized rule $g_{\mathrm{off}}$ $\leq$ 0.1\%, the line this implementation's own tables drew, the $A_{\mathrm{heur}}$ runs succeed at 81\%, 85\% and 82\% (N = 12, 16, 20); under the feasible-range rule $g_{F}$ $\leq$ 1\% at 78\%, 40\% and 6\%. The share of runs that pass the first and fail the second is 3\%, 46\% and \textbf{76\%} at $A_{\mathrm{heur}}$, and 0\% at every other setting at N = 16 and $\leq$ 5\% at N = 20. Read at four gap thresholds and three quality thresholds (Supplementary Table~S16) the disagreement is monotone in the gap threshold --- 0.06, 0.49, 0.76 and 0.89 at N = 20, $A_{\mathrm{heur}}$, for 0.01\% to 0.2\% --- and stays between 0.03 and 0.07 at $A_{\mathrm{margin}}$ at every one of them; the 0.1\% line is not a threshold at which anything changes character.
+
+
+\textit{Within the feasible set, the heuristic-weight sampler is close to uniform.} $P_{\tau}$ factors as $P_{F}$ $\cdot$ $q_{\tau}$ with $q_{\tau}$ = Pr[$g_{F}$ $\leq$ $\tau$ $|$ x $\in$ F], and at $A_{\mathrm{heur}}$ the second factor is the share $u_{\tau}$ = $|$$F_{\tau}$$|$/$|$F$|$ an indifferent draw from F would give: the ratio $R_{\tau}$ = $q_{\tau}$/$u_{\tau}$ is 0.999, 0.998 and 1.009 at N = 12, 16 and 20 with interquartile ranges of 0.02 or less (Supplementary Table~S17). That ratio, however, only checks the mass on one subset; a distribution such as ($\tfrac{1}{2}$, 0, $\tfrac{1}{2}$, 0) on a four-element F has $R_{\tau}$ = 1 on a two-element $F_{\tau}$ and is not uniform. So the retained probabilities of every feasible bitstring were used to compute the conditional distance $D_{cond}$ of Table~\ref{tab:I} directly, per run (Table~\ref{tab:IV}; Supplementary Table~S18). At $A_{\mathrm{heur}}$ it is 0.001--0.002 in the median at every size and never above 0.038 (N = 12), 0.009 (N = 16) or 0.005 (N = 20) in 450 runs --- against a point mass at 0.985--1.000 and against 0.10--0.81 for what a 1,000-shot empirical draw from the uniform distribution itself would show at these $|$F$|$. Small is not zero: the distribution is \textit{near}-uniform, and because $D_{cond}$ carries no direction, the departures from uniform it measures are read through $R_{\tau}$, whose median stays within 1\% of 1 at every size (interquartile range $\leq$ 0.02). At $A_{\mathrm{margin}}$ the conditional distribution departs further from uniform ($D_{cond}$ 0.17, 0.14 and 0.09 in the median); enrichment of the primary quality set is clear at N = 12 and 16 (median $R_{\tau}$ 1.40 and 1.55), whereas at N = 20 the median $R_{\tau}$ stays close to one (1.01) although the distribution is not uniform. The multiples of $A_{\mathrm{crit}}$ depart more the closer A is to $A_{\mathrm{crit}}$ ($D_{cond}$ 0.37--0.49 at 1.1$\cdot$$A_{\mathrm{crit}}$).
+
+
+$D_{cond}$ per run (Table~\ref{tab:I}), summarised over the 150 runs of each (N, setting) --- 30 instances $\times$ 5 seeds --- as the median and, for $A_{\mathrm{heur}}$, the maximum; $R_{\tau}$ is the median over the same runs (Supplementary Tables~S17--S18 give quartiles, the initial state and every setting). Rounded to the digits shown.
+
+
+\begin{table*}[!t]
+\centering
+\scriptsize
+\caption{The conditional distribution on the feasible set.}
+\label{tab:IV}
+\begin{tabular}{rrp{0.281\textwidth}rp{0.244\textwidth}p{0.141\textwidth}}
+\toprule
+N & $|$F$|$ & $D_{cond}$ at $A_{\mathrm{heur}}$, median (max) & $R_{\tau}$ at $A_{\mathrm{heur}}$ & $D_{cond}$ at $A_{\mathrm{margin}}$, median & $R_{\tau}$ at $A_{\mathrm{margin}}$ \\
+\midrule
+12 & 66 & 0.002 (0.038) & 0.999 & 0.173 & 1.40 \\
+16 & 560 & 0.001 (0.009) & 0.998 & 0.139 & 1.55 \\
+20 & 4,845 & 0.002 (0.005) & 1.009 & 0.090 & 1.01 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+
+\textit{What optimisation does at a fixed weight, and what the weight does.} The two are separated by pairing each run's final state with its initial state (Supplementary Table~S34). At $A_{\mathrm{heur}}$, optimisation raises the feasible mass --- $P_{F}$ from 0.114, 0.035 and 0.087 (median initial) to 0.179, 0.229 and 0.167, a paired median increase of +0.070, +0.128 and +0.134 on 30 of 30 instances at N = 12, 16 and 20 --- and the expected constraint violation E[V] falls from 21.9, 34.8 and 45.7 to 10.6, 4.0 and 14.3, while the conditional distribution stays where it started: $D_{cond}$ moves from 0.002--0.004 to 0.001--0.002 in the median, and the initial states that were as far as 0.41 from uniform on F for some seeds end within 0.005 of it in every N = 20 run. Optimisation at $A_{\mathrm{heur}}$ thus increased the feasible mass while leaving the conditional distribution close to uniform, with little systematic enrichment of the primary quality set. Separately, changing the weight from $A_{\mathrm{heur}}$ to $A_{\mathrm{margin}}$ after optimisation raises the median $P_{F}$ from 0.167 to 0.303 at N = 20 (Table~\ref{tab:III}); at $A_{\mathrm{margin}}$ optimisation raises $P_{F}$ (+0.18, +0.22 and +0.24) and the final conditional distribution departs from uniformity, with the enrichment of Table~\ref{tab:IV} at N $\leq$ 16. As a complementary multiplicative summary of the same matched runs, $P_{\tau}$ = $P_{F}$ $\cdot$ $u_{\tau}$ $\cdot$ $R_{\tau}$ on each (instance, seed) pair, where $u_{\tau}$ cancels, splits the geometric-mean ratio of $P_{\tau}$ into a feasible-mass factor and a conditional-enrichment factor: over the 150 pairs per size, $P_{\tau}$($A_{\mathrm{margin}}$)/$P_{\tau}$($A_{\mathrm{heur}}$) $\approx$ 1.64 $\approx$ 1.35 $\times$ 1.22, 1.59 $\approx$ 1.10 $\times$ 1.45 and 2.29 $\approx$ 1.79 $\times$ 1.28 as $P_{F}$ ratio $\times$ $R_{\tau}$ ratio at N = 12, 16 and 20 (the identity holds on the unrounded values), so the feasible mass accounts for 60\%, 21\% and 70\% of the mean log-ratio; the $R_{\tau}$ ratio exceeds one on 113, 125 and 88 of the 150 pairs (Supplementary Table~S38). These shares refer to the mean log-ratio: they complement rather than decompose the median additive contrasts of Table~\ref{tab:III}, the identity is algebraic and not a mediation analysis, and the geometric-mean $R_{\tau}$ ratio of 1.28 at N = 20 is a different statistic from the median $R_{\tau}$ of 1.01 in Table~\ref{tab:IV}. The paired increases at $A_{\mathrm{heur}}$ are nearly the same on every instance (interquartile range $\leq$ 0.001), which is what a circuit dominated by the permutation-symmetric penalty term would give: with f removed, the cost, the mixer and the initial state are all invariant under qubit permutations, so every bitstring of one cardinality has the same probability at any angles and the conditional distribution on F is exactly uniform. The measured $\epsilon_{F}$(A) = $\Delta_{F}$ / $s_{H}$ --- the objective's whole feasible range in units of the normalised Hamiltonian the optimiser descends --- is 0.015, 0.015 and 0.016 at $A_{\mathrm{heur}}$ in the median over instances ($\Delta_{F}$ is 1.5--1.6\% of $s_{H}$) (the objective's largest Ising coefficient is 0.7--1.2\% of $s_{H}$, and its largest QUBO entry 0.3--1.2\% of the matrix maximum; Supplementary Table~S35), against 0.45--0.52 at $A_{\mathrm{margin}}$. That scale is consistent with the near-uniformity and is offered as context for it, not as its demonstration: the symmetry argument is exact only for the penalty alone, and how far a 1.5\% objective perturbation is resolved by a given optimiser at finite A is what $D_{cond}$ measures. Most of the $A_{\mathrm{heur}}$ state's mass remains far from cardinality K after optimisation, and $P_{F}$ is what best-of-shots has to rescue.
+
+
+\textit{The seed axis, within every instance.} The within-instance spread over five seeds of $Q_{\tau}$(1000) has a median over instances of 0.86, 0.49 and 0.19 at $A_{\mathrm{heur}}$ (N = 12, 16, 20) --- most of the quantity's range at the two smaller sizes. At N = 16 and $A_{\mathrm{heur}}$, 14 of 150 runs returned no feasible bitstring among 1,000 shots (9\%; 7\% at $A_{\mathrm{margin}}$; under 1\% at N = 12 and N = 20 at either weight) --- a within-instance tail, not a size trend. Across settings the lowest-energy shot is infeasible in 8, 124 and 95 runs at the three sizes (Table~\ref{tab:II}), and in 55\% of N = 20 runs at 1.1$\cdot$$A_{\mathrm{crit}}$, where the best \textit{feasible} shot nevertheless has the smallest $g_{F}$ of any setting ($-$3.3 points of $\Delta_{F}$ against $A_{\mathrm{heur}}$, 29 of 30 instances): the selection rule of Sec.~III-C is not a formality, and under it a near-threshold weight is judged by $P_{\tau}$, $g_{F}$ and cost, not by the batch minimum.
+
+
+\textbf{What the best shot means (E2; Fig.~\ref{fig:3}).} The same exact states answer the question the best-of-shots rule begs: how often does a batch of S shots contain a solution within $\tau$, and how does that compare with not optimising at all? Optimisation \textit{works}, in the sense the literature's convergence curves show: at $A_{\mathrm{heur}}$ the optimised state raises $Q_{\tau}$(1000) over the unoptimised state at the same initial angles from 0.062 to 0.336 at N = 16 and from 0.019 to 0.059 at N = 20, and it beats the uniform-over-2$^{N}$ sampler by one to two orders of magnitude. And its one-shot success probability at the primary threshold $\tau$ = 1\% never exceeds a uniform draw's from the feasible set: $P_{\tau}$ $<$ $P_{\tau}$$^{uniform-F}$ in 450 of 450 $A_{\mathrm{heur}}$ runs, hence at every S from 10 to 10,000 --- one direct comparison of $P_{\tau}$, shown at four operating points because $Q_{\tau}$(S) is monotone in $P_{\tau}$. This is a measured inequality, not a consequence of the small $D_{cond}$ above (Sec.~III-C), and it holds at the two sensitivity thresholds as well, 0 of 450 at the exact optimum and at $\tau$ = 5\% (Supplementary Table~S14). At S = 1,000 and N = 20 a uniform feasible draw succeeds with probability 0.34 and the optimised state with 0.06; a benchmark that reported its best-of-1,000 gap would not show the difference at N = 12, where both samplers usually contain a good shot (median $Q_{\tau}$(1000) 0.93 and 1.00), whereas at N = 16 the gap between them is already wide (0.34 against 0.83) and at N = 20 neither reliably does (levels at every S: Supplementary Table~S14). The comparison depends on the penalty setting: at $A_{\mathrm{margin}}$ the optimised state beats the feasible-uniform sampler in 7--9\% of runs, and at 1.1$\cdot$$A_{\mathrm{crit}}$ in 41\% of N = 20 runs; the 0 of 450 is a result at $A_{\mathrm{heur}}$. So \textbf{at these sizes and budgets a best-of-shots figure alone cannot confirm that the optimisation contributed}; the exact-state comparison with explicit control samplers can, and it shows that at $A_{\mathrm{heur}}$ and the evaluated thresholds optimisation improves acquisition relative to the unoptimised state while the resulting sampler remains far better than an uninformed one and below uniform feasible sampling. The uniform-over-F sampler is not a computational peer of QAOA (Sec.~IV-C); it is the floor a constraint-respecting method has to clear, and the classical annealers of Sec.~V-A clear it by a wide margin.
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{figures/fig_e2_shots.pdf}
+\caption{E2. $Q_{\tau}$(S) at $\tau$ = 1\% against the shot budget   S $\in$ {10, 100, 1,000, 10,000} for four samplers --- the optimised QAOA state, the unoptimised state   at the same initial angles, uniform over F and uniform over all bitstrings --- at $A_{\mathrm{heur}}$, for   (a) N = 12, (b) N = 16 and (c) N = 20; instance-level medians with IQR bands.}
+\label{fig:3}
+\end{figure*}
+
+
+
+\textbf{A second market period (E5; Table~\ref{tab:V}).} Everything above is conditional on one three-year window. E5 re-ran the pre-fixed 300-run block on the adjacent window, where $\Delta_{F}$ is 23--34\% wider at every size and one N = 12 instance whose $A_{\mathrm{crit}}$ is zero in the paper's window has a positive threshold. The main contrast, the disagreement of the two success rules and the uniform-F comparison keep their direction (Table~\ref{tab:V}; the conditional-distribution and initial $\rightarrow$ final analyses were not repeated on this window). At N = 20, $A_{\mathrm{margin}}$ against $A_{\mathrm{heur}}$ raises $Q_{\tau}$(1000) on 10 of 10 instances in both windows (+0.09 and +0.12), lowers $g_{F}$ on 9 and on 7, and worsens $g_{\mathrm{off}}$ on 9 and on 10; the $g_{\mathrm{off}}$ ratio decomposes, in the geometric mean, as 22.3 $\approx$ 0.64 $\times$ 34.6 in the paper's window and 12.4 $\approx$ 0.45 $\times$ 27.4 in the earlier one, the denominator carrying the sign in both. The two success rules disagree at the same rate --- 74\% and 66\% of N = 20 $A_{\mathrm{heur}}$ runs pass $g_{\mathrm{off}}$ $\leq$ 0.1\% and fail $g_{F}$ $\leq$ 1\% --- and the optimised state beats the uniform-over-F sampler in 0 of 50 $A_{\mathrm{heur}}$ runs per size in the earlier window, as in 0 of 150 in the paper's. The levels move ($Q_{\tau}$(1000) at $A_{\mathrm{heur}}$, N = 20 is 0.060 in one window and 0.098 in the other), which is what a different instance set produces; the signs and orderings do not. This is one further window from the same universe and asset class, not a sample of market periods (Sec.~VII); the full comparison is Supplementary Table~S15.
+
+
+Instances 0--9 $\times$ seeds 42--46 $\times$ {$A_{\mathrm{heur}}$, $A_{\mathrm{margin}}$}, 300 runs per window; ``2023--26'' is the paper's window and ``2020--23'' the adjacent earlier one. Paired rows are $A_{\mathrm{margin}}$ $-$ $A_{\mathrm{heur}}$ reduced to an instance median and bootstrapped over the ten instances (95\% interval), with the count of instances on which $A_{\mathrm{margin}}$ is better (ties in parentheses); $g_{\mathrm{off}}$ and $g_{F}$ are of the best feasible shot. The E2 row counts $A_{\mathrm{heur}}$ runs whose optimised state beats the uniform-over-F sampler at S = 1,000.
+
+
+\begin{table*}[!t]
+\centering
+\scriptsize
+\caption{The E1 block on two price windows (E5).}
+\label{tab:V}
+\begin{tabular}{p{0.170\textwidth}p{0.105\textwidth}p{0.105\textwidth}p{0.109\textwidth}p{0.109\textwidth}p{0.109\textwidth}p{0.109\textwidth}}
+\toprule
+Quantity & N = 12, 2023--26 & N = 12, 2020--23 & N = 16, 2023--26 & N = 16, 2020--23 & N = 20, 2023--26 & N = 20, 2020--23 \\
+\midrule
+$A_{\mathrm{heur}}$: pass $g_{\mathrm{off}}$ $\leq$ 0.1\%, fail $g_{F}$ $\leq$ 1\% & 0.04 & 0.04 & 0.47 & 0.49 & 0.74 & 0.66 \\
+Paired $Q_{\tau}$(1000) [CI]; better of 10 & +0.020 [+0.000, +0.067]; 8 & +0.010 [+0.000, +0.061]; 9 & +0.041 [+0.004, +0.062]; 10 & +0.057 [+0.029, +0.074]; 10 & +0.090 [+0.067, +0.202]; 10 & +0.122 [+0.062, +0.219]; 10 \\
+Paired $g_{\mathrm{off}}$ (pt) [CI]; better of 10 & 0 [0, 0]; 0 (9) & 0 [0, 0]; 0 (10) & +0.28 [$-$0.00, +1.41]; 2 (2) & +0.19 [$-$0.01, +0.76]; 4 (0) & +0.63 [+0.41, +0.95]; 1 (0) & +0.52 [+0.20, +0.90]; 0 (0) \\
+Paired $g_{F}$ (pt) [CI]; better of 10 & 0 [0, 0]; 0 (9) & 0 [0, 0]; 0 (10) & 0.00 [$-$2.31, +0.07]; 4 (4) & $-$0.22 [$-$2.05, +0.13]; 5 (3) & $-$1.75 [$-$4.49, $-$0.73]; 9 (0) & $-$1.93 [$-$3.80, 0.00]; 7 (2) \\
+E2: $A_{\mathrm{heur}}$ beats uniform-F at S = 1,000 & 0 / 50 & 0 / 50 & 0 / 50 & 0 / 50 & 0 / 50 & 0 / 50 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+
+\subsection{The optimizer: is the result an artefact of one setting? (E3)}
+
+
+The baseline runs ADAM at a fixed step of 0.1 for 50 steps. One objection to Sec.~V-B is that a better optimizer would change it. The single-seed depth sweep and the steps $\times$ p $\times$ seed grid (Supplementary Sec. S-VI) had shown that p = 2 is where depth stops helping monotonically, that $\langle$$H_{\mathrm{norm}}$$\rangle$ saturates by 50--100 ADAM steps and does not improve with an 8$\times$ larger budget, and that a run can barely optimise and still report a small best-of-1,000 gap ($\langle$$H_{\mathrm{norm}}$$\rangle$ = $-$0.91 against $-$5.01 in the same cell, gaps 0.038\% and 0.022\%). Which of initialisation, local minima and expressivity produces the non-monotonicity in p is not identified by those runs. E3 asks the narrower question for p = 2: on a block fixed before it was run, do two other optimizer settings change the acquisition quantities?
+
+
+Instances 0--9 $\times$ seeds 42--46 at each size and weight; the paired columns are the instance-level median difference from the ADAM 0.1 $\times$ 50 baseline with its 95\% bootstrap interval, and the count of instances (of 10) on which the control reached a lower $\langle$$H_{\mathrm{norm}}$$\rangle$. Budget is the median number of gradient evaluations used (every ADAM step is one objective and one gradient evaluation; for L-BFGS-B the objective and gradient counts were equal in every run, $n_{f}$ = n\_$\nabla$, line-search evaluations included, since each trial point evaluates both) and the median optimisation wall-clock. ``Optimum hit'' counts runs whose best feasible shot is the exact optimum over all fifty runs of the cell, with the number that produced no feasible shot in parentheses. Levels, $\Delta$$P_{\tau}$ and the dispersion behind each median are in Supplementary Tables~S22--S23.
+
+
+\begin{table*}[!t]
+\centering
+\scriptsize
+\caption{Optimizer controls on the E3 block.}
+\label{tab:VI}
+\begin{tabular}{rlp{0.083\textwidth}rp{0.211\textwidth}p{0.184\textwidth}p{0.150\textwidth}}
+\toprule
+N & A & Setting & Budget ($\nabla$, s) & $\Delta$$\langle$$H_{\mathrm{norm}}$$\rangle$ vs. baseline [CI]; lower in & $\Delta$$Q_{\tau}$(1000) [CI] & Optimum hit / 50 (no feas.) \\
+\midrule
+12 & $A_{\mathrm{heur}}$ & ADAM 0.1 $\times$ 50 & 50, 10 & --- & --- & 38/50 (0) \\
+12 & $A_{\mathrm{heur}}$ & ADAM 0.03 $\times$ 100 & 100, 20 & $-$2.4$\cdot$10$^{-3}$ [$-$2.5, $-$2.3]$\cdot$10$^{-3}$; 10/10 & +0.0010 [$-$0.0001, +0.0036] & 42/50 (0) \\
+12 & $A_{\mathrm{heur}}$ & L-BFGS-B & 52, 13 & $-$3.0$\cdot$10$^{-3}$ [$-$3.1, $-$2.4]$\cdot$10$^{-3}$; 10/10 & +0.0087 [+0.0044, +0.0094] & 40/50 (0) \\
+16 & $A_{\mathrm{heur}}$ & ADAM 0.1 $\times$ 50 & 50, 17 & --- & --- & 14/50 (3) \\
+16 & $A_{\mathrm{heur}}$ & ADAM 0.03 $\times$ 100 & 100, 35 & $-$6.5$\cdot$10$^{-3}$ [$-$6.8, $-$6.2]$\cdot$10$^{-3}$; 10/10 & +2.0$\cdot$10$^{-5}$ [$-$0.56$\cdot$10$^{-5}$, +3.1$\cdot$10$^{-5}$] & 14/50 (4) \\
+16 & $A_{\mathrm{heur}}$ & L-BFGS-B & 53, 21 & $-$3.6$\cdot$10$^{-3}$ [$-$3.7, $-$3.6]$\cdot$10$^{-3}$; 9/10 & +1.6$\cdot$10$^{-4}$ [+1.3$\cdot$10$^{-4}$, +2.5$\cdot$10$^{-4}$] & 17/50 (8) \\
+20 & $A_{\mathrm{heur}}$ & ADAM 0.1 $\times$ 50 & 50, 30 & --- & --- & 2/50 (0) \\
+20 & $A_{\mathrm{heur}}$ & ADAM 0.03 $\times$ 100 & 100, 61 & \textbf{+2.9$\cdot$10$^{-3}$} [+2.8, +3.2]$\cdot$10$^{-3}$; 0/10 & $-$0.0060 [$-$0.0092, $-$0.0027] & 1/50 (0) \\
+20 & $A_{\mathrm{heur}}$ & L-BFGS-B & 51, 36 & $-$1.4$\cdot$10$^{-3}$ [$-$1.5, $-$1.2]$\cdot$10$^{-3}$; 10/10 & $-$1.5$\cdot$10$^{-4}$ [$-$2.5$\cdot$10$^{-4}$, $-$0.7$\cdot$10$^{-4}$] & 1/50 (0) \\
+12 & $A_{\mathrm{margin}}$ & ADAM 0.1 $\times$ 50 & 50, 10 & --- & --- & 38/50 (0) \\
+12 & $A_{\mathrm{margin}}$ & ADAM 0.03 $\times$ 100 & 100, 20 & +1.3$\cdot$10$^{-3}$ [$-$1$\cdot$10$^{-4}$, +9.6$\cdot$10$^{-2}$]; 4/10 & $-$3.8$\cdot$10$^{-5}$ [$-$3.0$\cdot$10$^{-3}$, +1.4$\cdot$10$^{-3}$] & 36/50 (0) \\
+12 & $A_{\mathrm{margin}}$ & L-BFGS-B & 65, 17 & $-$4.3$\cdot$10$^{-3}$ [$-$15.9, $-$1.5]$\cdot$10$^{-3}$; 10/10 & +2.5$\cdot$10$^{-6}$ [$-$2.9$\cdot$10$^{-3}$, +1.0$\cdot$10$^{-3}$] & 36/50 (0) \\
+16 & $A_{\mathrm{margin}}$ & ADAM 0.1 $\times$ 50 & 50, 17 & --- & --- & 20/50 (2) \\
+16 & $A_{\mathrm{margin}}$ & ADAM 0.03 $\times$ 100 & 100, 35 & $-$1.0$\cdot$10$^{-3}$ [$-$1.2$\cdot$10$^{-3}$, +5.5$\cdot$10$^{-2}$]; 7/10 & $-$0.0281 [$-$0.0710, $-$0.0128] & 12/50 (3) \\
+16 & $A_{\mathrm{margin}}$ & L-BFGS-B & 68, 27 & $-$2.1$\cdot$10$^{-2}$ [$-$2.4, $-$1.2]$\cdot$10$^{-2}$; 10/10 & $-$0.0160 [$-$0.0271, +0.0020] & 17/50 (2) \\
+20 & $A_{\mathrm{margin}}$ & ADAM 0.1 $\times$ 50 & 50, 30 & --- & --- & 6/50 (0) \\
+20 & $A_{\mathrm{margin}}$ & ADAM 0.03 $\times$ 100 & 100, 62 & \textbf{+0.318} [+0.292, +0.331]; 0/10 & \textbf{$-$0.1060 [$-$0.1866, $-$0.0604]} & 0/50 (0) \\
+20 & $A_{\mathrm{margin}}$ & L-BFGS-B & 63, 45 & $-$4.1$\cdot$10$^{-3}$ [$-$60.2, $-$2.0]$\cdot$10$^{-3}$; 10/10 & +0.0005 [$-$0.0064, +0.0049] & 3/50 (0) \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+
+The controls did not yield a uniform improvement in acquisition probability. \textit{L-BFGS-B} reduced the optimised expectation modestly and consistently --- lower than the baseline's in 59 of 60 instance-cells, by 1.4$\cdot$10$^{-3}$ to 2.1$\cdot$10$^{-2}$ in the median, at 1.2--1.6$\times$ the wall-clock, stopping before the 100-gradient cap in 88--96\% of runs --- and its effect on the batch probability $Q_{\tau}$(1000) is of both signs and not uniformly small: +0.009 [+0.004, +0.009] at N = 12, $A_{\mathrm{heur}}$, and $-$0.016 [$-$0.027, +0.002] at N = 16, $A_{\mathrm{margin}}$, where 7 of 10 instances are worse and the 95th percentile of $|$$\Delta$Q$|$ is 0.079. Its paired median changes to the one-shot $P_{\tau}$ are within $\pm$4$\cdot$10$^{-4}$ in every cell (instance maxima $\leq$ 1.0$\cdot$10$^{-3}$); Q compounds P over a thousand draws ($\partial$$Q_{\tau}$(S)/$\partial$$P_{\tau}$ = S(1 $-$ $P_{\tau}$)\^{}(S$-$1)), so a difference in $P_{\tau}$ too small to print can be worth a tenth of a batch, and a paper that reports only $P_{\tau}$ has not reported the quantity its own selection rule uses. ``Stopped'' is not ``converged'': the E3 block ran at single precision, and a diagnostic re-run of a fixed sub-block at both precisions (Supplementary Sec. S-VI) shows that in single precision every run that stopped on a tolerance stopped on the \textit{objective} criterion with a final gradient norm of 10$^{-5}$--10$^{-1}$, several failed their line search or exhausted the budget, while in double precision 11 of 24 stopped on the gradient criterion at gradient norms one to three orders smaller. What the two precisions agree on is narrower than the stopping reasons suggest, and is stated as two facts. The optimised $\langle$$H_{\mathrm{norm}}$$\rangle$ agrees to 6$\cdot$10$^{-4}$ in 14 of 16 paired conditions (4.7$\cdot$10$^{-5}$ at N = 20), and --- since a similar expectation does not by itself imply similar mass on the success set --- the same runs' exact final states agree on $P_{F}$, $P_{\tau}$ and $Q_{\tau}$(1000) to 1.0$\cdot$10$^{-5}$, 7$\cdot$10$^{-8}$ and 3$\cdot$10$^{-5}$ in the median over the 24 pairs and to 3.6$\cdot$10$^{-3}$, 1.7$\cdot$10$^{-5}$ and 4.4$\cdot$10$^{-3}$ in 22 of them. The remaining two pairs differ in expectation by 0.04--0.05 and in $Q_{\tau}$(1000) by 0.043 and 0.227 --- different optimisation outcomes reached from the same initialisation, and material for the acquisition probability --- yet in both pairs $P_{\tau}$ stays below the instance's uniform-F success probability at either precision (Supplementary Table~S36 and Sec. S-VI). The acquisition quantities are thus precision-sensitive in 2 of 24 pairs, while the comparison against uniform feasible sampling kept its direction in those two; the conclusion of this section rests on the latter and not on the stopping reason. \textit{ADAM at step 0.03 with twice the budget} did not improve on the baseline within the tested budget at N = 20: its expectation after 100 steps is higher than the baseline's after 50 in 10 of 10 instances at both weights, by 0.32 at $A_{\mathrm{margin}}$, and its $Q_{\tau}$(1000) is lower by 0.006 and by 0.106 [$-$0.187, $-$0.060], worse on 10 of 10 instances in both cells --- the largest effect any control has on any quantity in this block, and it is an optimizer setting. Whether those runs were still descending or had settled in a different local minimum is not identified by the trajectories, which record no stopping reason for ADAM.
+
+
+\textit{The scale of the seed.} The baseline's own spread of $\langle$$H_{\mathrm{norm}}$$\rangle$ over the five seeds \textit{within an instance} has a median of 3.4--5.5 at every N and both weights, and moves $Q_{\tau}$(1000) by 0.2--0.9 (Sec.~V-B). At this budget and p = 2, a large within-instance variation across initial angles thus remained in the tested configuration, alongside optimizer-dependent changes in acquisition probability; the comparison is of observed ranges --- a paired median against a within-instance max $-$ min --- and not a ranking of factor contributions, and ADAM at 0.03 moves $\langle$$H_{\mathrm{norm}}$$\rangle$ by 0.32 at N = 20. Where a control moves a run by order 1 it has reached a different optimisation outcome, in either direction. Whether a different initialisation rule \cite{ref29}, \cite{ref30} or a larger budget changes the picture is not tested.
+
+
+\textit{Multistart at equal shots.} The five E1 seeds can be re-read as a five-start strategy --- optimise five times, draw 1,000 shots from each state, keep the best feasible candidate of the 5,000 --- and compared with the single-start strategy a user can actually run at the same shot budget: optimise once from a seed drawn at random, sample that state 5,000 times, with Q computed per seed and then averaged (the median seed's state is a summary, not a strategy: no one can select it before optimising). By the AM--GM inequality the pooled strategy is never worse at equal shots, so the question is the size of the increment against the four extra optimisations. The increment in the median over instances is +0.095, +0.153 and +0.046 at $A_{\mathrm{heur}}$ and +0.055, +0.336 and +0.060 at $A_{\mathrm{margin}}$ (N = 12, 16, 20), exceeding 0.01 on 30 of 30 instances in every cell but one (23 of 30 at N = 12, $A_{\mathrm{margin}}$), with intervals clear of zero, for 41--118 s of additional optimisation per instance (Supplementary Table~S24). Five initial angles do buy acquisition probability that five thousand shots from one start do not, most at N = 16 where the single-start $Q_{\tau}$(5000) is 0.64--0.68; none of the strategies reaches uniform sampling from the feasible set at the same 5,000 candidates (1.000, 1.000 and 0.873), nor the annealing baseline of Sec.~V-A.
+
+
+\subsection{The backend and the hardware: fixed angles on four backends, and four hardware tasks}
+
+
+\textbf{Numerics or sampling (E4-A; Fig.~\ref{fig:4}, Table~\ref{tab:VII}).} Single runs of the same configuration on the local GPU and on SV1 return bitwise-identical portfolios at N $\leq$ 12 and different feasible portfolios at N = 16 and N = 20; three submissions of one configuration to SV1 return three different portfolios at N $\geq$ 16; and matching the precision does not restore agreement (Supplementary Sec. S-VII). Those single runs cannot say whether the output distribution differs between implementations or the same distribution was sampled differently. E4-A fixes the angles and asks both questions separately. What is compared is the exact probability of each computational basis state, not the quantum state (equal basis probabilities leave the relative phases unconstrained, and probabilities are what the selection rule consumes), on F $\cup$ {$\perp$}: the feasible bitstrings together with one symbol for ``this shot is infeasible'', p\_$\perp$ = 1 $-$ $P_{F}$. That p\_$\perp$ is a one-shot quantity; the probability that a whole batch of 1,000 shots holds no feasible solution is (1 $-$ $P_{F}$)$^{1000}$, and the two are not the same event.
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=\textwidth]{figures/fig_e4_backends.pdf}
+\caption{E4-A. (a) Same angles, different backend:   total variation distance on F $\cup$ {$\perp$} between each arm's exact output probabilities and the GPU   double-precision ones, per circuit (i0/i1 = instance, s42/s43 = seed; log y; the double- and   single-precision $\epsilon$ lines for scale). (b) Same output distribution, ten batches: distinct   best-feasible portfolios over ten 1,000-shot batches of one state, per circuit and arm, with the   95\% interval of the same count under i.i.d. draws from the arm's own exact distribution.  Supplementary Figs.~S1--S12 and Tables~S1--S38 are in the Supplementary Material, generated by the same scripts from the same committed files.}
+\label{fig:4}
+\end{figure*}
+
+
+
+\textit{The double-precision implementations agree; single precision differs by 10$^{-7}$.} On F $\cup$ {$\perp$} the managed cloud simulator's exact probabilities differ from the GPU double-precision reference by at most 2.6$\cdot$10$^{-14}$ in total variation (5.3$\cdot$10$^{-16}$ per state, 2.8$\cdot$10$^{-13}$ relative in $P_{\tau}$) at every one of the twelve circuits, and the single-threaded CPU's by at most 4.3$\cdot$10$^{-15}$. Single precision --- the precision of every E1 run --- is the only arm that moves the distribution: by up to 6.1$\cdot$10$^{-7}$ in total variation (5.0$\cdot$10$^{-9}$ per state, 5.5$\cdot$10$^{-6}$ relative in $P_{\tau}$). How much such a distance can change the distribution of the \textit{selected} output is bounded directly: if two one-shot distributions are at total variation d, couple the S shots of a batch pairwise by a maximal coupling, so that the two batches differ with probability at most 1 $-$ (1 $-$ d)$^{S}$, and apply the same deterministic selection rule to both; by data processing the selected-output distributions are then within 1 $-$ (1 $-$ d)$^{S}$ $\leq$ S$\cdot$d in total variation (derivation in Supplementary Sec. S-VII). At S = 1,000 the selected-output distributions differ by at most 2.6$\cdot$10$^{-11}$ for SV1 and 6.1$\cdot$10$^{-4}$ for the single-precision arm, relative to the double-precision GPU reference. These bounds quantify how far the arithmetic can move the distribution of the returned portfolio at fixed angles; they do not bound how often two \textit{independently} sampled batches return different portfolios, which is a different quantity --- two identical fair coins are at d = 0 and still disagree on half of independent draws --- and is what the next paragraph measures.
+
+
+\textit{The draws are not.} Ten batches of 1,000 shots from one state on one backend return \textbf{nine or ten distinct best-feasible portfolios in ten batches} at N = 20, on every arm and in every circuit --- ten in 15 of the 16 arm $\times$ circuit cells and nine feasible portfolios in the one SV1 cell where a batch held no feasible shot (ten selected outcomes there if $\perp$ is counted); three to five at N = 16 and one or two at N = 12 for the seed-42 states, and one to five and five to ten for the seed-43 states. Pooled over the four arms, the forty batches of one N = 20 state name 33--36 distinct portfolios, and in no N = 20 batch is the best feasible shot the exact optimum. The spread is what i.i.d. sampling from the arm's own exact distribution predicts: a Monte Carlo of ten batches from each arm's distribution puts the observed number of distinct portfolios inside its 95\% interval in 46 of 48 arm $\times$ circuit cells, and the feasible-shot count of 456 of 480 batches lies within two binomial standard deviations of 1,000$\cdot$$P_{F}$. The seed-43 states have $P_{F}$ = 0.0005--0.0006 at N = 16, so five to nine of their ten batches hold no feasible shot, on the GPU as on SV1.
+
+
+Left: distance between each arm's exact output probabilities on F $\cup$ {$\perp$} and the GPU double-precision ones at the same angles, maximum over the twelve circuits, and the upper bound 1 $-$ (1 $-$ d)$^{1000}$ it implies on the total variation between the two arms' selected-output distributions at S = 1,000 (not a rate of disagreement between independent batches). Right: distinct best-feasible portfolios over ten 1,000-shot batches of one state, range over the four circuits of each size (the Monte Carlo 95\% interval under i.i.d. draws from the arm's own distribution in the last row); these counts exclude $\perp$, so a batch with no feasible shot adds nothing to them and is counted in the last column (N = 16, seed 43, where they occur), while the TV columns are on the output space F $\cup$ {$\perp$}. The full comparison, with per-state and F-only distances, is Supplementary Table~S30.
+
+
+\begin{table*}[!t]
+\centering
+\scriptsize
+\caption{Fixed angles on four backends (E4-A).}
+\label{tab:VII}
+\begin{tabular}{p{0.125\textwidth}rp{0.149\textwidth}rp{0.119\textwidth}p{0.053\textwidth}lp{0.132\textwidth}}
+\toprule
+Arm & TV on F $\cup$ {$\perp$} & Upper bound on selected-output TV (S = 1,000) & $|$$\Delta$$P_{\tau}$/$P_{\tau}$$|$ & Distinct best, N = 12 (seed 42 / 43) & N = 16 (42 / 43) & N = 20 & No-feasible-shot batches, N = 16 seed 43 \\
+\midrule
+GPU double (reference) & --- & --- & --- & 1--2 / 5--6 & 3--4 / 1--5 & 10 & 5--9 \\
+CPU double, 1 thread & 4.3$\cdot$10$^{-15}$ & 4.3$\cdot$10$^{-12}$ & 2.1$\cdot$10$^{-14}$ & 1--2 / 6--10 & 3--5 / 3 & 10 & 7 \\
+GPU single & 6.1$\cdot$10$^{-7}$ & 6.1$\cdot$10$^{-4}$ & 5.5$\cdot$10$^{-6}$ & 1 / 6--7 & 3--4 / 1 & 10 & 9 \\
+SV1 double (cloud) & 2.6$\cdot$10$^{-14}$ & 2.6$\cdot$10$^{-11}$ & 2.8$\cdot$10$^{-13}$ & 2 / 7--8 & 3--4 / 3--4 & 9--10 & 6--7 \\
+i.i.d. from own distribution (MC 95\%) &  &  &  & 1--3 / 5--9 & 2--6 / 1--7.5 & 9--10 & --- \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+
+Repeated sampling from a fixed output distribution was therefore sufficient to produce portfolio disagreement of the magnitude the single runs showed, while the arithmetic can move the selected-output distribution by at most the bounds above; the observed disagreements are not individually attributed to either channel. What E4-A does not test is the third possibility --- different final angles reached by optimisation runs whose analytic trajectories differ by \~{}10$^{-6}$ per step on the two backends --- so the contribution of backend-dependent optimisation trajectories was not isolated, and the paper does not claim that sampling is the only source. Three things stay apart here, and only the first two are measured: compression of a wide quality band by the offset denominator (Sec.~V-A), finite-shot sampling variability from one distribution (this section), and different optimisation outcomes in angle space (not identified). The practical consequence for anyone building on a device-abstraction layer is that backend-independence of the QUBO does not imply backend-independence of the returned portfolio: agreement at small sizes does not establish output-level agreement at larger sizes, where the feasible set is large, and the check that shows it cost \$1.47 for four sizes.
+
+
+\textbf{Hardware: four tasks on IonQ Forte-1.} Each task samples 100 shots from a circuit whose angles were optimised on the local GPU (two seeds at N = 8, one at N = 12, one at N = 16; \$33.20 in all). In the N = 12 task, 89 of 100 recorded shots violated the cardinality constraint and the remaining 11 contained the exact optimum, so a best-of-shots report would record a 0.0000\% gap from a circuit whose fidelity under a product-of-gate-fidelities model is 26\%; at N = 16, 18 shots were feasible and the best of them was 0.0438\% from the exact optimum. The two N = 8 tasks, which differ only in initial angles, returned 25\% and 7\% feasible shots and best-feasible portfolios with Sharpe ratios of 1.34 and 1.09 (the optimum's is 1.32). These observations illustrate the distinction between the quality of the best feasible outcome and the frequency of feasible outcomes, which the reporting of Sec.~VI keeps separate. They do not identify a hardware size limit or separate the contributions of noise, instance structure and initialization: four tasks at one calibration are not a design that could, and the product-fidelity model that predicted a ceiling near N = 12 was contradicted by the N = 16 task. The per-task counts, their provenance from the device's nested result schema, and the fidelity model are in Supplementary Sec. S-VIII.
+
+
+\section{Engineering Implications}
+
+
+The measurements identify three engineering requirements: formulation-independent scoring, feasibility-aware acquisition metrics, and a recorded execution configuration. Runtime comparisons provide context for the evaluated implementation rather than evidence about quantum advantage: on a statevector simulator the exact classical baseline dominated on runtime by three to six orders of magnitude and on solution quality at every size we could run (Sec.~V-A). What the measurement leaves behind is reusable: what to report, what the same experiment cost on metered backends, the implementation defects that changed results before they were caught, and an artifact that lets a reader re-run any of it (Sec.~IV-D and the availability statement). The infrastructure, its cost guards and the provider-specific defects met in deploying it are documented in the artifact, not here.
+
+
+\subsection{What to report}
+
+
+Three reporting proposals exist \cite{ref19}, \cite{ref20}, \cite{ref21} and none is a formal standard; we adopt the fields of \cite{ref19}, \cite{ref20} where they apply and add nothing as a standard. Table~\ref{tab:VIII} lists what each result of Sec.~V showed to be necessary, linking each reporting item to the measurement that motivates it.
+
+
+
+
+
+\begin{table*}[!t]
+\centering
+\scriptsize
+\caption{What each measurement showed a report has to carry.}
+\label{tab:VIII}
+\begin{tabular}{p{0.061\textwidth}p{0.365\textwidth}p{0.484\textwidth}}
+\toprule
+Evaluated quantity & Report & Result that showed the need \\
+\midrule
+Solution quality & $g_{F}$ against the objective's spread over F, or the rank in F; the penalty weight A alongside any offset-normalized figure & E0: the same portfolio reads 33.6\% or 0.22\% as A alone changes; the all-states ratio of \cite{ref19} is non-discriminative at $A_{\mathrm{heur}}$ (Sec.~V-A) \\
+Optimisation & the optimised expectation beside the best-of-shots figure (\cite{ref19}'s mean/best split) & a run at $\langle$$H_{\mathrm{norm}}$$\rangle$ = $-$0.91 reports a gap indistinguishable from one at $-$5.01 (Sec.~V-C) \\
+Acquisition & $P_{F}$, $P_{\tau}$ and $Q_{\tau}$(S) at the budget used, against a constraint-respecting control sampler & E2: optimisation raises the median $Q_{\tau}$(1000) from 0.06 to 0.34 at N = 16, yet at $A_{\mathrm{heur}}$ and $\tau$ = 1\% beats a uniform feasible draw's $P_{\tau}$ in 0 of 450 runs (Sec.~V-B) \\
+Execution conditions & the initial-angle seed distribution, precision, backend and sampler seeding, as factors & one seed reverses the main contrast (Sec.~IV-E); single runs on two backends disagree at N $\geq$ 16 (Sec.~V-D) \\
+Cost & measured task counts and billed time per run & one sampling call was billed as 177 tasks, not one, until its angles were marked non-trainable (Sec.~VI-B) \\
+Domain metric & the finance quantity as an auxiliary, with its definition & similar objective values do not guarantee similar Sharpe ratios (Sec.~V-A) \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+
+The sharpest form of the first three rows is that the penalty weight is a free parameter of the reported metric (Table~\ref{tab:III}). Re-scoring fixed feasible solutions at a larger penalty weight reduces the offset-normalized gap without changing the solutions or their sampling distribution (E0); in the primary re-optimisation contrast, the larger heuristic weight also yielded a lower acquisition probability than the margin weight under the tested settings (E1) --- two effects, one of the number and one of the run, and neither a law that a larger A always degrades the sampler. Reporting A is the minimum; reporting against the penalty-free objective, or a rank, removes the degree of freedom; reporting $Q_{\tau}$(S) against the uniform-feasible control says whether the optimiser did anything a constraint-aware guess would not. The case of Mancilla et al. \cite{ref24} makes the cost of under-reporting concrete: a realized Sharpe of 1.81 for QAOA against 1.31 for annealing is read as a property of the energy landscape without the objective value of a single selected portfolio, and without the exact optimum, which C(10, 5) = 252 candidates is small enough to enumerate directly.
+
+
+\subsection{Compute and billing}
+
+
+Table~\ref{tab:II} reports, for every metered run, the task count and the dollars billed, and the totals of the study (\$37.90 on Braket). Task counts are reported because one of them was wrong by two orders of magnitude before it was measured: in the N = 8 SV1 pilot the final 1,000-shot sampling call was handed the optimiser's angles while they were still marked trainable, and the service's task log shows 227 tasks for the run --- 50 analytic tasks for the fifty optimiser steps and 177 for the one sampling call --- against 51 once the angles were marked non-trainable. The 177 is the forward circuit plus the 176 shifted tapes that the gradient transform returns for this ansatz at N = 8 (2$\cdot$p$\cdot$[C(N, 2) + 2N], reproduced locally with no device; 920 at N = 20), a count consistent with the framework falling back to parameter shift for a shots-based circuit it cannot differentiate by the adjoint method, and computing a gradient no one reads. The metered path was not re-run under instrumentation, so the mechanism is inferred from the count and the fix; the per-task log, reduced to a per-run ledger, is in the artifact. What the episode establishes for reporting is narrower than its cause: on a metered backend the executed circuit count is not implied by the algorithm's description, so it has to be measured and reported per run. Operationally, cloud and hardware paths require an explicit backend name and a results tag, and the optimiser is never dispatched to hardware; a default invocation runs locally and bills nothing.
+
+
+\subsection{Checks on the recorded results}
+
+
+The results of Sec.~V rest on four correspondences that were checked rather than assumed, each because an implementation defect had at some point broken it; the defects, in the order found, and what each would have reported are in Supplementary Sec. S-IX. (i) \textit{Objective against QUBO.} The evaluator of Sec.~III-C scores from the returns and covariance, not from the QUBO matrix, and agrees with the QUBO path on every state at N = 8 and 12 (E0). The cost Hamiltonian is divided by its largest coefficient so that one ADAM step resolves the $\gamma$-landscape (Sec.~III-A); at $A_{\mathrm{heur}}$ the objective's whole feasible range is 1.5--1.6\% of that coefficient in the median (Sec.~V-B), so the normalised landscape is almost entirely the constraint, which is the context for the near-uniform conditional distribution of Sec.~V-B. (ii) \textit{State against batch.} The analytic state quantities and the final sampling call receive the same final parameters, checked by regression tests on both optimizer paths. The E3 L-BFGS-B arm had violated this --- its sampler read the initial parameter vector --- so its batch columns (the ``no feasible shot'' and ``min-energy shot infeasible'' counts of Table~\ref{tab:II}, the optimum hits of Table~\ref{tab:VI}) described unoptimised states while its state columns ($\langle$$H_{\mathrm{norm}}$$\rangle$, $P_{F}$, $P_{\tau}$, $Q_{\tau}$) did not. The check that caught it is reported with every arm: the batch's feasible fraction must track the final state's $P_{F}$ (it tracked the initial state's, r = 0.99, and the final state's at r = $-$0.30), and the batch counts must fall within what the recorded states predict under independent draws (Supplementary Table~S22). The arm was re-run with the fix on the same host: every recorded state of the 300 runs reproduced bit for bit, the batch columns printed are the re-run's (r = 0.998 against the final state's $P_{F}$), and its counts sit within 3.0 hits and 2.7 no-feasible runs of the independent-draw prediction in every cell, as the ADAM cells do. (iii) \textit{Sampler against seed.} E4-A seeds the device's own generator: the Lightning devices draw a seed from NumPy's global generator once, at construction, so a control that re-seeded the global generator before sampling changed nothing, and two earlier sweeps reported as varying the shots had re-drawn identical ones. A reproducibility claim about a sampler names the generator it seeds. (iv) \textit{Hardware records against device schema.} The four IonQ task records are read from the device's nested result schema, which the client library had misread into an energy of exactly 0.0 (Supplementary Sec. S-VIII); the committed records are the device's own.
+
+
+\section{Limitations and Threats to Validity}
+
+
+\textbf{Formulation and data.} Every measurement is on the K-of-N cardinality penalty with a single weight A; slack variables, a Lagrangian update or a constraint-preserving mixer \cite{ref45}, \cite{ref46} would place the constant differently or remove it and would change $P_{F}$ by construction, and an implementation that restores the constant and scores on the original objective would not report $g_{\mathrm{off}}$ at all. The cross covers N $\leq$ 20, where the feasible set is enumerable; the census extends to N = 30 by enumeration on thirty instances per size (Supplementary Table~S9) while the QAOA runs above N = 20 are single; N = 50 was not enumerated in this study. All E0--E4 instances are subsets of one fifty-ticker Nikkei universe over one three-year window, so every interval in Sec.~V is conditional on that universe, window and drawing rule (Sec.~IV-E); E5 adds one adjacent window of the same universe, chosen by adjacency rather than sampled, and does not make the intervals unconditional. Thirty subsets is fewer than \cite{ref15}'s 100 or \cite{ref8}'s 250. The Sharpe ratio is auxiliary: it is measured on the raw series for the equal-weight portfolio, is not what the QUBO optimizes, and its deviations from the optimum's are reported as domain-level consequences, not predicted.
+
+
+\textbf{Optimisation.} Five seeds per instance are a tail detector, not a rate: the design was not sized from a minimum detectable effect, and the intervals are conditional on the fixed seed set, one member of which reverses the main contrast on its own at each of the two larger sizes (Supplementary Table~S19). E3 tests two settings, not the optimizer space, and one of them did not improve on the baseline within its budget; the other's single-precision terminations include line-search failures (Sec.~V-C); a schedule, a larger budget, a different initialisation rule \cite{ref29}, \cite{ref30} or depth beyond 2 with a warm start could change the relative sizes of the effects Sec.~V-C summarises, and the depth non-monotonicity remains an observation whose cause is not identified. The multistart comparison is at equal shots with the optimisation cost stated beside it, not at equal total cost. $A_{\mathrm{crit}}$ and $A_{\mathrm{margin}}$ are reference conditions computed by enumeration, not procedures that scale. The critical penalty is a ground-state feasibility threshold, not a guarantee of reliable finite-shot acquisition: near it, infeasible batch minima are common (55\% of N = 20 runs at 1.1$\cdot$$A_{\mathrm{crit}}$), which makes the feasibility-aware selection rule essential; these observations do not by themselves rule out near-threshold weights under that rule, whose utility is assessed through the acquisition probability and solution quality at the chosen budget (Sec.~V-B). E2's strongest control is matched on candidates generated, not on cost: that the optimised state at $A_{\mathrm{heur}}$ beat a uniform draw from F in none of 450 runs at the tested thresholds says the best-of-shots figure cannot confirm the optimisation's contribution at these sizes, not that a constraint-aware quantum method would not; $Q_{\tau}$(S) assumes i.i.d. shots.
+
+
+\textbf{Backend and hardware.} E4-A separates the output distribution from the draws, not the optimisation: twelve circuits at one weight, evaluated at fixed angles, bound how far the arithmetic can move the selected-output distribution and show sampling sufficient for the observed disagreement, while whether an optimisation run on SV1 reaches the same angles as the GPU's was not tested (E4-B, $\approx$1,500 tasks), so the backend attribution is partial. Hardware is four tasks --- two seeds at N = 8, one each at N = 12 and 16, 100 shots each --- at one calibration; they illustrate the separation of best-outcome quality from feasible-shot frequency and establish no size limit, no noise ranking and no distribution. Continuous weights and richer constraints are deferred.
+
+
+\section{Conclusion}
+
+
+Two effects were measured separately for the tested penalty encoding. Re-scoring fixed portfolios as only the penalty weight changed moved the offset-normalized gap from 33.6\% to 0.22\% while the feasible-range gap stayed at 37.8\%; re-optimising at a different weight, across 30 instances $\times$ 5 initial angles at N = 20, worsened that gap in 29 of 30 instances while raising the probability that 1,000 shots hold a feasible solution within 1\% of the feasible range in 30 of 30 (+0.086), and a 300-run subset on a second price window reproduced each direction. At the heuristic weight the optimised sampler's distribution conditioned on feasibility was close to uniform (median total variation 0.002, maximum 0.04 over 450 runs), and its one-shot success probability, compared directly, exceeded uniform feasible sampling's in none of those runs at the primary threshold or at the two sensitivity thresholds; relative to the unoptimised state at the same initial angles, the median 1,000-shot success probability rose from 0.062 to 0.336 at N = 16 and from 0.019 to 0.059 at N = 20. The optimizer controls changed that batch probability by $-$0.106 to +0.009 depending on the setting, and a five-start strategy at equal shots added 0.05--0.34 to it. With the angles fixed, double-precision implementations agreed on the output distribution to 2.6$\cdot$10$^{-14}$ in total variation and the single-precision arm to 6.1$\cdot$10$^{-7}$, so the arithmetic can move the distribution of the selected portfolio by at most 2.6$\cdot$10$^{-11}$ and 6.1$\cdot$10$^{-4}$ at 1,000 shots, whereas independent resampling of one distribution returned a different selected portfolio in nearly every batch at N = 20; the contribution of backend-dependent optimisation trajectories was not separated. Exact references, feasibility-aware sampling controls and explicitly recorded execution conditions made those differences visible. These findings characterise the evaluated benchmark configuration --- one encoding, N $\leq$ 20, two adjacent windows of one universe, p = 2 --- rather than the performance limit of QAOA.
+
+
+\section*{Acknowledgment}
+
+
+\textbf{AI assistance disclosure.} Claude Opus (Anthropic), accessed through the Claude Code command-line interface \cite{ref47}, was used throughout this work: implementing the QUBO formulation, the solvers, the evaluator, the experiment drivers and the infrastructure code; drafting and revising the prose of this manuscript (Sections I--VIII and Supplementary Sections S-I--S-X); generating the figures and tables from the committed result files; screening the benchmark literature of the census; and checking numerical claims against the result files. The research questions, the experimental design, the choice of what to measure and the interpretation of every result are the author's, who reviewed and edited every portion of the manuscript and verified every reported number against the committed artifact that produced it. The author is responsible for all content, including any error introduced with the tool's assistance and not caught in that review.
+
+
+\section*{Data and Code Availability}
+
+The code, the derived input statistics of the two price windows ($\mu$ and $\Sigma$ of the fifty-ticker universe, from which every instance is sliced; the price snapshots themselves are third-party data and are not redistributed), the census and its per-paper cells, every result CSV this paper reads (one row per run and one per instance, with the aggregates the tables are checked against), the figure scripts and the table-checking script are at \url{https://github.com/tobitaQ/qaoa-portfolio-penalty-benchmark}, release \texttt{v1.0}, archived at \url{https://doi.org/10.5281/zenodo.22743582}; the README indexes the files by experiment. A clone reproduces every number without network access to a market-data provider, at three levels: every figure and table from the committed CSVs (seconds, no GPU); one N = 8 or N = 12 instance end to end (minutes on a CPU); the cross from the manifest (13.9 GPU h). The per-run E1 artifacts (exact probabilities on F under the initial and final state, angles, trajectory, shot counts; $\approx$100 MB compressed, 2,565 files) are deposited in the same archive, and are needed only to recompute the E2 columns and $D_{cond}$, which the committed CSVs already hold; any full state vector is reconstructed from the recorded angles and seed. The four IonQ task records are committed in the device's own nested schema. Cloud and hardware paths require an explicit backend name and a results tag.
+
+\begin{thebibliography}{99}
+\bibitem{ref1} H. Markowitz, ``Portfolio selection,'' \textit{The Journal of Finance}, vol. 7, no. 1, pp. 77--91, Mar. 1952, doi: 10.1111/j.1540-6261.1952.tb01525.x.
+
+\bibitem{ref2} D. Bienstock, ``Computational study of a family of mixed-integer quadratic programming problems,'' \textit{Mathematical Programming}, vol. 74, pp. 121--140, 1996.
+
+\bibitem{ref3} A. Lucas, ``Ising formulations of many NP problems,'' \textit{Frontiers in Physics}, vol. 2, art. 5, 2014, doi: 10.3389/fphy.2014.00005.
+
+\bibitem{ref4} E. Farhi, J. Goldstone, and S. Gutmann, ``A quantum approximate optimization algorithm,'' arXiv:1411.4028, 2014.
+
+\bibitem{ref5} R. Or\'{u}s, S. Mugel, and E. Lizaso, ``Quantum computing for finance: Overview and prospects,'' \textit{Reviews in Physics}, vol. 4, art. 100028, 2019, doi: 10.1016/j.revip.2019.100028.
+
+\bibitem{ref6} D. J. Egger \textit{et al.}, ``Quantum computing for finance: State-of-the-art and future prospects,'' \textit{IEEE Transactions on Quantum Engineering}, vol. 1, pp. 1--24, 2020.
+
+\bibitem{ref7} D. Herman \textit{et al.}, ``Quantum computing for finance,'' \textit{Nature Reviews Physics}, vol. 5, pp. 450--465, 2023, doi: 10.1038/s42254-023-00603-1.
+
+\bibitem{ref8} E. Stopfer and F. Wagner, ``Quantum portfolio optimization: An extensive benchmark,'' arXiv:2509.17876, 2025 (rev. Jul. 2026).
+
+\bibitem{ref9} S. Brandhofer, D. Braun, V. Dehn, G. Hellstern, M. H\"{u}ls, Y. Ji, I. Polian, A. S. Bhatia, and T. Wellens, ``Benchmarking the performance of portfolio optimization with QAOA,'' \textit{Quantum Information Processing}, vol. 22, no. 1, art. 25, 2023; preprint arXiv:2207.10555, Jul. 2022.
+
+\bibitem{ref10} J. S. Baker and S. K. Radha, ``Wasserstein solution quality and the quantum approximate optimization algorithm: A portfolio optimization case study,'' arXiv:2202.06782, 2022.
+
+\bibitem{ref11} L. Lozano, ``A penalty-free pipeline for direct quantum-annealer portfolio optimization,'' \textit{arXiv preprint} arXiv:2605.17628, May 2026.
+
+\bibitem{ref12} G. Rosenberg, P. Haghnegahdar, P. Goddard, P. Carr, K. Wu, and M. L\'{o}pez de Prado, ``Solving the optimal trading trajectory problem using a quantum annealer,'' \textit{IEEE Journal of Selected Topics in Signal Processing}, vol. 10, no. 6, pp. 1053--1060, Sep. 2016.
+
+\bibitem{ref13} D. Venturelli and A. Kondratyev, ``Reverse quantum annealing approach to portfolio optimization problems,'' \textit{Quantum Machine Intelligence}, vol. 1, no. 1, pp. 17--30, 2019, doi: 10.1007/s42484-019-00001-w.
+
+\bibitem{ref14} S. Mugel \textit{et al.}, ``Dynamic portfolio optimization with real datasets using quantum processors and quantum-inspired tensor networks,'' \textit{Physical Review Research}, vol. 4, art. 013006, 2022, doi: 10.1103/PhysRevResearch.4.013006.
+
+\bibitem{ref15} V. Uotila, J. Ripatti, and B. Zhao, ``Higher-order portfolio optimization with the quantum approximate optimization algorithm,'' in \textit{Proc. IEEE Int. Conf. Quantum Computing and Engineering (QCE)}, 2025, pp. 2238--2249, doi: 10.1109/QCE65121.2025.00244.
+
+\bibitem{ref16} A. Verma and M. Lewis, ``Penalty and partitioning techniques to improve performance of QUBO solvers,'' \textit{Discrete Optimization}, vol. 44, art. 100594, 2022.
+
+\bibitem{ref17} M. Ayodele, ``Penalty weights in QUBO formulations: permutation problems,'' in \textit{Proc. EvoCOP 2022}, LNCS 13222, pp. 159--174; preprint arXiv:2206.11040.
+
+\bibitem{ref18} J. A. Montanez-Barrera, D. Willsch, A. Maldonado-Romo, and K. Michielsen, ``Unbalanced penalization: a new approach to encode inequality constraints of combinatorial problems for quantum optimization algorithms,'' \textit{Quantum Science and Technology}, vol. 9, no. 2, art. 025022, 2024; preprint arXiv:2211.13914.
+
+\bibitem{ref19} A. Abbas \textit{et al.}, ``Challenges and opportunities in quantum optimization,'' \textit{Nature Reviews Physics}, vol. 6, no. 12, pp. 718--735, Dec. 2024, doi: 10.1038/s42254-024-00770-9.
+
+\bibitem{ref20} T. Koch \textit{et al.}, ``Quantum optimization benchmarking library --- The intractable decathlon,'' arXiv:2504.03832, 2025.
+
+\bibitem{ref21} L. Lozano, ``Where the quantum lives in D-Wave hybrid portfolio optimization: an operational decomposition audit,'' \textit{arXiv preprint} arXiv:2605.17623, 2026.
+
+\bibitem{ref22} M. Hodson, B. Ruck, H. Ong, D. Garvin, and S. Dulman, ``Portfolio rebalancing experiments using the Quantum Alternating Operator Ansatz,'' \textit{arXiv preprint} arXiv:1911.05296, Nov. 2019.
+
+\bibitem{ref23} A. Oralkhan and T. Zhaxalykov, ``Investigation of hardware architecture effects on quantum algorithm performance: A comparative hardware study,'' arXiv:2601.05286, 2026.
+
+\bibitem{ref24} J. Mancilla, T. D. Bouloumis, and F. Goguikian, ``Constrained portfolio optimization via QAOA with XY-mixers and Trotterized initialization: A hybrid approach for direct indexing,'' \textit{arXiv preprint} arXiv:2602.14827, Feb. 2026.
+
+\bibitem{ref25} N. N. Hegade, P. Chandarana, K. Paul, X. Chen, F. Albarr\'{a}n-Arriagada, and E. Solano, ``Portfolio optimization with digitized counterdiabatic quantum algorithms,'' \textit{arXiv preprint} arXiv:2112.08347, Dec. 2021.
+
+\bibitem{ref26} B. Wu and L. Wang, ``A two-step quantum approximate optimization algorithm for portfolio optimization and risk assessment,'' \textit{Quantum Reports}, vol. 8, no. 2, art. 45, May 2026, doi: 10.3390/quantum8020045.
+
+\bibitem{ref27} N. Innan, A. Saleem, A. Marchisio, and M. Shafique, ``Quantum portfolio optimization with expert analysis evaluation,'' \textit{arXiv preprint} arXiv:2507.20532, Jul. 2025.
+
+\bibitem{ref28} P. K. Barkoutsos, G. Nannicini, A. Robert, I. Tavernelli, and S. Woerner, ``Improving variational quantum optimization using CVaR,'' \textit{Quantum}, vol. 4, art. 256, 2020.
+
+\bibitem{ref29} L. Zhou, S.-T. Wang, S. Choi, H. Pichler, and M. D. Lukin, ``Quantum approximate optimization algorithm: Performance, mechanism, and implementation on near-term devices,'' \textit{Physical Review X}, vol. 10, art. 021067, 2020, doi: 10.1103/PhysRevX.10.021067.
+
+\bibitem{ref30} S. H. Sack and M. Serbyn, ``Quantum annealing initialization of the quantum approximate optimization algorithm,'' \textit{Quantum}, vol. 5, art. 491, Jul. 2021, doi: 10.22331/q-2021-07-01-491.
+
+\bibitem{ref31} J. R. McClean, S. Boixo, V. N. Smelyanskiy, R. Babbush, and H. Neven, ``Barren plateaus in quantum neural network training landscapes,'' \textit{Nature Communications}, vol. 9, art. 4812, 2018, doi: 10.1038/s41467-018-07090-4.
+
+\bibitem{ref32} L. Bittel and M. Kliesch, ``Training variational quantum algorithms is NP-hard,'' \textit{Physical Review Letters}, vol. 127, no. 12, art. 120502, 2021, doi: 10.1103/PhysRevLett.127.120502.
+
+\bibitem{ref33} G. G. Guerreschi and A. Y. Matsuura, ``QAOA for Max-Cut requires hundreds of qubits for quantum speed-up,'' \textit{Scientific Reports}, vol. 9, art. 6903, 2019, doi: 10.1038/s41598-019-43176-9.
+
+\bibitem{ref34} Amazon Web Services, ``Amazon Braket Developer Guide,'' AWS documentation. [Online]. Available: https://docs.aws.amazon.com/braket/ (accessed Aug. 8, 2026).
+
+\bibitem{ref35} V. Bergholm \textit{et al.}, ``PennyLane: Automatic differentiation of hybrid quantum-classical computations,'' arXiv:1811.04968, 2018.
+
+\bibitem{ref36} H. Bayraktar \textit{et al.}, ``cuQuantum SDK: A high-performance library for accelerating quantum science,'' in \textit{Proc. IEEE Int. Conf. Quantum Computing and Engineering (QCE)}, 2023, pp. 1050--1061, doi: 10.1109/QCE57702.2023.00119.
+
+\bibitem{ref37} T. Jones and J. Gacon, ``Efficient calculation of gradients in classical simulations of variational quantum algorithms,'' arXiv:2009.02823, 2020.
+
+\bibitem{ref38} C. Collberg and T. A. Proebsting, ``Repeatability in computer systems research,'' \textit{Communications of the ACM}, vol. 59, no. 3, pp. 62--69, Mar. 2016, doi: 10.1145/2812803.
+
+\bibitem{ref39} G. K. Sandve, A. Nekrutenko, J. Taylor, and E. Hovig, ``Ten simple rules for reproducible computational research,'' \textit{PLoS Computational Biology}, vol. 9, no. 10, art. e1003285, 2013, doi: 10.1371/journal.pcbi.1003285.
+
+\bibitem{ref40} Association for Computing Machinery, ``Artifact review and badging --- version 1.1,'' ACM policy, Aug. 2020. [Online]. Available: https://www.acm.org/publications/policies/artifact-review-and-badging-current (accessed Aug. 8, 2026).
+
+\bibitem{ref41} S. Kirkpatrick, C. D. Gelatt, and M. P. Vecchi, ``Optimization by simulated annealing,'' \textit{Science}, vol. 220, no. 4598, pp. 671--680, 1983, doi: 10.1126/science.220.4598.671.
+
+\bibitem{ref42} D. P. Kingma and J. Ba, ``Adam: A method for stochastic optimization,'' in \textit{Proc. 3rd Int. Conf. Learning Representations (ICLR)}, 2015. arXiv:1412.6980.
+
+\bibitem{ref43} R. H. Byrd, P. Lu, J. Nocedal, and C. Zhu, ``A limited memory algorithm for bound constrained optimization,'' \textit{SIAM J. Sci. Comput.}, vol. 16, no. 5, pp. 1190--1208, 1995, doi: 10.1137/0916069.
+
+\bibitem{ref44} P. Virtanen et al., ``SciPy 1.0: fundamental algorithms for scientific computing in Python,'' \textit{Nature Methods}, vol. 17, pp. 261--272, 2020, doi: 10.1038/s41592-019-0686-2.
+
+\bibitem{ref45} S. Hadfield, Z. Wang, B. O'Gorman, E. G. Rieffel, D. Venturelli, and R. Biswas, ``From the quantum approximate optimization algorithm to a quantum alternating operator ansatz,'' \textit{Algorithms}, vol. 12, no. 2, art. 34, 2019.
+
+\bibitem{ref46} Z. Wang, N. C. Rubin, J. M. Dominy, and E. G. Rieffel, ``XY mixers: analytical and numerical results for the quantum alternating operator ansatz,'' \textit{Physical Review A}, vol. 101, art. 012320, 2020.
+
+\bibitem{ref47} Anthropic, ``Claude Code,'' 2026. [Online]. Available: https://claude.com/claude-code
+
+
+
+\end{thebibliography}
+\end{document}

@@ -1,0 +1,22 @@
+# GPU-accelerated statevector simulation (lightning.gpu via NVIDIA cuQuantum).
+#
+# Linux + NVIDIA CUDA 12 only. Not available on macOS (no CUDA support since 2019)
+# and not needed for the classical solver or for lightning_cpu.
+#
+# Install on the GPU machine AFTER requirements.txt:
+#     pip install -r requirements.txt
+#     pip install -r requirements-gpu.txt
+#
+# Verify with:
+#     python -c "from src.solvers.braket_solver import available_backends; print(available_backends())"
+#
+# Memory reference (RTX A6000, 48 GB VRAM), adjoint differentiation ≈ 3 statevector copies:
+#     N=28  single 6.4 GB / double 12.9 GB   → both fit
+#     N=30  single 25.8 GB / double 51.6 GB  → single precision only
+#     N=31  single 51.6 GB                   → does not fit
+# Use BraketSolver(backend="lightning_gpu", precision="single") for N=30.
+
+-r requirements.txt
+
+pennylane-lightning-gpu>=0.45.0
+custatevec-cu12>=1.6.0

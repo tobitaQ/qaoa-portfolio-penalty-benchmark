@@ -1,0 +1,2 @@
+n_assets,n_select,solver,energy_no_offset,runtime_s,feasible,expected_return,volatility,sharpe_ratio,method_detail,data_start,data_end
+16,3,classical_auto,-153.26711059662722,0.004754706285893917,True,0.2568156466299874,0.1846856590820826,1.3851408274006345,exact,2023-08-06,2026-08-05
