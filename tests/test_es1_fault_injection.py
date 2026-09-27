@@ -195,21 +195,6 @@ def test_a_sibling_arm_is_checked_against_its_own_window_and_manifest():
         assert es1.run_check(check, rec) == [], name
 
 
-def test_the_seed_set_of_this_record_gives_distinct_initial_angles():
-    """The exact half of ``seed-distinct`` holds only in this record's scope.
-
-    A pseudo-random generator does not promise distinct output from distinct
-    seeds, so the paper claims the angle clause as exact only for the generator,
-    the draw and the five seeds E1 actually used. This pins that claim: if the
-    generator or the seed set changes, the claim has to be re-scoped.
-    """
-    import numpy as np
-    seeds = range(42, 47)
-    for p in (1, 2, 3, 4):
-        vectors = {tuple(np.random.default_rng(s).uniform(0, np.pi, size=2 * p)) for s in seeds}
-        assert len(vectors) == len(list(seeds)), p
-
-
 def test_only_the_batch_clause_of_seed_distinct_fires_on_the_shot_seed_replay(clean, tmp_path):
     """``shot_seed_noop`` copies a batch and leaves the angles, so the angle clause is silent."""
     found = es1.check_seed_distinct(es1.fault_shot_seed_noop(clean, tmp_path))

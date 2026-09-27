@@ -553,3 +553,20 @@ class TestEvaluateFixedAngles:
         probs, task_id, ms = solver._cloud_state_probabilities(dev, tape, idx, 4, qml)
         np.testing.assert_allclose(probs, full[idx], rtol=0, atol=1e-12)
         assert task_id and np.isnan(ms)
+
+
+def test_the_seed_set_of_the_cross_gives_distinct_initial_angles():
+    """The exact half of ``seed-distinct`` holds only in the scope it is checked in.
+
+    The system paper calls the angle clause of that relation exact, and a
+    pseudo-random generator does not promise distinct output from distinct
+    seeds. What is true is narrower: for this generator, this draw and the five
+    seeds E1 used, the vectors are pairwise distinct. This pins that scope, so
+    changing the generator or the seed set breaks the test rather than the claim.
+    Lives here rather than beside the E-S1 harness because it needs no record.
+    """
+    import numpy as np
+    seeds = list(range(42, 47))
+    for p in (1, 2, 3, 4):
+        vectors = {tuple(np.random.default_rng(s).uniform(0, np.pi, size=2 * p)) for s in seeds}
+        assert len(vectors) == len(seeds), p
