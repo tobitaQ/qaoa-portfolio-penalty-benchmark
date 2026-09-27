@@ -35,6 +35,7 @@ PREAMBLE = r"""\documentclass[acmsmall,screen,review]{acmart}
 \pdfgentounicode=1
 \usepackage{tabularx}
 \usepackage{xltabular}
+\usepackage{longtable}
 \usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{ragged2e}
@@ -95,7 +96,11 @@ def prose(text: str) -> str:
     # Braces are set literally (sets such as N ∈ {12, 16, 20}); the draft
     # writes no LaTeX groups of its own.
     text = text.replace("{", "\\{").replace("}", "\\}")
-    return breakable(inline(cite(verify_notes(text))))
+    # The shared Unicode map reads § as a cross-reference and sets it "Sec.~",
+    # which is right for the numerical paper and wrong for the third provenance
+    # mark of Table 7. A § not followed by a number is the sign itself.
+    text = re.sub(r"§(?!\s*\d)", "\x1f", text)
+    return breakable(inline(cite(verify_notes(text)))).replace("\x1f", r"\S{}")
 
 
 def is_row(line: str) -> bool:
@@ -133,24 +138,25 @@ def table(rows: list[str], caption: str, number: int) -> list[str]:
         spec = spec.replace("l", "Y", 1) if "l" in spec else spec
     header = " & ".join(rf"\textbf{{{prose(h)}}}" for h in head) + r" \\"
     rows_tex = [" & ".join(prose(c) for c in r) + r" \\" for r in body]
-    # A float cannot break, and a table taller than a page silently runs off it:
-    # Table 9 grew past the footer when the v1.1 block was added. Past a dozen
-    # rows the table is set as xltabular, which breaks and repeats its header.
-    if len(body) > 12:
-        return [r"\begingroup", r"\small",
-                rf"\begin{{xltabular}}{{\textwidth}}{{{spec.replace('l', 'Y', 1) if 'Y' not in spec else spec}}}",
-                rf"\caption{{{prose(caption)}}}\label{{tab:{number}}} \\",
-                r"\toprule", header, r"\midrule", r"\endfirsthead",
-                r"\toprule", header, r"\midrule", r"\endhead",
-                r"\endfoot", r"\bottomrule", r"\endlastfoot",
-                *rows_tex, r"\end{xltabular}", r"\endgroup", ""]
-    env = "tabularx" if "Y" in spec else "tabular"
-    width = r"{\textwidth}" if env == "tabularx" else ""
-    out = [r"\begin{table}[t]", r"\small", rf"\caption{{{prose(caption)}}}",
-           rf"\label{{tab:{number}}}", rf"\begin{{{env}}}{width}{{{spec}}}", r"\toprule",
-           header, r"\midrule", *rows_tex]
-    out += [r"\bottomrule", rf"\end{{{env}}}", r"\end{table}", ""]
-    return out
+    # Every table is set in the flow rather than as a float. A float is placed
+    # where LaTeX finds room, and in a paper with fourteen of them the queue
+    # backs up: Tables 12, 13 and 14 were deferred past the references and
+    # printed four to five pages after the text that discusses them, each alone
+    # on a page. A longtable sits where it is written and breaks across pages
+    # with its header repeated, which is what a reader of a systems paper wants
+    # from a table the sentence beside it is about.
+    env = "xltabular" if "Y" in spec else "longtable"
+    width = r"{\textwidth}" if env == "xltabular" else ""
+    return [r"\begingroup", r"\small",
+            # longtable is left-aligned by default in this class; centre it so a
+            # table narrower than the text block does not sit off to one side.
+            r"\setlength\LTleft{\fill}", r"\setlength\LTright{\fill}",
+            rf"\begin{{{env}}}{width}{{{spec}}}",
+            rf"\caption{{{prose(caption)}}}\label{{tab:{number}}} \\",
+            r"\toprule", header, r"\midrule", r"\endfirsthead",
+            r"\toprule", header, r"\midrule", r"\endhead",
+            r"\endfoot", r"\bottomrule", r"\endlastfoot",
+            *rows_tex, rf"\end{{{env}}}", r"\endgroup", ""]
 
 
 def convert(md: str) -> str:

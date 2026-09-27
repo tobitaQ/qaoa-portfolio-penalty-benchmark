@@ -122,10 +122,11 @@ particular edge here.
    their realisation in an open reproduction package (Section 3).
 2. A fault-injection evaluation of a 2,565-run record: ten faults, thirteen verification relations,
    ten detected against one for a schema-only pipeline and eight for an expectation stated in a
-   data-quality library's vocabulary over the run table, no relation firing on any of five committed
-   clean records, and 26 of 26 headline-moving mutations caught in a held-out draw of 300 made after
-   the relations were frozen; a measurement of which faults move headline numbers silently, and of
-   which relations that vocabulary cannot state (Section 5.1).
+   data-quality library's vocabulary over the run table, and no relation firing on any of five
+   committed clean records. Over 600 random mutations, half of them drawn after the relations were
+   frozen, the two are within one of each other on the 52 that move a headline number (51 against 49);
+   where they separate is the 168 that touch a file the run table does not contain, which the
+   relations catch 135 times and the control never (Section 5.1).
 3. A guard-stage evaluation on a device that, like a QPU, offers no derivative method: measured
    per-step task counts (177 / 361 / 609 / 921 at N = 8 / 12 / 16 / 20), the stopping stage of five
    misconfigurations under four guard configurations, the division of labour between structural
@@ -340,7 +341,7 @@ it.
   bitstring under the final and the initial state, the per-cardinality mass, the shot indices and
   counts, the penalty and the Hamiltonian scale.
 
-![Fig. 1. The four files that describe a run and the thirteen relations that bind them. A solid double-headed arrow is a verification relation between two files, named on the arrow, and double-headed because the relation must hold in both directions; the relations that hold within one file are listed inside its box. The single dotted grey arrow is not a relation but the control of Section 4.1: a pipeline that reads the run rows with no check but the schema.](figures/fig_record_relations.pdf)
+![Fig. 1. The four files that describe a run and the thirteen relations that bind them. A solid double-headed arrow is a relation between two files, named on the arrow; the relations that hold within one file are listed inside its box. The one dotted arrow is not a relation but the schema-only control of Section 4.1.](figures/fig_record_relations.pdf)
 
 **The relations.** Figure 1 places them. On a correct record the thirteen below hold, each
 implemented as a function that returns the rows on which it does not; Section 4.1 lists them as the
@@ -598,9 +599,9 @@ cheapest that can see a fault sees it first:
 that occurred in this project; six are mix-ups a user of the code base can make. The harness's first
 pass is the clean record, on which every check must return nothing.
 
-**Table 1. Injected faults. Each fault changes the records its row names and leaves every other
-byte of the copy as the committed record has it; "the row" is the run row of the cross file and "the
-artifact" its `.npz`. Where that partial reach matters for what the checks see, Section 5.1 says so.**
+**Table 1. Injected faults. Each changes only the records its row names, leaving the rest of the copy
+as committed; "the row" is the run row and "the artifact" its `.npz`. Section 5.1 says where that
+partial reach matters.**
 
 | Fault | What is changed | Origin |
 |---|---|---|
@@ -791,10 +792,9 @@ nothing on five clean records
 The clean record passes all thirteen checks. Table 3 gives the matrix.
 
 **Table 3. Detection matrix (N ∈ {12, 16, 20}; 2,565 runs). "First" is the first failing check in
-stage order; "moved" is the number of the thirty headline numbers that changed. Naive and
-Declarative are the two controls of Section 4.1; the declarative entry names the constraint families
-that fire (single = a column that must hold one value, fk = the join with the reference table,
-pair = an inequality between two columns of a row).**
+stage order, "moved" how many of the thirty headline numbers changed. Naive and Declarative are the
+controls of Section 4.1; the declarative entry names the families that fire (single = one value per
+file, fk = the join with the reference table, pair = an inequality within a row).**
 
 | Fault | First failing check (stage) | Also failing | Naive | Declarative | Moved |
 |---|---|---|---|---|---:|
@@ -976,16 +976,15 @@ detected**, and of the 26 that moved a headline number, **26 were caught** (Tabl
 `paper02_es1_random_faults_heldout.csv`). The control detects 86 and 25 of the 26. The 77 mutations
 that touch a file the run table does not contain — a perturbed artifact, an exchanged artifact, a
 perturbed input — are caught 64 times by the relations and never by the control, the same separation
-the ten faults show. What this does not remove is that the mutation operators are ours, so both rates
+the ten faults show. Taking the two draws together: of 600 mutations, 52 move a headline number and
+the relations catch 51 against the control's 49, which is not a difference worth a claim; of the 168
+that reach outside the table, the relations catch 135 and the control none, which is. What this does not remove is that the mutation operators are ours, so both rates
 are conditioned on a distribution of faults we chose, and that the tolerances were set on this
 record.
 
-**Table 4. Column coverage of the verification relations (133 columns of run row, reference row and
-artifact; one column empty on every row is excluded). Each pass is a committed scan of the whole
-record. "12 relations without the identity check" is the thirteen of Section 3.1 less `identities`,
-which is one relation holding many per-column recomputations. The last column counts the columns no
-other relation binds; the rest of the increase from pass 1 is four columns added to the manifest
-relation's single-valued list in the same pass.**
+**Table 4. Column coverage of the relations over the 133 columns of the run row, the reference row
+and the artifact; the one column empty on every row is excluded. Each pass is a committed scan of the
+whole record. The last column counts the columns no other relation binds.**
 
 | Pass | Checks | Covered | Covered by `identities` alone |
 |---|---|---:|---:|
@@ -993,11 +992,9 @@ relation's single-valued list in the same pass.**
 | 2 | + identities (Q_τ, P_τ/P_opt, rank, D and the offset magnitude, best expectation, uniform baselines, Sharpe constancy) | 103 / 132 | 52 |
 | 3 | + shot-level successes, fractions, distinct shots, probability sums, portfolio metrics from the pinned statistics, reference row against its own cardinality minima and stored f | 114 / 132 | 63 |
 
-**Table 5. 300 random mutations, final pass, by operator. "Declarative" is the control of Section 4.1
-on the same mutations; "moved and missed" counts the mutations that changed a headline number and
-that the relations did not catch (the control's count of those is in the text). The last row is a
-second draw of 300 from the same operators with a different seed, run once after the relations were
-frozen, and is the only line of this table the checks were not developed against.**
+**Table 5. 300 random mutations by operator, final pass. "Declarative" is the control of Section 4.1
+on the same mutations; "moved and missed" counts those that changed a headline number and that the
+relations did not catch. The last row is the held-out draw.**
 
 | Operator | n | Detected | Declarative | Moved a headline | Moved and missed |
 |---|---:|---:|---:|---:|---:|
@@ -1038,19 +1035,13 @@ service in any case — what is measured is the framework's decision, not a bill
 **Stopping stages.** Figure 2 shows the N = 8 cells; Table 7 gives N = 8 and N = 20, and the CSV
 holds N = 12 and 16, which lie between.
 
-![Fig. 2. The stage at which each misconfiguration stops under the four guard configurations (N = 8, list prices). Nothing in the figure is carried by colour: the marker's shape is the guard configuration and its fill is the outcome — open for nothing wasted, grey for a correct call with a costly default, solid for wasted spend or the baseline file lost. A section mark is a count computed from a measured per-step count rather than run to completion (fifty steps of the optimizer loop); a dagger marks a cell that follows from the provider's documented behaviour and was not observed, because the spending limit exists only for hardware and the device stayed offline; a double dagger marks a cell confirmed on the service (Section 5.2). Unmarked cells are measured by the harness. The structural guards act at the first two stages; the cap acts at the fourth, and not at all for the simulator.](figures/fig_guard_stages.pdf)
+![Fig. 2. Where each misconfiguration stops under the four guard configurations (N = 8, list prices). Nothing is carried by colour: the marker's shape is the guard configuration and its fill the outcome — open for nothing wasted, grey for a correct call with a costly default, solid for wasted spend or the baseline file lost. The marks are Table 7's: § computed from a measured per-step count, † the provider's documented behaviour, ‡ confirmed on the service, unmarked measured by the harness.](figures/fig_guard_stages.pdf)
 
 **Table 7. Stage at which each misconfiguration stops, tasks billed and list-price bill, under four
-guard configurations. Cap = $50 per QPU. "—" in the result column: nothing usable; "?" the six
-accepted tasks carry the forward evaluation and part of one gradient, so a value comes back and no
-gradient does. Where each cell comes from: unmarked cells are measured by the harness, which runs the
-committed code against a device that offers no derivative method and counts the tapes it sends;
-§ marks a count the harness did not run to completion but computed from a measured per-step count
-(50 steps of 177 tapes plus the sampling call is 9,027 at N = 8, and of 921 is 46,971 at N = 20);
-‡ marks a cell confirmed on Amazon Braket (Section 5.2); † marks a cell that follows from the
-provider's documented behaviour and was not observed, because the spending limit exists only for
-hardware and the device stayed offline for the seven days of the probe. Every dollar figure is a list
-price applied to a task count, not a bill anyone received.**
+guard configurations (cap = $50 per QPU). Where a cell comes from: unmarked, measured by the harness;
+§, computed from a measured per-step count; ‡, confirmed on the service; †, the provider's documented
+behaviour, not observed. In the last column "—" is nothing usable and "?" a value with no gradient.
+Every dollar figure is a list price applied to a task count, not a bill anyone received.**
 
 | Misconfiguration | N | none | cap only | structural | both |
 |---|---:|---|---|---|---|
@@ -1118,14 +1109,15 @@ hardware and not a prediction of what a QPU loop would overrun by: the residue i
 3–4 s submission loop got in before a denial propagated, and on hardware both the submission rate and
 the queue are different. It is the order of magnitude that matters here, and it is what a cap of the
 second kind — had it existed for the device — would have stopped at
-$50, and the structural guard at $0.
+$50, and the structural guard at $0. Two cells of the first repetition are not in the summary that
+run wrote, because the aggregation gained those fields afterwards; `es2_cost_control_aggregate.py`
+recomputes them from the run's own task records and checks the recomputation against every field the
+four later summaries do hold.
 
-**Table 8. Five repetitions of the account-level control, one column per repetition (limit $0.30;
-SV1 Bell circuit, 10 shots, $0.00375 per task, sequential). Every cell is an observation of the
-deployed control on Amazon Braket; nothing in this table is modelled. Two cells of run 1 are recomputed from that run's task records,
-which the summary written during the first repetition did not yet carry
-(`es2_cost_control_aggregate.py`, which also checks the recomputation against every field the later
-summaries do hold).**
+**Table 8. Five repetitions of the account-level control, one column each (limit $0.30; SV1 Bell
+circuit, 10 shots, $0.00375 per task, sequential). Every cell is an observation on Amazon Braket;
+nothing here is modelled. Two cells of run 1 are recomputed from its task records by
+`es2_cost_control_aggregate.py`.**
 
 | Quantity | 1 | 2 | 3 | 4 | 5 | median |
 |---|---:|---:|---:|---:|---:|---:|
@@ -1138,14 +1130,9 @@ summaries do hold).**
 
 ### 5.3 E-S3: three levels rebuilt from a clone; one in-flight run lost on interruption; two controls fail as they should
 
-**Table 9. The clean-room harness's steps. Levels 0–3 and the two controls clone the public package
-`v1.0`, which is what E-S3 evaluates and the version the numerical study was submitted with. The last
-block repeats the checks on `v1.1`, the release this paper is submitted with, and runs the
-interruption there: the job status record of Section 3.3 does not exist in `v1.0`, so before `v1.1`
-that row could only be measured in the working tree. The `v1.0` rows clone over the network from the
-published repository; the `v1.1` rows clone the same release from a local mirror of it, because the
-tag becomes public on submission — which is why that clone takes 0.3 s and not 1.5 s, and is the only
-difference. Fresh environment for each; this host.**
+**Table 9. The clean-room harness's steps: levels 0–3 and the two controls on the public package
+`v1.0`, then the same checks and the interruption on `v1.1`, the release this paper ships. A fresh
+environment for each, on one host.**
 
 | Level | Command (from the README) | Wall-clock | Outcome |
 |---|---|---:|---|
@@ -1160,12 +1147,12 @@ difference. Fresh environment for each; this host.**
 | 3 | re-issue with `--resume` | 168 s | "6 rows already done"; 24 rows; 94/94 non-timing columns identical to the uninterrupted block |
 | control | level 2 without `data/derived`, network unreachable | 6 s | fails: `TypeError: '<' not supported between instances of 'int' and 'NoneType'` |
 | control | E2 aggregation without the artifacts | 1.2 s | fails: "no run artifacts under …/e1_runs" |
-| 0 (v1.1) | `git clone --branch v1.1`; `python -m venv`; `pip install -r requirements-repro.txt` | 0.3 s; 8 s; 152 s | commit 71b05e0, 24 MB |
-| 0 (v1.1) | `pytest -q -rs` | 100 s | 400 passed, 32 skipped: 28 need the per-run artifacts, 3 the price snapshots, 1 a host without `lightning.gpu` |
-| 1 (v1.1) | `python -m notebooks.generate_tqe_figures`; `python check_tables.py` | 24 s; 2.7 s | 5/5 byte-identical; 2,578 cells agree, 0 disagree, 0 pending |
+| 0 (v1.1) | `git clone --branch v1.1`; `python -m venv`; `pip install -r requirements-repro.txt` | 0.3 s; 8 s; 147 s | commit fde2941, 24 MB |
+| 0 (v1.1) | `pytest -q -rs` | 103 s | 400 passed, 32 skipped: 28 need the per-run artifacts, 3 the price snapshots, 1 a host without `lightning.gpu` |
+| 1 (v1.1) | `python -m notebooks.generate_tqe_figures`; `python check_tables.py` | 24 s; 2.6 s | 5/5 byte-identical; 2,578 cells agree, 0 disagree, 0 pending |
 | 2 (v1.1) | the level-2 command above | 18 s | energy and Sharpe identical to the committed file, to 0 |
 | 3 (v1.1) | the level-3 block with the job status record: `SIGKILL` after 5 runs | 50 s | status file `RUNNING 5/12, last N12_i00_5xAcrit_s42`, matching the 5 rows on disk, which the manifest parses with no artifact left without a row; `analyze_e1` refuses the manifest |
-| 3 (v1.1) | re-issue with `--resume` | 69 s | driver prints "previous job: RUNNING pid … 5/12"; status `EXIT 0 12/12`; `analyze_e1` runs |
+| 3 (v1.1) | re-issue with `--resume` | 71 s | driver prints "previous job: RUNNING pid … 5/12"; status `EXIT 0 12/12`; `analyze_e1` runs |
 
 The inputs the harness supplied were the repository URL and tag, a name for `--results-tag`, and
 the choice of CPU over the README's GPU for level 3; every other token came from the README.
@@ -1217,14 +1204,17 @@ reports. The fixes those gaps produced are in `v1.1`, so the last block of Table
 repeats what can be repeated: the suite (400 passed, 32 skipped), level 1 (5/5 figures byte-identical,
 2,578 manuscript cells agreeing), level 2 (identical to the committed file, to zero), and the
 interruption and resumption — which `v1.0` cannot be asked for at all, since the job status record
-was written in response to this evaluation. What the 32 skips are: 28 tests of the E-S1 harness need
+was written in response to this evaluation. The `v1.0` rows of Table 9 clone over the network from
+the published repository and the `v1.1` rows clone the same release from a local mirror, because the
+tag becomes public on submission; that is why the second clone takes 0.3 s rather than 1.5 s, and it
+is the only difference between the two passes. What the 32 skips are: 28 tests of the E-S1 harness need
 the per-run artifacts, about 100 MB of `.npz` that the git repository does not carry and the Zenodo
 deposit of [1] does, so a reader who clones without fetching the deposit does not exercise the
 fault-injection relations against real artifacts; three need the price snapshots, which are
 third-party data the package deliberately does not redistribute (it ships the derived statistics
 instead); and one is the test that a GPU backend does not silently fall back, which has nothing to
 fall back from on a host where `lightning.gpu` is installed and runs. Every claim this paper makes about the final
-implementation is therefore a claim about a tagged commit (`71b05e0`) that a reader can clone, and the
+implementation is therefore a claim about a tagged commit (`fde2941`) that a reader can clone, and the
 `CHANGELOG` says which paper was evaluated against which release. What is *not* repeated on `v1.1` is
 level 3's full block and its column-by-column agreement (Table 10), which measures a host-and-precision
 difference the release does not change.
@@ -1370,11 +1360,13 @@ reported elsewhere.
 
 One binding cannot close, and it is this paper's own. The package contains this manuscript *and* the
 record of the pass that evaluated the package, so that record cannot name the tree that holds it:
-writing the pass's output back into the package changes the package the pass examined. What is fixed
-is the tag and the deposit, which are assigned once and do not move; the commit Table 9 reports is the
-one the pass actually cloned, and the released tree differs from it in the manuscript and in the
-pass's own step file and nowhere else. The relations bind a record to its inputs; they do not bind a
-record to the act of writing it down.
+writing the pass's output back into the package changes the package the pass examined. The pass did
+clone exactly the released tree — the commit of Table 9 is the tag's — and the tag and the deposit
+are assigned once and do not move. What the released tree cannot hold is the edit its own result
+caused: its copies of this manuscript and of that step record are the versions from just before the
+pass ran, and they differ from the submitted ones in four files and in nothing else (the manuscript
+as Markdown, LaTeX and PDF, and the step record itself). The relations bind a record to its inputs;
+they do not bind a record to the act of writing it down.
 
 One limit of P1 is not ours to remove here. A record is bound to its inputs by a digest of those
 inputs, which lets a reader detect a mix-up but not re-derive the inputs: the price snapshots
@@ -1413,7 +1405,7 @@ behind it are the author's, who is responsible for all content.
 ## Availability
 
 Everything this paper reports is in one package, release `v1.1`
-(https://github.com/tobitaQ/qaoa-portfolio-penalty-benchmark, tag `v1.1`, commit `71b05e0`,
+(https://github.com/tobitaQ/qaoa-portfolio-penalty-benchmark, tag `v1.1`, commit `fde2941`,
 doi:[[v1.1 DOI]]): the platform; the three harnesses
 (`experiments/system_paper/es1_fault_injection.py`, `es1_random_faults.py`, `es2_guard_stages.py`,
 `es2_observe_cloud.py`, `es2_observe_cost_control.py`, `es3_reconstruction.py`) and the cost-control
@@ -1595,9 +1587,8 @@ exceeds $1.00.
 ### A.1 Provider-side controls (Amazon Braket, as of September 2026)
 
 **Table 14. Three controls that can stop or report a Braket charge, and one client-side limit that
-cannot — what each governs, when in the life of a task it acts, and what this project observed of it.
-The first three are the "cap" of Section 5.2 in its three available forms. The fourth bounds only how
-long the client waits and is listed because it is easy to mistake for a bound on the task.**
+cannot. The first three are the "cap" of Section 5.2 in its available forms; the fourth bounds only
+how long the client waits, and is listed because it is easy to mistake for a bound on the task.**
 
 | Kind | Control | Scope | When it acts | Observed here |
 |---|---|---|---|---|

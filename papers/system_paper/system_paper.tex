@@ -3,6 +3,7 @@
 \pdfgentounicode=1
 \usepackage{tabularx}
 \usepackage{xltabular}
+\usepackage{longtable}
 \usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{ragged2e}
@@ -62,7 +63,7 @@ Each principle is stated with what it prevents and what it does not (Section 3),
 
 \begin{enumerate}
 \item Three design principles for a cloud quantum benchmark platform, each with a stated scope, and their realisation in an open reproduction package (Section 3).
-\item A fault-injection evaluation of a 2,565-run record: ten faults, thirteen verification relations, ten detected against one for a schema-only pipeline and eight for an expectation stated in a data-quality library's vocabulary over the run table, no relation firing on any of five committed clean records, and 26 of 26 headline-moving mutations caught in a held-out draw of 300 made after the relations were frozen; a measurement of which faults move headline numbers silently, and of which relations that vocabulary cannot state (Section 5.1).
+\item A fault-injection evaluation of a 2,565-run record: ten faults, thirteen verification relations, ten detected against one for a schema-only pipeline and eight for an expectation stated in a data-quality library's vocabulary over the run table, and no relation firing on any of five committed clean records. Over 600 random mutations, half of them drawn after the relations were frozen, the two are within one of each other on the 52 that move a headline number (51 against 49); where they separate is the 168 that touch a file the run table does not contain, which the relations catch 135 times and the control never (Section 5.1).
 \item A guard-stage evaluation on a device that, like a QPU, offers no derivative method: measured per-step task counts (177 / 361 / 609 / 921 at N = 8 / 12 / 16 / 20), the stopping stage of five misconfigurations under four guard configurations, the division of labour between structural guards and a spending limit, and the fallback re-observed on the service (Section 5.2).
 \item A costed clean-room reconstruction of the public package at three levels, including interruption and idempotent resumption, with a control that lacks the derived statistics (Section 5.3).
 \item A case study in secondary analysis from a bound record: two hypotheses about the platform's next use, each settled in minutes of CPU with no quantum run, and each re-scoring verified against the values the record already held (Section 5.4).
@@ -131,7 +132,7 @@ The platform is a Python code base with a solver abstraction over PennyLane \cit
 \begin{figure}[t]
 \centering
 \includegraphics[width=\textwidth]{figures/fig_record_relations.pdf}
-\caption{The four files that describe a run and the thirteen relations that bind them. A solid double-headed arrow is a verification relation between two files, named on the arrow, and double-headed because the relation must hold in both directions; the relations that hold within one file are listed inside its box. The single dotted grey arrow is not a relation but the control of Section 4.1: a pipeline that reads the run rows with no check but the schema.}
+\caption{The four files that describe a run and the thirteen relations that bind them. A solid double-headed arrow is a relation between two files, named on the arrow; the relations that hold within one file are listed inside its box. The one dotted arrow is not a relation but the schema-only control of Section 4.1.}
 \label{fig:1}
 \end{figure}
 
@@ -249,14 +250,23 @@ Three evaluations, one per principle, each with a control. The cloud calls are 1
 
 
 
-\begin{table}[t]
+\begingroup
 \small
-\caption{Injected faults. Each fault changes the records its row names and leaves every other byte of the copy as the committed record has it; ``the row'' is the run row of the cross file and ``the artifact'' its \texttt{.npz}. Where that partial reach matters for what the checks see, Section 5.1 says so.}
-\label{tab:1}
-\begin{tabularx}{\textwidth}{YYY}
+\setlength\LTleft{\fill}
+\setlength\LTright{\fill}
+\begin{xltabular}{\textwidth}{YYY}
+\caption{Injected faults. Each changes only the records its row names, leaving the rest of the copy as committed; ``the row'' is the run row and ``the artifact'' its \texttt{.npz}. Section 5.1 says where that partial reach matters.}\label{tab:1} \\
 \toprule
 \textbf{Fault} & \textbf{What is changed} & \textbf{Origin} \\
 \midrule
+\endfirsthead
+\toprule
+\textbf{Fault} & \textbf{What is changed} & \textbf{Origin} \\
+\midrule
+\endhead
+\endfoot
+\bottomrule
+\endlastfoot
 price\_perturbation & one asset's mean return in the derived statistics $\times$ (1 + 10$^{-6}$) & the provider's 4.2$\cdot$10$^{-7}$ revision, 2026-08 \\
 window\_mixin & one run of the prior-window replication (E5) pasted over the same cell of the main file, run id included & plausible merge error \\
 optimizer\_mixin & one run of the E3 L-BFGS-B arm pasted the same way & plausible merge error \\
@@ -267,9 +277,8 @@ evaluator\_from\_Q & f of the best feasible shot replaced by its penalised energ
 column\_drop & the \texttt{final\_P\_F} column removed & the E4 \texttt{write\_csv} defect \\
 shot\_seed\_noop & seed 43's shot batch replaced by seed 42's in three instances, summary columns copied & the \texttt{shot\_seed} defect \cite[Sec. VI-C]{ref1} \\
 reference\_stale & the reference f* of one instance $\times$ (1 + 10$^{-9}$) & a stale regeneration \\
-\bottomrule
-\end{tabularx}
-\end{table}
+\end{xltabular}
+\endgroup
 
 
 \textbf{Controls and measures.} Three configurations. The \textit{naive} pipeline reads the CSV and computes the study's headline numbers with no check but the schema. The \textit{declarative} control is the vocabulary of a data-quality library, applied generously and in eight families:
@@ -301,22 +310,30 @@ reference\_stale & the reference f* of one instance $\times$ (1 + 10$^{-9}$) & a
 
 
 
-\begin{table}[t]
+\begingroup
 \small
-\caption{Misconfigurations a user of the code base can write.}
-\label{tab:2}
-\begin{tabularx}{\textwidth}{YYY}
+\setlength\LTleft{\fill}
+\setlength\LTright{\fill}
+\begin{xltabular}{\textwidth}{YYY}
+\caption{Misconfigurations a user of the code base can write.}\label{tab:2} \\
 \toprule
 \textbf{Misconfiguration} & \textbf{What is written} & \textbf{Consequence if nothing stops it} \\
 \midrule
+\endfirsthead
+\toprule
+\textbf{Misconfiguration} & \textbf{What is written} & \textbf{Consequence if nothing stops it} \\
+\midrule
+\endhead
+\endfoot
+\bottomrule
+\endlastfoot
 QPU as optimizer backend & \texttt{-\allowbreak{}-\allowbreak{}backend braket\_\allowbreak{}ionq} & 1 + 2p$\cdot$[C(N,2) + 2N] tasks per optimizer step for 50 steps, plus the sampling call's own \\
 Trainable angles at sampling, SV1 & the optimizer's tensors handed to the 1,000-shot QNode & 1 + 2p$\cdot$[C(N,2) + 2N] tasks for one bitstring (the 2026-08-09 pilot) \\
 Trainable angles at sampling, IonQ & the same, on hardware at 100 shots & the same count at \$8.30 per task \\
 QPU as sampling backend, default shots & \texttt{-\allowbreak{}-\allowbreak{}sample-\allowbreak{}backend braket\_\allowbreak{}ionq} without \texttt{--shots} & one correct task at \$0.30 + 1,000 $\times$ \$0.08 \\
 Untagged cloud run & \texttt{-\allowbreak{}-\allowbreak{}backend braket\_\allowbreak{}sv1} without \texttt{--results-tag} & the committed baseline behind the paper's tables is overwritten \\
-\bottomrule
-\end{tabularx}
-\end{table}
+\end{xltabular}
+\endgroup
 
 
 \textbf{Configurations.} \textit{none} (every guard of the code base disabled by monkey-patching: the QPU set emptied, the cloud backends declared local, the canonical-file refusal disabled, \texttt{frozen\_angles} made the identity); \textit{cap} (no structural guard; a \$50 per-QPU spending limit, the project's budget figure, modelled as documented --- tasks accepted while the cumulative list-price estimate stays within the cap, the first task that would exceed it rejected; simulators outside its scope); \textit{structural} (the committed guards, with the device factory returning the stand-in for every cloud backend and the AWS session factory raising if called); \textit{both}.
@@ -357,14 +374,23 @@ The clean record passes all thirteen checks. Table 3 gives the matrix.
 
 
 
-\begin{table}[t]
+\begingroup
 \small
-\caption{Detection matrix (N $\in$ \{12, 16, 20\}; 2,565 runs). ``First'' is the first failing check in stage order; ``moved'' is the number of the thirty headline numbers that changed. Naive and Declarative are the two controls of Section 4.1; the declarative entry names the constraint families that fire (single = a column that must hold one value, fk = the join with the reference table, pair = an inequality between two columns of a row).}
-\label{tab:3}
-\begin{tabularx}{\textwidth}{YYYllr}
+\setlength\LTleft{\fill}
+\setlength\LTright{\fill}
+\begin{xltabular}{\textwidth}{YYYllr}
+\caption{Detection matrix (N $\in$ \{12, 16, 20\}; 2,565 runs). ``First'' is the first failing check in stage order, ``moved'' how many of the thirty headline numbers changed. Naive and Declarative are the controls of Section 4.1; the declarative entry names the families that fire (single = one value per file, fk = the join with the reference table, pair = an inequality within a row).}\label{tab:3} \\
 \toprule
 \textbf{Fault} & \textbf{First failing check (stage)} & \textbf{Also failing} & \textbf{Naive} & \textbf{Declarative} & \textbf{Moved} \\
 \midrule
+\endfirsthead
+\toprule
+\textbf{Fault} & \textbf{First failing check (stage)} & \textbf{Also failing} & \textbf{Naive} & \textbf{Declarative} & \textbf{Moved} \\
+\midrule
+\endhead
+\endfoot
+\bottomrule
+\endlastfoot
 clean & --- & --- & --- & --- & 0 \\
 price\_perturbation & input-digest (input) & reference-input, identities & no & no & 0 \\
 window\_mixin & manifest (file) & reference-row, input-digest, identities, state-recompute & no & single;fk & 2 \\
@@ -376,9 +402,8 @@ evaluator\_from\_Q & scorer (row) & row-npz, identities & no & range;pair & 6 \\
 column\_drop & schema (file) & row-npz, state-batch & \textbf{yes} & schema & 6 \\
 shot\_seed\_noop & state-batch (statistical) & seed-distinct & no & unique;band & 2 \\
 reference\_stale & reference-row (row) & reference-input & no & fk & 0 \\
-\bottomrule
-\end{tabularx}
-\end{table}
+\end{xltabular}
+\endgroup
 
 
 Three observations.
@@ -420,35 +445,52 @@ Two faults it does not see, and the reason is not the vocabulary but where the v
 The declarative control detects 81 of the 300, and \textbf{24 of the 26 that move a headline} against the relations' 25. On this mutation set it is barely worse, and Table 5 shows why: what moves a headline here is a block of the table changing at once, which an expectation over the table sees. The two separate elsewhere. Of the 52 perturbed artifacts, the 15 exchanged artifacts and the 24 perturbed inputs --- 91 mutations that touch a file the table does not contain --- the control detects none and the relations detect 71. None of those 91 moved a headline number in this draw, which is a fact about the operators rather than a defence of the control: the two defects of this project that did move reported numbers, a batch drawn from the wrong state and a revised price snapshot, are of exactly those kinds. Detection depends on magnitude as the tolerances say it should: 100\% for a count moved by one, 79--81\% at 10$^{-6}$ to 10$^{-1}$, 47\% at 10$^{-9}$, which is the relative tolerance itself. Of the 64 missed, 38 touch the unbindable columns above, 19 are 10$^{-9}$ perturbations of bound columns, and seven sit inside a stated tolerance (a probability sum of 1 $\pm$ 10$^{-4}$ replaced by another row's; an interior value of the stored f that is neither an extremum nor the selected solution). Every operator that changes \textit{which} record a value belongs to --- a swapped artifact, a copied row, a deleted row, a permuted label, a perturbed input --- was detected in 100\% of its draws.
 
 
-\textbf{What these rates are a rate of, and a held-out draw.} The 300 mutations were drawn once and then used three times, and between passes the relations changed: the uncovered list of the first pass is what told us which columns a further identity could bind. The 79\% is therefore the rate of the final relations on the mutation set they were developed against, not an estimate of their rate on faults nobody has seen. So, with the relations frozen and nothing changed in them afterwards, the same harness drew 300 more from the same operators with a different seed and ran them once: \textbf{245 (82\%) detected}, and of the 26 that moved a headline number, \textbf{26 were caught} (Table 5, last row; \texttt{paper02\_\allowbreak{}es1\_\allowbreak{}random\_\allowbreak{}faults\_\allowbreak{}heldout.\allowbreak{}csv}). The control detects 86 and 25 of the 26. The 77 mutations that touch a file the run table does not contain --- a perturbed artifact, an exchanged artifact, a perturbed input --- are caught 64 times by the relations and never by the control, the same separation the ten faults show. What this does not remove is that the mutation operators are ours, so both rates are conditioned on a distribution of faults we chose, and that the tolerances were set on this record.
+\textbf{What these rates are a rate of, and a held-out draw.} The 300 mutations were drawn once and then used three times, and between passes the relations changed: the uncovered list of the first pass is what told us which columns a further identity could bind. The 79\% is therefore the rate of the final relations on the mutation set they were developed against, not an estimate of their rate on faults nobody has seen. So, with the relations frozen and nothing changed in them afterwards, the same harness drew 300 more from the same operators with a different seed and ran them once: \textbf{245 (82\%) detected}, and of the 26 that moved a headline number, \textbf{26 were caught} (Table 5, last row; \texttt{paper02\_\allowbreak{}es1\_\allowbreak{}random\_\allowbreak{}faults\_\allowbreak{}heldout.\allowbreak{}csv}). The control detects 86 and 25 of the 26. The 77 mutations that touch a file the run table does not contain --- a perturbed artifact, an exchanged artifact, a perturbed input --- are caught 64 times by the relations and never by the control, the same separation the ten faults show. Taking the two draws together: of 600 mutations, 52 move a headline number and the relations catch 51 against the control's 49, which is not a difference worth a claim; of the 168 that reach outside the table, the relations catch 135 and the control none, which is. What this does not remove is that the mutation operators are ours, so both rates are conditioned on a distribution of faults we chose, and that the tolerances were set on this record.
 
 
 
-\begin{table}[t]
+\begingroup
 \small
-\caption{Column coverage of the verification relations (133 columns of run row, reference row and artifact; one column empty on every row is excluded). Each pass is a committed scan of the whole record. ``12 relations without the identity check'' is the thirteen of Section 3.1 less \texttt{identities}, which is one relation holding many per-column recomputations. The last column counts the columns no other relation binds; the rest of the increase from pass 1 is four columns added to the manifest relation's single-valued list in the same pass.}
-\label{tab:4}
-\begin{tabularx}{\textwidth}{rYrr}
+\setlength\LTleft{\fill}
+\setlength\LTright{\fill}
+\begin{xltabular}{\textwidth}{rYrr}
+\caption{Column coverage of the relations over the 133 columns of the run row, the reference row and the artifact; the one column empty on every row is excluded. Each pass is a committed scan of the whole record. The last column counts the columns no other relation binds.}\label{tab:4} \\
 \toprule
 \textbf{Pass} & \textbf{Checks} & \textbf{Covered} & \textbf{Covered by \texttt{identities} alone} \\
 \midrule
+\endfirsthead
+\toprule
+\textbf{Pass} & \textbf{Checks} & \textbf{Covered} & \textbf{Covered by \texttt{identities} alone} \\
+\midrule
+\endhead
+\endfoot
+\bottomrule
+\endlastfoot
 1 & 12 relations without the identity check & 47 / 132 & 0 \\
 2 & + identities ($Q_{\tau}$, $P_{\tau}$/$P_{\mathrm{opt}}$, rank, D and the offset magnitude, best expectation, uniform baselines, Sharpe constancy) & 103 / 132 & 52 \\
 3 & + shot-level successes, fractions, distinct shots, probability sums, portfolio metrics from the pinned statistics, reference row against its own cardinality minima and stored f & 114 / 132 & 63 \\
-\bottomrule
-\end{tabularx}
-\end{table}
+\end{xltabular}
+\endgroup
 
 
 
-\begin{table}[t]
+\begingroup
 \small
-\caption{300 random mutations, final pass, by operator. ``Declarative'' is the control of Section 4.1 on the same mutations; ``moved and missed'' counts the mutations that changed a headline number and that the relations did not catch (the control's count of those is in the text). The last row is a second draw of 300 from the same operators with a different seed, run once after the relations were frozen, and is the only line of this table the checks were not developed against.}
-\label{tab:5}
-\begin{tabularx}{\textwidth}{YlllYY}
+\setlength\LTleft{\fill}
+\setlength\LTright{\fill}
+\begin{xltabular}{\textwidth}{YlllYY}
+\caption{300 random mutations by operator, final pass. ``Declarative'' is the control of Section 4.1 on the same mutations; ``moved and missed'' counts those that changed a headline number and that the relations did not catch. The last row is the held-out draw.}\label{tab:5} \\
 \toprule
 \textbf{Operator} & \textbf{n} & \textbf{Detected} & \textbf{Declarative} & \textbf{Moved a headline} & \textbf{Moved and missed} \\
 \midrule
+\endfirsthead
+\toprule
+\textbf{Operator} & \textbf{n} & \textbf{Detected} & \textbf{Declarative} & \textbf{Moved a headline} & \textbf{Moved and missed} \\
+\midrule
+\endhead
+\endfoot
+\bottomrule
+\endlastfoot
 cell perturbed ($\delta$ $\in$ \{10$^{-9}$, 10$^{-6}$, 10$^{-3}$, 10$^{-1}$\}) & 80 & 52 & 16 & 1 & 1 \\
 cell replaced by another row's & 30 & 20 & 2 & 0 & 0 \\
 row's metrics copied onto another row & 13 & 13 & 13 & 2 & 0 \\
@@ -461,9 +503,8 @@ derived statistic perturbed & 24 & 24 & 0 & 0 & 0 \\
 column dropped & 27 & 25 & 12 & 1 & 0 \\
 \textbf{all} & \textbf{300} & \textbf{236 (79\%)} & \textbf{81} & \textbf{26} & \textbf{1} \\
 \textbf{all, held-out draw (seed 7, relations frozen)} & \textbf{300} & \textbf{245 (82\%)} & \textbf{86} & \textbf{26} & \textbf{0} \\
-\bottomrule
-\end{tabularx}
-\end{table}
+\end{xltabular}
+\endgroup
 
 
 \subsection{E-S2: structural guards stop before construction; a cap stops after six tasks; each sees what the other does not}
@@ -472,21 +513,29 @@ column dropped & 27 & 25 & 12 & 1 & 0 \\
 
 
 
-\begin{table}[t]
+\begingroup
 \small
-\caption{Tapes per optimizer step on a device without a derivative method.}
-\label{tab:6}
-\begin{tabular}{rrrrr}
+\setlength\LTleft{\fill}
+\setlength\LTright{\fill}
+\begin{longtable}{rrrrr}
+\caption{Tapes per optimizer step on a device without a derivative method.}\label{tab:6} \\
 \toprule
 \textbf{N} & \textbf{stand-in (\texttt{default.qubit}, no derivatives)} & \textbf{\texttt{braket.\allowbreak{}local.\allowbreak{}qubit}} & \textbf{transform} & \textbf{formula} \\
 \midrule
+\endfirsthead
+\toprule
+\textbf{N} & \textbf{stand-in (\texttt{default.qubit}, no derivatives)} & \textbf{\texttt{braket.\allowbreak{}local.\allowbreak{}qubit}} & \textbf{transform} & \textbf{formula} \\
+\midrule
+\endhead
+\endfoot
+\bottomrule
+\endlastfoot
 8 & 177 & 177 & 177 & 177 \\
 12 & 361 & --- & 361 & 361 \\
 16 & 609 & --- & 609 & 609 \\
 20 & 921 & --- & 921 & 921 \\
-\bottomrule
-\end{tabular}
-\end{table}
+\end{longtable}
+\endgroup
 
 
 \textbf{Stopping stages.} Figure 2 shows the N = 8 cells; Table 7 gives N = 8 and N = 20, and the CSV holds N = 12 and 16, which lie between.
@@ -495,31 +544,39 @@ column dropped & 27 & 25 & 12 & 1 & 0 \\
 \begin{figure}[t]
 \centering
 \includegraphics[width=\textwidth]{figures/fig_guard_stages.pdf}
-\caption{The stage at which each misconfiguration stops under the four guard configurations (N = 8, list prices). Nothing in the figure is carried by colour: the marker's shape is the guard configuration and its fill is the outcome --- open for nothing wasted, grey for a correct call with a costly default, solid for wasted spend or the baseline file lost. A section mark is a count computed from a measured per-step count rather than run to completion (fifty steps of the optimizer loop); a dagger marks a cell that follows from the provider's documented behaviour and was not observed, because the spending limit exists only for hardware and the device stayed offline; a double dagger marks a cell confirmed on the service (Section 5.2). Unmarked cells are measured by the harness. The structural guards act at the first two stages; the cap acts at the fourth, and not at all for the simulator.}
+\caption{Where each misconfiguration stops under the four guard configurations (N = 8, list prices). Nothing is carried by colour: the marker's shape is the guard configuration and its fill the outcome --- open for nothing wasted, grey for a correct call with a costly default, solid for wasted spend or the baseline file lost. The marks are Table 7's: \S{} computed from a measured per-step count, $\dagger$ the provider's documented behaviour, $\ddagger$ confirmed on the service, unmarked measured by the harness.}
 \label{fig:2}
 \end{figure}
 
 
 
-\begin{table}[t]
+\begingroup
 \small
-\caption{Stage at which each misconfiguration stops, tasks billed and list-price bill, under four guard configurations. Cap = \$50 per QPU. ``---'' in the result column: nothing usable; ``?'' the six accepted tasks carry the forward evaluation and part of one gradient, so a value comes back and no gradient does. Where each cell comes from: unmarked cells are measured by the harness, which runs the committed code against a device that offers no derivative method and counts the tapes it sends; Sec.~ marks a count the harness did not run to completion but computed from a measured per-step count (50 steps of 177 tapes plus the sampling call is 9,027 at N = 8, and of 921 is 46,971 at N = 20); $\ddagger$ marks a cell confirmed on Amazon Braket (Section 5.2); $\dagger$ marks a cell that follows from the provider's documented behaviour and was not observed, because the spending limit exists only for hardware and the device stayed offline for the seven days of the probe. Every dollar figure is a list price applied to a task count, not a bill anyone received.}
-\label{tab:7}
-\begin{tabularx}{\textwidth}{YrYYYY}
+\setlength\LTleft{\fill}
+\setlength\LTright{\fill}
+\begin{xltabular}{\textwidth}{YrYYYY}
+\caption{Stage at which each misconfiguration stops, tasks billed and list-price bill, under four guard configurations (cap = \$50 per QPU). Where a cell comes from: unmarked, measured by the harness; \S{}, computed from a measured per-step count; $\ddagger$, confirmed on the service; $\dagger$, the provider's documented behaviour, not observed. In the last column ``---'' is nothing usable and ``?'' a value with no gradient. Every dollar figure is a list price applied to a task count, not a bill anyone received.}\label{tab:7} \\
 \toprule
 \textbf{Misconfiguration} & \textbf{N} & \textbf{none} & \textbf{cap only} & \textbf{structural} & \textbf{both} \\
 \midrule
-QPU as optimizer backend, 50 steps, 100 shots & 8 & Sec.~ submitted; 9,027 tasks; \textbf{\$74,924} & $\dagger$ service; 6 tasks; \$49.80; --- & \textbf{cli}; 0 tasks; \$0 & cli; 0; \$0 \\
- & 20 & Sec.~ submitted; 46,971 tasks; \textbf{\$389,859} & $\dagger$ service; 6; \$49.80; --- & cli; 0; \$0 & cli; 0; \$0 \\
+\endfirsthead
+\toprule
+\textbf{Misconfiguration} & \textbf{N} & \textbf{none} & \textbf{cap only} & \textbf{structural} & \textbf{both} \\
+\midrule
+\endhead
+\endfoot
+\bottomrule
+\endlastfoot
+QPU as optimizer backend, 50 steps, 100 shots & 8 & \S{} submitted; 9,027 tasks; \textbf{\$74,924} & $\dagger$ service; 6 tasks; \$49.80; --- & \textbf{cli}; 0 tasks; \$0 & cli; 0; \$0 \\
+ & 20 & \S{} submitted; 46,971 tasks; \textbf{\$389,859} & $\dagger$ service; 6; \$49.80; --- & cli; 0; \$0 & cli; 0; \$0 \\
 Trainable angles at sampling, SV1, 1,000 shots & 8 & $\ddagger$ submitted; 177 tasks; \$0.66 & $\ddagger$ submitted; 177; \$0.66 (\textbf{cap blind}) & $\ddagger$ \textbf{pre-submit}; 1 task & $\ddagger$ pre-submit; 1 \\
  & 20 & submitted; 921; \$3.45 & submitted; 921; \$3.45 & pre-submit; 1 & pre-submit; 1 \\
 Trainable angles at sampling, IonQ, 100 shots & 8 & submitted; 177; \$1,469 & $\dagger$ service; 6; \$49.80; ? & pre-submit; 1; \$8.30 & pre-submit; 1; \$8.30 \\
  & 20 & submitted; 921; \$7,644 & $\dagger$ service; 6; \$49.80; ? & pre-submit; 1; \$8.30 & pre-submit; 1; \$8.30 \\
 QPU as sampling backend, default 1,000 shots & 8 & submitted; 1 task; \$80.30 & $\dagger$ \textbf{service; 0; \$0} & submitted; 1; \textbf{\$80.30} & $\dagger$ service; 0; \$0 \\
 Untagged SV1 run over the baseline & 8 & submitted; \textbf{baseline overwritten} & overwritten & \textbf{cli}; baseline intact & cli; intact \\
-\bottomrule
-\end{tabularx}
-\end{table}
+\end{xltabular}
+\endgroup
 
 
 The division of labour is the result. The structural guards stop the two runs that would have been ruinous at the command line and before the call reaches a device, and they do so at every N, because they act on the configuration and not on a running total. The counterfactual bill of the unguarded optimizer loop is \$74,924 at N = 8 (the numerical study's ``about \$73,000'' excluded the sampling call's own 177 tasks) and \$389,859 at N = 20.
@@ -531,27 +588,35 @@ The cap stops the same runs after six tasks of \$8.30 with nothing to show --- t
 \textbf{What the service confirmed.} The sampling fallback is no longer an inference from a month-old ledger: on 16 September 2026, under PennyLane 0.45.1 and amazon-braket-pennylane-plugin 1.35.1, the N = 8 sampling QNode sent to SV1 with the optimizer's angles still marked trainable created \textbf{177 tasks in 672 s}, and the same QNode with frozen angles created \textbf{1 task in 4 s}; both returned a full 1,000 $\times$ 8 sample. The \texttt{none} cells for the fallback therefore rest on an observation, and the transform's count and the 2026-08-09 ledger agree with it. Of the cap, one half is observed and one half still modelled: the request for a spending limit on SV1 was refused by the service (``Spending limits can not be created for simulator devices''), which is the row ``cap blind'' of Table 7; the rejection of an over-cap QPU task at creation was attempted with a \$1.00 limit on IonQ Forte-1 and a 100-shot (\$8.30) circuit, and the service answered \texttt{Device\allowbreak{}Offline\allowbreak{}Exception} because the device was outside its availability --- the task was not created and nothing was billed, but the refusal observed was the device's, not the cap's. The probe was then left to a poller that queried the device every 30 minutes for seven days (2026-09-17 09:45 to 2026-09-24 09:28 UTC, 336 queries, \texttt{paper02\_\allowbreak{}ionq\_\allowbreak{}availability\_\allowbreak{}probe.\allowbreak{}log}): the device answered \texttt{OFFLINE} every time and the probe never ran. That is itself the point of P3's device-availability record --- a benchmark that needs this QPU is not runnable on demand, and the platform writes that fact rather than inferring it --- but it leaves the \texttt{service} cells of Table 7 as the provider's documented behaviour, not as an observation of ours.
 
 
-\textbf{The third kind of control, observed twice.} Deployed as documented, the account-level solution metered nothing: its task-logger function failed on import in all 392 invocations of the first run (the Braket SDK pulls in a simulator whose numba-compiled functions try to write a cache beside the source, and \texttt{/var/task} is read-only in Lambda), the running-cost alarms stayed \texttt{INSUFFICIENT\_\allowbreak{}DATA}, no denial was attached, and 400 tasks (\$1.50 at list price) were created against a \$0.30 limit. The solution's own ``task logger errors'' alarm did fire, four minutes in --- a detective control for the detective control, which nothing in the documented procedure says to watch. With one environment variable added (\texttt{NUMBA\_\allowbreak{}CACHE\_\allowbreak{}DIR=/\allowbreak{}tmp/\allowbreak{}numba}; Appendix A.2) the control behaved as designed, and the measurement was repeated five times with the running cost reset between runs (Table 8). In every run the list-price total crossed \$0.30 at task 81 and the alarm fired 91--96 s later (one 60 s evaluation period plus its phase); and the first \texttt{Access\allowbreak{}Denied\allowbreak{}Exception} came 7--146 s after the alarm --- that interval covers the alarm action attaching the deny policy and IAM's eventually consistent propagation of it, neither of which the record separates. The tasks created after the limit was crossed were \textbf{41--92 (median 47)}, after the alarm \textbf{6--56 (median 10)}, and after the first denial a further 1--5 slipped through before the denial held. The residue the documentation calls ``a few'' is therefore, for a sequential loop at 3--4 s per task, about 47 tasks in the median and twice that in one run of five --- \$0.18 to \$0.35 on the simulator. Priced at IonQ's \$8.30 per task the same counts would be \$390 to \$760, which is an illustration of what a residue of that size costs on hardware and not a prediction of what a QPU loop would overrun by: the residue is a count of tasks a 3--4 s submission loop got in before a denial propagated, and on hardware both the submission rate and the queue are different. It is the order of magnitude that matters here, and it is what a cap of the second kind --- had it existed for the device --- would have stopped at \$50, and the structural guard at \$0.
+\textbf{The third kind of control, observed twice.} Deployed as documented, the account-level solution metered nothing: its task-logger function failed on import in all 392 invocations of the first run (the Braket SDK pulls in a simulator whose numba-compiled functions try to write a cache beside the source, and \texttt{/var/task} is read-only in Lambda), the running-cost alarms stayed \texttt{INSUFFICIENT\_\allowbreak{}DATA}, no denial was attached, and 400 tasks (\$1.50 at list price) were created against a \$0.30 limit. The solution's own ``task logger errors'' alarm did fire, four minutes in --- a detective control for the detective control, which nothing in the documented procedure says to watch. With one environment variable added (\texttt{NUMBA\_\allowbreak{}CACHE\_\allowbreak{}DIR=/\allowbreak{}tmp/\allowbreak{}numba}; Appendix A.2) the control behaved as designed, and the measurement was repeated five times with the running cost reset between runs (Table 8). In every run the list-price total crossed \$0.30 at task 81 and the alarm fired 91--96 s later (one 60 s evaluation period plus its phase); and the first \texttt{Access\allowbreak{}Denied\allowbreak{}Exception} came 7--146 s after the alarm --- that interval covers the alarm action attaching the deny policy and IAM's eventually consistent propagation of it, neither of which the record separates. The tasks created after the limit was crossed were \textbf{41--92 (median 47)}, after the alarm \textbf{6--56 (median 10)}, and after the first denial a further 1--5 slipped through before the denial held. The residue the documentation calls ``a few'' is therefore, for a sequential loop at 3--4 s per task, about 47 tasks in the median and twice that in one run of five --- \$0.18 to \$0.35 on the simulator. Priced at IonQ's \$8.30 per task the same counts would be \$390 to \$760, which is an illustration of what a residue of that size costs on hardware and not a prediction of what a QPU loop would overrun by: the residue is a count of tasks a 3--4 s submission loop got in before a denial propagated, and on hardware both the submission rate and the queue are different. It is the order of magnitude that matters here, and it is what a cap of the second kind --- had it existed for the device --- would have stopped at \$50, and the structural guard at \$0. Two cells of the first repetition are not in the summary that run wrote, because the aggregation gained those fields afterwards; \texttt{es2\_\allowbreak{}cost\_\allowbreak{}control\_\allowbreak{}aggregate.\allowbreak{}py} recomputes them from the run's own task records and checks the recomputation against every field the four later summaries do hold.
 
 
 
-\begin{table}[t]
+\begingroup
 \small
-\caption{Five repetitions of the account-level control, one column per repetition (limit \$0.30; SV1 Bell circuit, 10 shots, \$0.00375 per task, sequential). Every cell is an observation of the deployed control on Amazon Braket; nothing in this table is modelled. Two cells of run 1 are recomputed from that run's task records, which the summary written during the first repetition did not yet carry (\texttt{es2\_\allowbreak{}cost\_\allowbreak{}control\_\allowbreak{}aggregate.\allowbreak{}py}, which also checks the recomputation against every field the later summaries do hold).}
-\label{tab:8}
-\begin{tabularx}{\textwidth}{Yllllll}
+\setlength\LTleft{\fill}
+\setlength\LTright{\fill}
+\begin{xltabular}{\textwidth}{Yllllll}
+\caption{Five repetitions of the account-level control, one column each (limit \$0.30; SV1 Bell circuit, 10 shots, \$0.00375 per task, sequential). Every cell is an observation on Amazon Braket; nothing here is modelled. Two cells of run 1 are recomputed from its task records by \texttt{es2\_\allowbreak{}cost\_\allowbreak{}control\_\allowbreak{}aggregate.\allowbreak{}py}.}\label{tab:8} \\
 \toprule
 \textbf{Quantity} & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} & \textbf{median} \\
 \midrule
+\endfirsthead
+\toprule
+\textbf{Quantity} & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} & \textbf{median} \\
+\midrule
+\endhead
+\endfoot
+\bottomrule
+\endlastfoot
 Tasks created & 124 & 127 & 172 & 121 & 127 & 127 \\
 Created past the limit & 44 & 47 & 92 & 41 & 47 & 47 \\
 Limit $\rightarrow$ alarm & 96 s & 95 s & 94 s & 91 s & 94 s & 94 s \\
 Created past the alarm & 6 & 10 & 56 & 6 & 11 & 10 \\
 Alarm $\rightarrow$ first denial & 16 s & 14 s & 146 s & 7 s & 19 s & 16 s \\
 Created past the first denial & 2 & 5 & 1 & 4 & 5 & 4 \\
-\bottomrule
-\end{tabularx}
-\end{table}
+\end{xltabular}
+\endgroup
 
 
 \subsection{E-S3: three levels rebuilt from a clone; one in-flight run lost on interruption; two controls fail as they should}
@@ -559,8 +624,10 @@ Created past the first denial & 2 & 5 & 1 & 4 & 5 & 4 \\
 
 \begingroup
 \small
+\setlength\LTleft{\fill}
+\setlength\LTright{\fill}
 \begin{xltabular}{\textwidth}{lYYY}
-\caption{The clean-room harness's steps. Levels 0--3 and the two controls clone the public package \texttt{v1.0}, which is what E-S3 evaluates and the version the numerical study was submitted with. The last block repeats the checks on \texttt{v1.1}, the release this paper is submitted with, and runs the interruption there: the job status record of Section 3.3 does not exist in \texttt{v1.0}, so before \texttt{v1.1} that row could only be measured in the working tree. The \texttt{v1.0} rows clone over the network from the published repository; the \texttt{v1.1} rows clone the same release from a local mirror of it, because the tag becomes public on submission --- which is why that clone takes 0.3 s and not 1.5 s, and is the only difference. Fresh environment for each; this host.}\label{tab:9} \\
+\caption{The clean-room harness's steps: levels 0--3 and the two controls on the public package \texttt{v1.0}, then the same checks and the interruption on \texttt{v1.1}, the release this paper ships. A fresh environment for each, on one host.}\label{tab:9} \\
 \toprule
 \textbf{Level} & \textbf{Command (from the README)} & \textbf{Wall-clock} & \textbf{Outcome} \\
 \midrule
@@ -583,12 +650,12 @@ Created past the first denial & 2 & 5 & 1 & 4 & 5 & 4 \\
 3 & re-issue with \texttt{--resume} & 168 s & ``6 rows already done''; 24 rows; 94/94 non-timing columns identical to the uninterrupted block \\
 control & level 2 without \texttt{data/derived}, network unreachable & 6 s & fails: \texttt{Type\allowbreak{}Error:\allowbreak{} '<' not supported between instances of 'int' and 'None\allowbreak{}Type'} \\
 control & E2 aggregation without the artifacts & 1.2 s & fails: ``no run artifacts under \ldots{}/e1\_runs'' \\
-0 (v1.1) & \texttt{git clone -\allowbreak{}-\allowbreak{}branch v1.\allowbreak{}1}; \texttt{python -m venv}; \texttt{pip install -\allowbreak{}r requirements-\allowbreak{}repro.\allowbreak{}txt} & 0.3 s; 8 s; 152 s & commit 71b05e0, 24 MB \\
-0 (v1.1) & \texttt{pytest -q -rs} & 100 s & 400 passed, 32 skipped: 28 need the per-run artifacts, 3 the price snapshots, 1 a host without \texttt{lightning.gpu} \\
-1 (v1.1) & \texttt{python -\allowbreak{}m notebooks.\allowbreak{}generate\_\allowbreak{}tqe\_\allowbreak{}figures}; \texttt{python check\_\allowbreak{}tables.\allowbreak{}py} & 24 s; 2.7 s & 5/5 byte-identical; 2,578 cells agree, 0 disagree, 0 pending \\
+0 (v1.1) & \texttt{git clone -\allowbreak{}-\allowbreak{}branch v1.\allowbreak{}1}; \texttt{python -m venv}; \texttt{pip install -\allowbreak{}r requirements-\allowbreak{}repro.\allowbreak{}txt} & 0.3 s; 8 s; 147 s & commit fde2941, 24 MB \\
+0 (v1.1) & \texttt{pytest -q -rs} & 103 s & 400 passed, 32 skipped: 28 need the per-run artifacts, 3 the price snapshots, 1 a host without \texttt{lightning.gpu} \\
+1 (v1.1) & \texttt{python -\allowbreak{}m notebooks.\allowbreak{}generate\_\allowbreak{}tqe\_\allowbreak{}figures}; \texttt{python check\_\allowbreak{}tables.\allowbreak{}py} & 24 s; 2.6 s & 5/5 byte-identical; 2,578 cells agree, 0 disagree, 0 pending \\
 2 (v1.1) & the level-2 command above & 18 s & energy and Sharpe identical to the committed file, to 0 \\
 3 (v1.1) & the level-3 block with the job status record: \texttt{SIGKILL} after 5 runs & 50 s & status file \texttt{RUNNING 5/\allowbreak{}12, last N12\_\allowbreak{}i00\_\allowbreak{}5x\allowbreak{}Acrit\_\allowbreak{}s42}, matching the 5 rows on disk, which the manifest parses with no artifact left without a row; \texttt{analyze\_e1} refuses the manifest \\
-3 (v1.1) & re-issue with \texttt{--resume} & 69 s & driver prints ``previous job: RUNNING pid \ldots{} 5/12''; status \texttt{EXIT 0 12/12}; \texttt{analyze\_e1} runs \\
+3 (v1.1) & re-issue with \texttt{--resume} & 71 s & driver prints ``previous job: RUNNING pid \ldots{} 5/12''; status \texttt{EXIT 0 12/12}; \texttt{analyze\_e1} runs \\
 \end{xltabular}
 \endgroup
 
@@ -597,14 +664,23 @@ The inputs the harness supplied were the repository URL and tag, a name for \tex
 
 
 
-\begin{table}[t]
+\begingroup
 \small
-\caption{Level 3: a CPU double-precision block against the committed GPU single-precision rows (24 runs).}
-\label{tab:10}
-\begin{tabularx}{\textwidth}{lYlY}
+\setlength\LTleft{\fill}
+\setlength\LTright{\fill}
+\begin{xltabular}{\textwidth}{lYlY}
+\caption{Level 3: a CPU double-precision block against the committed GPU single-precision rows (24 runs).}\label{tab:10} \\
 \toprule
 \textbf{Group} & \textbf{Column} & \textbf{Identical rows} & \textbf{Max abs. difference} \\
 \midrule
+\endfirsthead
+\toprule
+\textbf{Group} & \textbf{Column} & \textbf{Identical rows} & \textbf{Max abs. difference} \\
+\midrule
+\endhead
+\endfoot
+\bottomrule
+\endlastfoot
 reference & f*, $\Delta_{F}$, $A_{\mathrm{crit}}$, $A_{\mathrm{heur}}$, $A_{\mathrm{margin}}$, Hamiltonian scale & 24/24 each & 0 \\
 angles & initial\_angles & 24/24 & 0 \\
 angles & final\_angles & 0/24 & --- \\
@@ -617,9 +693,8 @@ state & final\_Q\_$\tau$(1000) & 0/24 & 3.3$\cdot$10$^{-6}$ \\
 shots & feasible\_shots & 0/24 & 31 shots \\
 shots & shots\_optimal & 10/24 & 5 shots \\
 shots & best\_all\_E, $g_{F}$, $g_{\mathrm{off}}$ & 14/24 & 0.19, 0.28, 0.11 \\
-\bottomrule
-\end{tabularx}
-\end{table}
+\end{xltabular}
+\endgroup
 
 
 The block changes two things at once --- the host and the precision --- so it bounds what a reader should expect rather than separating the two causes; a CPU run at single precision would separate them and is not part of the level the README defines. What reproduces bit for bit across hosts is what P1 binds the record to: the pinned inputs, the reference derived from them, and the seeded initial angles. What does not is what the numerical study said would not: fifty ADAM steps in single precision on one host and double on another end at different angles, the state quantities differ at the 10$^{-4}$ level, and the shot columns are a different draw from a slightly different state. The README states this division in advance; the table measures it.
@@ -628,7 +703,7 @@ The block changes two things at once --- the host and the precision --- so it bo
 \textit{Interruption.} Seven runs had printed their completion line when the process was killed; six rows were on disk. That measurement is of the released \texttt{v1.0}, whose flush rewrote the manifest in place, so the six rows survived because the kill fell outside the rewrite rather than because it could not fall inside it; the \texttt{v1.1} driver, which lands the file with a rename (Section 3.3), is measured in the same way in the last block of Table 9, where the manifest parses and holds exactly the rows the status file claims. What an interruption costs either way is the run in flight and its artifact: the \texttt{.npz} is written before the row, so a kill between the two leaves an artifact with no row --- the resumed run rewrites it, and the row-npz relation would flag it if it did not. The seventh had completed its computation and not yet its flush, so the run in flight is the unit of loss and the flush granularity bounds it at one. The resumed run read the six rows, skipped their cells, and produced a file identical to the uninterrupted block in all 94 non-timing columns; the timing columns differ, as they must.
 
 
-\textit{The same checks on the release this paper ships.} E-S3's three levels are an evaluation of \texttt{v1.0}, because that is the package a reader of the numerical study has and the one whose gaps this section reports. The fixes those gaps produced are in \texttt{v1.1}, so the last block of Table 9 clones \texttt{v1.1} and repeats what can be repeated: the suite (400 passed, 32 skipped), level 1 (5/5 figures byte-identical, 2,578 manuscript cells agreeing), level 2 (identical to the committed file, to zero), and the interruption and resumption --- which \texttt{v1.0} cannot be asked for at all, since the job status record was written in response to this evaluation. What the 32 skips are: 28 tests of the E-S1 harness need the per-run artifacts, about 100 MB of \texttt{.npz} that the git repository does not carry and the Zenodo deposit of \cite{ref1} does, so a reader who clones without fetching the deposit does not exercise the fault-injection relations against real artifacts; three need the price snapshots, which are third-party data the package deliberately does not redistribute (it ships the derived statistics instead); and one is the test that a GPU backend does not silently fall back, which has nothing to fall back from on a host where \texttt{lightning.gpu} is installed and runs. Every claim this paper makes about the final implementation is therefore a claim about a tagged commit (\texttt{71b05e0}) that a reader can clone, and the \texttt{CHANGELOG} says which paper was evaluated against which release. What is \textit{not} repeated on \texttt{v1.1} is level 3's full block and its column-by-column agreement (Table 10), which measures a host-and-precision difference the release does not change.
+\textit{The same checks on the release this paper ships.} E-S3's three levels are an evaluation of \texttt{v1.0}, because that is the package a reader of the numerical study has and the one whose gaps this section reports. The fixes those gaps produced are in \texttt{v1.1}, so the last block of Table 9 clones \texttt{v1.1} and repeats what can be repeated: the suite (400 passed, 32 skipped), level 1 (5/5 figures byte-identical, 2,578 manuscript cells agreeing), level 2 (identical to the committed file, to zero), and the interruption and resumption --- which \texttt{v1.0} cannot be asked for at all, since the job status record was written in response to this evaluation. The \texttt{v1.0} rows of Table 9 clone over the network from the published repository and the \texttt{v1.1} rows clone the same release from a local mirror, because the tag becomes public on submission; that is why the second clone takes 0.3 s rather than 1.5 s, and it is the only difference between the two passes. What the 32 skips are: 28 tests of the E-S1 harness need the per-run artifacts, about 100 MB of \texttt{.npz} that the git repository does not carry and the Zenodo deposit of \cite{ref1} does, so a reader who clones without fetching the deposit does not exercise the fault-injection relations against real artifacts; three need the price snapshots, which are third-party data the package deliberately does not redistribute (it ships the derived statistics instead); and one is the test that a GPU backend does not silently fall back, which has nothing to fall back from on a host where \texttt{lightning.gpu} is installed and runs. Every claim this paper makes about the final implementation is therefore a claim about a tagged commit (\texttt{fde2941}) that a reader can clone, and the \texttt{CHANGELOG} says which paper was evaluated against which release. What is \textit{not} repeated on \texttt{v1.1} is level 3's full block and its column-by-column agreement (Table 10), which measures a host-and-precision difference the release does not change.
 
 
 \textit{The second gap.} The package without its derived statistics and without network access fails, as it should --- but in \texttt{v1.0} it fails with a \texttt{TypeError} raised inside pandas on the empty frame the provider returned, which tells the reader nothing about which of the three input sources (snapshot, derived statistics, provider) is missing. The loader now raises a \texttt{RuntimeError} naming all three and the file to restore; a test pins it. The E2 aggregation without the artifacts fails with a message that names the directory and, in the README, the deposit.
@@ -638,21 +713,29 @@ The block changes two things at once --- the host and the precision --- so it bo
 
 
 
-\begin{table}[t]
+\begingroup
 \small
-\caption{Level 1 from the release tag on four machines (the author's own; \texttt{requirements.txt}, the minimum versions, except on the GPU host).}
-\label{tab:11}
-\begin{tabularx}{\textwidth}{YlrYY}
+\setlength\LTleft{\fill}
+\setlength\LTright{\fill}
+\begin{xltabular}{\textwidth}{YlrYY}
+\caption{Level 1 from the release tag on four machines (the author's own; \texttt{requirements.txt}, the minimum versions, except on the GPU host).}\label{tab:11} \\
 \toprule
 \textbf{Machine} & \textbf{Shell} & \textbf{Python} & \textbf{Test suite} & \textbf{\texttt{check\_tables.py}} \\
 \midrule
+\endfirsthead
+\toprule
+\textbf{Machine} & \textbf{Shell} & \textbf{Python} & \textbf{Test suite} & \textbf{\texttt{check\_tables.py}} \\
+\midrule
+\endhead
+\endfoot
+\bottomrule
+\endlastfoot
 GPU host (Ubuntu, RTX A6000) & bash & 3.11.9 & 364 passed, 4 skipped & 2,578 agree, 0 disagree \\
 Windows & Git Bash & 3.12 & 365 passed, 3 skipped & 2,578 agree, 0 disagree \\
 macOS & bash & 3.12 & 365 passed, 3 skipped & 2,578 agree, 0 disagree \\
 Google Colab (three runs) & notebook & 3.13.15 & 365 passed, 3 skipped & 2,578 agree, 0 disagree \\
-\bottomrule
-\end{tabularx}
-\end{table}
+\end{xltabular}
+\endgroup
 
 
 \subsection{A case study in secondary analysis: two hypotheses settled from the record alone}
@@ -675,14 +758,23 @@ Seven implementation defects changed reported numbers during the numerical study
 
 
 
-\begin{table}[t]
+\begingroup
 \small
-\caption{The seven defects.}
-\label{tab:12}
-\begin{tabularx}{\textwidth}{rYYYY}
+\setlength\LTleft{\fill}
+\setlength\LTright{\fill}
+\begin{xltabular}{\textwidth}{rYYYY}
+\caption{The seven defects.}\label{tab:12} \\
 \toprule
 \textbf{\#} & \textbf{Defect} & \textbf{How it was found} & \textbf{Relation that now holds it} & \textbf{E-S1 replay} \\
 \midrule
+\endfirsthead
+\toprule
+\textbf{\#} & \textbf{Defect} & \textbf{How it was found} & \textbf{Relation that now holds it} & \textbf{E-S1 replay} \\
+\midrule
+\endhead
+\endfoot
+\bottomrule
+\endlastfoot
 1 & angles passed as a plain array; the optimizer returned them unchanged & a flat convergence curve, by inspection & npz-internal, by its diagnostic clause: the final angles equal the trajectory's first point. Not an identity --- a run stopped at a stationary point would look the same --- so it reports a run to look at, which is what this defect needs & --- \\
 2 & computational-basis sampling unsupported on the Braket device & an exception on first use & --- (a failure, not a wrong number) & --- \\
 3 & the $\gamma$-landscape's period at N = 12 smaller than one ADAM step & divergence of the expectation, by inspection & row-npz binds the Hamiltonian scale on the row to the one in the artifact, so a run whose scale differs from the one it was optimised under is visible; the step size against the period is not checked & --- \\
@@ -690,9 +782,8 @@ Seven implementation defects changed reported numbers during the numerical study
 5 & a hardware recovery path exercised only against a simulator & on the first real task & --- (documented manual step) & --- \\
 6 & \texttt{shot\_seed} a no-op: the Lightning devices seed once at construction & two sweeps with ``different'' shots had identical energies, by comparison & seed-distinct; state-batch & shot\_seed\_noop (caught by both) \\
 7 & the L-BFGS-B wrapper sampled from the initial angles & the batch's feasible fraction tracked initial $P_{F}$ (r = 0.99), not final (r = $-$0.30) & state-batch. The defect wrote a batch its artifact agreed with, so row-npz does not see it; row-npz sees the \textit{injection} of Section 5.1, which rewrites the row's summary and leaves the artifact & batch\_from\_initial (2,299 rows flagged; 12/30 headline numbers moved) \\
-\bottomrule
-\end{tabularx}
-\end{table}
+\end{xltabular}
+\endgroup
 
 
 Only the seventh was found by a relation that already existed as a check; the others were found by inspection, by exception or by an ad hoc comparison, and the relations were written afterwards so that the same class of defect would not need luck again. Two further defects concerned the record's writer and its inputs rather than a run: a CSV writer that took its header from the first row dropped twelve of nineteen columns of one file without a message (replayed as column\_drop; the writer now takes the union of keys), and a per-size price cache that held one file revised by the provider seven minutes after the others (replayed as price\_perturbation; one snapshot per window now, and --- from this evaluation --- the content digest of Section 5.1).
@@ -703,7 +794,7 @@ Only the seventh was found by a relation that already existed as a check; the ot
 The evaluation is of one platform for one application family on one provider, by the platform's authors. The faults of E-S1 are ours, four replays and six judgement, and the mutation operators are ours too: the held-out draw holds the operators fixed and changes only the seed, so it answers the objection that the relations were tuned to a particular draw and not the one that they were written for a particular kind of fault. Of E-S2's cap, the simulator half is observed and the QPU rejection is still the documented behaviour; the fallback counts rest on the transform, a month-old ledger and one re-observation. E-S3's reader is a clean-room script with the author's package cache, and the three further machines of Table 11 were run by the author as well: what is evidenced is that the written instructions carry to a machine they were not written on, not that an independent person can follow them. No one outside the project has run the package; the question of whether a stranger understands the README is a question about people, and answering it would need their consent and an ethics review rather than another harness. Three design gaps were found by the evaluation, and a fourth --- a per-run flush that was not atomic, so that the bound it was supposed to give held only by luck --- by checking the driver against the claim this paper makes about it; they are stated above, the releases they are in and are not in are Section 5.3's last paragraph, and the digest was appended to the released record files from the pinned statistics rather than produced by a re-run. The third gap was found not by a harness but by operating one: the two-hour coverage scan of Section 5.1 crashed in its first minute on a column that is empty on every row, the shell script that ran it had no \texttt{set -e} and printed its completion marker anyway, and success was read off that marker for nine hours. The status record of Section 3.3 is the consequence. The dollar figures are list prices applied to counts; the project's total spend on the provider was \$42.59. P2 is preventive: it does not detect a loop of correct calls; the account-level control that does was measured five times, on one provider's sample deployment, at one submission rate, and its residue varied twofold between runs. The thirteen relations are written by hand, one expression per fact; a record schema that declares each fact's kind, unit, rounding and synonyms, from which the extractor and the relations are generated, has been prototyped on two record types (a portfolio card and this paper's cost-control observations) and reproduces the hand-written checks on every text tried, but it is not what E-S1 evaluated and is reported elsewhere.
 
 
-One binding cannot close, and it is this paper's own. The package contains this manuscript \textit{and} the record of the pass that evaluated the package, so that record cannot name the tree that holds it: writing the pass's output back into the package changes the package the pass examined. What is fixed is the tag and the deposit, which are assigned once and do not move; the commit Table 9 reports is the one the pass actually cloned, and the released tree differs from it in the manuscript and in the pass's own step file and nowhere else. The relations bind a record to its inputs; they do not bind a record to the act of writing it down.
+One binding cannot close, and it is this paper's own. The package contains this manuscript \textit{and} the record of the pass that evaluated the package, so that record cannot name the tree that holds it: writing the pass's output back into the package changes the package the pass examined. The pass did clone exactly the released tree --- the commit of Table 9 is the tag's --- and the tag and the deposit are assigned once and do not move. What the released tree cannot hold is the edit its own result caused: its copies of this manuscript and of that step record are the versions from just before the pass ran, and they differ from the submitted ones in four files and in nothing else (the manuscript as Markdown, LaTeX and PDF, and the step record itself). The relations bind a record to its inputs; they do not bind a record to the act of writing it down.
 
 
 One limit of P1 is not ours to remove here. A record is bound to its inputs by a digest of those inputs, which lets a reader detect a mix-up but not re-derive the inputs: the price snapshots behind the derived statistics are third-party data that the package may not redistribute (Section 3.1), so the reproduction levels of Section 3.3 start from the statistics we publish and trust us for the step before them. The binding is verifiable only where the inputs are. Computations whose inputs live on a public ledger do not have that gap --- a block height and a transaction hash are an input digest that anyone can resolve, and the same record, relations and reconstruction levels would then be checkable end to end by a reader who trusts no one. We have not built that; we note it because it is the one part of P1 that a change of data source, rather than a change of design, would close.
@@ -721,7 +812,7 @@ A cloud quantum benchmark's record can be designed so that a mix-up between its 
 
 \section{Availability}
 
-Everything this paper reports is in one package, release \texttt{v1.1} (https://github.com/tobitaQ/qaoa-portfolio-penalty-benchmark, tag \texttt{v1.1}, commit \texttt{71b05e0}, doi:[[v1.1 DOI]]): the platform; the three harnesses (\texttt{experiments/\allowbreak{}system\_\allowbreak{}paper/\allowbreak{}es1\_\allowbreak{}fault\_\allowbreak{}injection.\allowbreak{}py}, \texttt{es1\_\allowbreak{}random\_\allowbreak{}faults.\allowbreak{}py}, \texttt{es2\_\allowbreak{}guard\_\allowbreak{}stages.\allowbreak{}py}, \texttt{es2\_\allowbreak{}observe\_\allowbreak{}cloud.\allowbreak{}py}, \texttt{es2\_\allowbreak{}observe\_\allowbreak{}cost\_\allowbreak{}control.\allowbreak{}py}, \texttt{es3\_\allowbreak{}reconstruction.\allowbreak{}py}) and the cost-control aggregation; the cost-control patch (\texttt{cdk/\allowbreak{}cost\_\allowbreak{}control\_\allowbreak{}patch/\allowbreak{}}); the job status module (\texttt{src/\allowbreak{}run\_\allowbreak{}status.\allowbreak{}py}, \texttt{scripts/\allowbreak{}run\_\allowbreak{}detached.\allowbreak{}sh}); their tests; the result files behind every table (\texttt{paper02\_\allowbreak{}es1\_\allowbreak{}*.\allowbreak{}csv}, \texttt{paper02\_\allowbreak{}es2\_\allowbreak{}*.\allowbreak{}csv}, \texttt{paper02\_\allowbreak{}es3\_\allowbreak{}*.\allowbreak{}csv}, \texttt{paper02\_\allowbreak{}level1\_\allowbreak{}machines.\allowbreak{}csv}); and \texttt{papers/\allowbreak{}system\_\allowbreak{}paper/\allowbreak{}check\_\allowbreak{}tables.\allowbreak{}py}, which binds each cell of Tables 3--11 and 13 to one of them and regenerates both figures for a byte comparison. Appendix C lists the commands.
+Everything this paper reports is in one package, release \texttt{v1.1} (https://github.com/tobitaQ/qaoa-portfolio-penalty-benchmark, tag \texttt{v1.1}, commit \texttt{fde2941}, doi:[[v1.1 DOI]]): the platform; the three harnesses (\texttt{experiments/\allowbreak{}system\_\allowbreak{}paper/\allowbreak{}es1\_\allowbreak{}fault\_\allowbreak{}injection.\allowbreak{}py}, \texttt{es1\_\allowbreak{}random\_\allowbreak{}faults.\allowbreak{}py}, \texttt{es2\_\allowbreak{}guard\_\allowbreak{}stages.\allowbreak{}py}, \texttt{es2\_\allowbreak{}observe\_\allowbreak{}cloud.\allowbreak{}py}, \texttt{es2\_\allowbreak{}observe\_\allowbreak{}cost\_\allowbreak{}control.\allowbreak{}py}, \texttt{es3\_\allowbreak{}reconstruction.\allowbreak{}py}) and the cost-control aggregation; the cost-control patch (\texttt{cdk/\allowbreak{}cost\_\allowbreak{}control\_\allowbreak{}patch/\allowbreak{}}); the job status module (\texttt{src/\allowbreak{}run\_\allowbreak{}status.\allowbreak{}py}, \texttt{scripts/\allowbreak{}run\_\allowbreak{}detached.\allowbreak{}sh}); their tests; the result files behind every table (\texttt{paper02\_\allowbreak{}es1\_\allowbreak{}*.\allowbreak{}csv}, \texttt{paper02\_\allowbreak{}es2\_\allowbreak{}*.\allowbreak{}csv}, \texttt{paper02\_\allowbreak{}es3\_\allowbreak{}*.\allowbreak{}csv}, \texttt{paper02\_\allowbreak{}level1\_\allowbreak{}machines.\allowbreak{}csv}); and \texttt{papers/\allowbreak{}system\_\allowbreak{}paper/\allowbreak{}check\_\allowbreak{}tables.\allowbreak{}py}, which binds each cell of Tables 3--11 and 13 to one of them and regenerates both figures for a byte comparison. Appendix C lists the commands.
 
 
 The package E-S3 evaluated at all three levels is the \textit{earlier} release, \texttt{v1.0} (same repository, commit \texttt{c804a63}, doi:10.5281/zenodo.22743582), which is the version the numerical study \cite{ref1} was submitted with and which does not contain this paper's material; \texttt{v1.1} adds it, together with two fixes this paper reports (the locale encoding of Section 5.3 and the non-atomic flush of Section 3.3) and an \texttt{input\_digest} column appended to the committed record from the pinned statistics, leaving every column of \texttt{v1.0} unchanged. \texttt{CHANGELOG.md} states which version each paper was evaluated against.
@@ -731,23 +822,31 @@ The cloud spend of this paper, and of the project behind it, is Table 13.
 
 
 
-\begin{table}[t]
+\begingroup
 \small
-\caption{Cloud tasks paid for, by what they were paid for.}
-\label{tab:13}
-\begin{tabularx}{\textwidth}{Yll}
+\setlength\LTleft{\fill}
+\setlength\LTright{\fill}
+\begin{xltabular}{\textwidth}{Yll}
+\caption{Cloud tasks paid for, by what they were paid for.}\label{tab:13} \\
 \toprule
 \textbf{What} & \textbf{Tasks} & \textbf{Cost} \\
 \midrule
+\endfirsthead
+\toprule
+\textbf{What} & \textbf{Tasks} & \textbf{Cost} \\
+\midrule
+\endhead
+\endfoot
+\bottomrule
+\endlastfoot
 the sampling-fallback observation on SV1 (Section 5.2) & 178 & \$0.67 \\
 the six account-level cost-control runs on SV1 (Table 8) & 1,071 & \$4.02 \\
 the IonQ spending-limit probe: limit created, device never online (Section 5.2) & 0 & \$0.00 \\
 \textbf{this paper} & \textbf{1,249} & \textbf{\$4.69} \\
 the numerical study \cite{ref1}: SV1 and IonQ arms, 2026-08 to 2026-09 & --- & \$37.90 \\
 \textbf{the project on Amazon Braket, to date} & --- & \textbf{\$42.59} \\
-\bottomrule
-\end{tabularx}
-\end{table}
+\end{xltabular}
+\endgroup
 
 
 All other figures in this paper are list prices applied to measured task counts; nobody paid them.
@@ -764,21 +863,29 @@ Two stacks, region-pinned to \texttt{us-east-1} (Braket has no endpoint in the p
 \subsection{Provider-side controls (Amazon Braket, as of September 2026)}
 
 
-\begin{table}[t]
+\begingroup
 \small
-\caption{Three controls that can stop or report a Braket charge, and one client-side limit that cannot --- what each governs, when in the life of a task it acts, and what this project observed of it. The first three are the ``cap'' of Section 5.2 in its three available forms. The fourth bounds only how long the client waits and is listed because it is easy to mistake for a bound on the task.}
-\label{tab:14}
-\begin{tabularx}{\textwidth}{YYYYY}
+\setlength\LTleft{\fill}
+\setlength\LTright{\fill}
+\begin{xltabular}{\textwidth}{YYYYY}
+\caption{Three controls that can stop or report a Braket charge, and one client-side limit that cannot. The first three are the ``cap'' of Section 5.2 in its available forms; the fourth bounds only how long the client waits, and is listed because it is easy to mistake for a bound on the task.}\label{tab:14} \\
 \toprule
 \textbf{Kind} & \textbf{Control} & \textbf{Scope} & \textbf{When it acts} & \textbf{Observed here} \\
 \midrule
+\endfirsthead
+\toprule
+\textbf{Kind} & \textbf{Control} & \textbf{Scope} & \textbf{When it acts} & \textbf{Observed here} \\
+\midrule
+\endhead
+\endfoot
+\bottomrule
+\endlastfoot
 service, per device & spending limit (\texttt{Create\allowbreak{}Spending\allowbreak{}Limit}, Nov. 2025): rejects a task whose list-price estimate exceeds the remaining cap & on-demand QPU tasks only; the API refuses to create one for a simulator & at task creation & created (\$1.00 on IonQ Forte-1); the simulator refusal observed; the QPU rejection pending device availability (Sec. 5.2) \\
 account, detective & AWS Budgets: notification at a threshold; optional action attaching an IAM deny & whole account & data lag of hours & deployed as notification only \\
 account, detective & AWS Braket cost-control solution (May 2023) \cite{ref28}: EventBridge task-state events $\rightarrow$ Lambda $\rightarrow$ DynamoDB running cost $\rightarrow$ notification or IAM deny on \texttt{braket:\allowbreak{}Create\allowbreak{}Quantum\allowbreak{}Task} & simulators, QPUs, hybrid jobs & near real time; ``a few'' tasks may be created before the denial propagates & deployed for Sec. 5.2 and destroyed: as documented it metered nothing (400 tasks passed); fixed, five runs denied 41--92 tasks (median 47) past the limit, 6--56 (median 10) past the alarm \\
 client, not a charge control & \texttt{poll\_\allowbreak{}timeout\_\allowbreak{}seconds} of the PennyLane--Braket device. In \texttt{Aws\allowbreak{}Quantum\allowbreak{}Task.\allowbreak{}\_\allowbreak{}wait\_\allowbreak{}for\_\allowbreak{}completion} (SDK 1.125) the timeout ends the polling loop, logs a warning and returns \texttt{None}; the task keeps running on the service and keeps accruing its charge. Cancelling is a separate call, \texttt{Aws\allowbreak{}Quantum\allowbreak{}Task.\allowbreak{}cancel()} & the caller's process, waiting for one task & while waiting for a result & set to 3,600 s here against the library's 432,000 s (five-day) default; nothing in this project reached it \\
-\bottomrule
-\end{tabularx}
-\end{table}
+\end{xltabular}
+\endgroup
 
 
 \subsection{The cost-control deployment}
