@@ -194,11 +194,25 @@ class Harness:
         self.steps[-1].metric = f"pennylane/numpy/matplotlib {proc.stdout.strip()}"
 
     def step_tests(self) -> None:
+        """The suite, with the reason for every skip.
+
+        A count of skips says nothing about what went unchecked, so ``-rs``
+        prints the reason of each and the metric carries them grouped: a reader
+        can see which of the paper's claims the clone alone does not exercise.
+        """
         def outcome(proc):
             m = re.search(r"(\d+) passed(?:, (\d+) skipped)?", proc.stdout)
+            why: dict[str, int] = {}
+            for line in proc.stdout.splitlines():
+                s = re.match(r"^SKIPPED \[(\d+)\].*?:\d+: (.*)$", line.strip())
+                if s:
+                    why[s.group(2)] = why.get(s.group(2), 0) + int(s.group(1))
+            grouped = "; ".join(f"{v} {k}" for k, v in sorted(why.items(), key=lambda kv: -kv[1]))
             return (("ok" if proc.returncode == 0 else "failed"),
-                    (f"{m.group(1)} passed, {m.group(2) or 0} skipped" if m else proc.stdout[-200:]))
-        self.run("tests", "0-setup", [str(self.py), "-m", "pytest", "-q", "-x", "-p", "no:cacheprovider"],
+                    (f"{m.group(1)} passed, {m.group(2) or 0} skipped"
+                     + (f" ({grouped})" if grouped else "") if m else proc.stdout[-200:]))
+        self.run("tests", "0-setup",
+                 [str(self.py), "-m", "pytest", "-q", "-rs", "-p", "no:cacheprovider"],
                  timeout=3600, outcome_fn=outcome)
 
     def step_level1(self) -> None:

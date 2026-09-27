@@ -187,11 +187,15 @@ for r, (mis, n) in zip(table(7), ORDER7):
         # The provenance mark of the caption: a dagger where the cap acts inside
         # the service (never observed, the device stayed offline), a double
         # dagger where the cloud observation covers the cell.
-        mark, cell = (cell[0], cell[1:].strip()) if cell.strip()[:1] in "†‡" else ("", cell)
+        mark, cell = (cell[0], cell[1:].strip()) if cell.strip()[:1] in "†‡§" else ("", cell)
         observed = set(pd.read_csv(R / "paper02_es2_cloud_observation.csv").step)
-        want = "†" if g.stage == "service" else (
-            "‡" if (mis == "trainable_sampling_sv1" and n == 8
-                         and {"sv1-sampling-trainable", "sv1-sampling-frozen"} <= observed) else "")
+        # A count the harness computed from a measured per-step count rather than
+        # running to completion: the optimizer loop, whose per-step tapes are Table 6's.
+        want = ("§" if (mis == "qpu_optimizer" and g.stage == "submitted")
+                else "†" if g.stage == "service"
+                else "‡" if (mis == "trainable_sampling_sv1" and n == 8
+                                  and {"sv1-sampling-trainable", "sv1-sampling-frozen"} <= observed)
+                else "")
         chks(7, f"{mis} N={n} {cfg} provenance", mark or "(none)", want or "(none)")
         head = cell.split(";")[0].strip()
         if mis == "untagged_cloud_run":
@@ -240,6 +244,20 @@ for r, (frame, steps) in zip(table(9), ORDER9):
     got = [float(x) for x in re.findall(r"(\d+\.?\d*)\s*s", cell)]
     for value, step in zip(got, steps):
         chk(9, f"{r['Level']} {step} seconds", value, round(float(frame.loc[step, "seconds"])), 0.51)
+
+# The commit the paper names as the final implementation must be the commit the
+# v1.1 pass actually cloned, in Table 9's row, in Section 5.3 and in the
+# availability statement. Re-exporting the package without re-running that pass
+# leaves the paper pointing at an artefact its evidence is not about.
+cloned = re.search(r"commit ([0-9a-f]{7,40})", str(t9b.loc["clone", "metric"])).group(1)
+for row in table(9):
+    if row["Level"] == "0 (v1.1)" and "commit" in row["Outcome"]:
+        chks(9, "v1.1 clone commit", re.search(r"commit ([0-9a-f]{7,40})", row["Outcome"]).group(1),
+             cloned)
+for label, pat in (("Section 5.3", r"a tagged commit \(`([0-9a-f]{7,40})`\)"),
+                   ("availability", r"tag `v1\.1`, commit `([0-9a-f]{7,40})`")):
+    m = re.search(pat, SRC)
+    chks(9, f"{label} names the cloned commit", m.group(1) if m else "(absent)", cloned)
 
 # ---------------------------------------------------------------- Table 10
 t10 = pd.read_csv(R / "paper02_es3_column_agreement.csv")

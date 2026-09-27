@@ -34,6 +34,7 @@ PREAMBLE = r"""\documentclass[acmsmall,screen,review]{acmart}
 \input{glyphtounicode}
 \pdfgentounicode=1
 \usepackage{tabularx}
+\usepackage{xltabular}
 \usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{ragged2e}
@@ -130,13 +131,24 @@ def table(rows: list[str], caption: str, number: int) -> list[str]:
             spec += "Y"
     if "Y" not in spec:
         spec = spec.replace("l", "Y", 1) if "l" in spec else spec
+    header = " & ".join(rf"\textbf{{{prose(h)}}}" for h in head) + r" \\"
+    rows_tex = [" & ".join(prose(c) for c in r) + r" \\" for r in body]
+    # A float cannot break, and a table taller than a page silently runs off it:
+    # Table 9 grew past the footer when the v1.1 block was added. Past a dozen
+    # rows the table is set as xltabular, which breaks and repeats its header.
+    if len(body) > 12:
+        return [r"\begingroup", r"\small",
+                rf"\begin{{xltabular}}{{\textwidth}}{{{spec.replace('l', 'Y', 1) if 'Y' not in spec else spec}}}",
+                rf"\caption{{{prose(caption)}}}\label{{tab:{number}}} \\",
+                r"\toprule", header, r"\midrule", r"\endfirsthead",
+                r"\toprule", header, r"\midrule", r"\endhead",
+                r"\endfoot", r"\bottomrule", r"\endlastfoot",
+                *rows_tex, r"\end{xltabular}", r"\endgroup", ""]
     env = "tabularx" if "Y" in spec else "tabular"
     width = r"{\textwidth}" if env == "tabularx" else ""
     out = [r"\begin{table}[t]", r"\small", rf"\caption{{{prose(caption)}}}",
            rf"\label{{tab:{number}}}", rf"\begin{{{env}}}{width}{{{spec}}}", r"\toprule",
-           " & ".join(rf"\textbf{{{prose(h)}}}" for h in head) + r" \\", r"\midrule"]
-    for r in body:
-        out.append(" & ".join(prose(c) for c in r) + r" \\")
+           header, r"\midrule", *rows_tex]
     out += [r"\bottomrule", rf"\end{{{env}}}", r"\end{table}", ""]
     return out
 

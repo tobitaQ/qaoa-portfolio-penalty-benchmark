@@ -242,7 +242,8 @@ def fig_guard_stages() -> None:
             # comes from. A dagger is the cap acting inside the service, which
             # the offline device never let us observe; a double dagger is a cell
             # the cloud observation of Section 5.2 covers.
-            prov = ("\u2020" if r["stage"] == "service" else
+            prov = ("\u00a7" if (m == "qpu_optimizer" and r["stage"] == "submitted") else
+                    "\u2020" if r["stage"] == "service" else
                     "\u2021" if m == "trainable_sampling_sv1" else "")
             if prov:
                 ax.text(x - 0.10, y, prov, fontsize=6.0, va="center", ha="right", color="black")
