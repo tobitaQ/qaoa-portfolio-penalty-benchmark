@@ -4,7 +4,7 @@
 """How small the objective is next to the penalty, in the units that matter.
 
 Sec. V-B and Sec. VI-C said that at A_heur "the objective is 0.5 % of the
-largest coefficient". Review round 3 (M6) asked which coefficient: the
+largest coefficient". Which coefficient is meant matters: the
 largest entry of the QUBO matrix Q and the scale s_H = max(max|h_i|,
 max|J_ij|) the circuit is actually normalised by are different numbers,
 because each h_i sums several Q entries. This computes both, per instance

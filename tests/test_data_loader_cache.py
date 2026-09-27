@@ -101,7 +101,7 @@ def test_corrupt_cache_falls_back_to_download(loader, monkeypatch) -> None:
     tickers = ["7203.T", "6758.T"]
     path = loader._cache_path(tickers, "2023-08-06", "2026-08-05")
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text("this is not a csv\x00\x00")
+    path.write_text("this is not a csv\x00\x00", encoding="utf-8")
 
     calls = {"n": 0}
 
@@ -129,3 +129,23 @@ def test_cache_key_is_order_independent(loader) -> None:
     a = loader._cache_path(["7203.T", "6758.T"], "2023-08-06", "2026-08-05")
     b = loader._cache_path(["6758.T", "7203.T"], "2023-08-06", "2026-08-05")
     assert a == b
+
+
+def test_no_source_at_all_names_the_three_sources(tmp_path, monkeypatch):
+    """No snapshot, no derived statistics, provider unreachable: say so.
+
+    Found by the reconstruction test (system paper E-S3, 2026-09-16): a clone
+    with ``data/derived`` removed and no network failed with a TypeError deep
+    inside pandas, which tells a reader nothing about what to restore.
+    """
+    import pandas as pd
+    from src.finance.data_loader import FinanceDataLoader
+
+    (tmp_path / "prices").mkdir()
+    (tmp_path / "derived").mkdir()
+    monkeypatch.setattr(FinanceDataLoader, "CACHE_DIR", tmp_path / "prices")
+    monkeypatch.setattr(FinanceDataLoader, "DERIVED_DIR", tmp_path / "derived")
+    yf = pytest.importorskip("yfinance")
+    monkeypatch.setattr(yf, "download", lambda *a, **k: pd.DataFrame())
+    with pytest.raises(RuntimeError, match="derived statistics"):
+        FinanceDataLoader().load(["7203.T", "6758.T"], end_date="2026-08-05", lookback_years=3)

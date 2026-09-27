@@ -69,7 +69,7 @@ def published_qaoa_energy(n: int) -> float | None:
     path = RESULTS_DIR / "paper01_results.csv"
     if not path.exists():
         return None
-    with open(path, newline="") as f:
+    with open(path, newline="", encoding="utf-8") as f:
         for r in csv.DictReader(f):
             if int(r["n_assets"]) == n and not r["solver"].startswith("classical"):
                 return float(r["energy_no_offset"])

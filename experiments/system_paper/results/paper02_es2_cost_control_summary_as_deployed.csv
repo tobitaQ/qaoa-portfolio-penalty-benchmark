@@ -1,0 +1,2 @@
+started_utc,tasks_created,list_price_usd,monthly_limit_usd,first_task_over_limit,tasks_created_after_limit_crossed,alarm_to_ALARM_utc,tasks_created_after_alarm,first_denial_utc,seconds_alarm_to_denial,denials_observed,stopped_by
+2026-09-17T11:48:24+00:00,400,1.5,0.3,81,320,,0,,,0,max-tasks

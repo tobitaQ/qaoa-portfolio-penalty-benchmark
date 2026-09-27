@@ -1,0 +1,2 @@
+started_utc,tasks_created,list_price_usd,monthly_limit_usd,first_task_over_limit,tasks_created_after_limit_crossed,alarm_to_ALARM_utc,tasks_created_after_alarm,first_denial_utc,seconds_alarm_to_denial,policy_attached_utc,tasks_created_after_first_denial,seconds_limit_to_alarm,denials_observed,stopped_by
+2026-09-17T14:38:34+00:00,127,0.4763,0.3,81,47,2026-09-17T23:43:49+09:00,11,2026-09-17T14:44:08+00:00,19,,5,94,4,denial

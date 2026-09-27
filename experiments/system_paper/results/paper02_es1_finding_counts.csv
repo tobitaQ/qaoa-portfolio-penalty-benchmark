@@ -1,0 +1,34 @@
+fault,check,n_findings
+price_perturbation,input-digest,1009
+price_perturbation,reference-input,150
+price_perturbation,identities,2725
+window_mixin,manifest,2
+window_mixin,reference-row,6
+window_mixin,input-digest,1
+window_mixin,identities,7
+window_mixin,state-recompute,1
+window_mixin,declarative (control),8
+optimizer_mixin,manifest,2
+optimizer_mixin,declarative (control),2
+label_swap,penalty,2
+label_swap,declarative (control),2
+angle_swap,npz-internal,2
+angle_swap,state-recompute,1
+batch_from_initial,row-npz,2562
+batch_from_initial,identities,1406
+batch_from_initial,state-batch,2299
+batch_from_initial,declarative (control),1
+evaluator_from_Q,scorer,4926
+evaluator_from_Q,row-npz,2463
+evaluator_from_Q,identities,5205
+evaluator_from_Q,declarative (control),2
+column_drop,schema,1
+column_drop,row-npz,2565
+column_drop,state-batch,1
+column_drop,declarative (control),1
+shot_seed_noop,state-batch,3
+shot_seed_noop,seed-distinct,3
+shot_seed_noop,declarative (control),2
+reference_stale,reference-row,30
+reference_stale,reference-input,1
+reference_stale,declarative (control),1

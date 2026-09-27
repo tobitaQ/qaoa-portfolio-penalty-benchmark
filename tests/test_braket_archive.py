@@ -43,7 +43,7 @@ def test_the_archive_is_present() -> None:
 
 
 def _rows() -> list[dict]:
-    with open(HARDWARE_CSV) as handle:
+    with open(HARDWARE_CSV, encoding="utf-8") as handle:
         return list(csv.DictReader(handle))
 
 
@@ -70,7 +70,7 @@ def test_archived_tasks_are_the_nested_program_set_schema() -> None:
     reader under test would no longer exercise the branch that matters.
     """
     for row in _rows():
-        result = json.loads((_task_dir(row) / "results.json").read_text())
+        result = json.loads((_task_dir(row) / "results.json").read_text(encoding="utf-8"))
         schema = result["braketSchemaHeader"]["name"]
         assert "program_set" in schema, schema
         assert (_task_dir(row) / "programs" / "0" / "results.json").exists()
@@ -81,13 +81,13 @@ def test_reader_rejects_a_directory_without_measurements(tmp_path: Path) -> None
     (tmp_path / "results.json").write_text(json.dumps({
         "braketSchemaHeader": {"name": "braket.task_result.gate_model_task_result"},
         "taskMetadata": {"shots": 100},
-    }))
+    }), encoding="utf-8")
     with pytest.raises(RuntimeError, match="no measurements"):
         shot_counts_from_dir(tmp_path)
 
 
 class TestHardwareShotProvenance:
-    """What the four IonQ tasks actually returned (review M9-a).
+    """What the four IonQ tasks actually returned.
 
     Table XVI prints integers like "89 of 100 shots infeasible". A reviewer
     cannot tell from the paper whether those are measured shot records, counts
@@ -107,7 +107,7 @@ class TestHardwareShotProvenance:
     def test_the_device_returned_probabilities_and_no_shot_sequence(self):
         for task in self._tasks():
             executable = json.loads(
-                (task / "programs" / "0" / "executables" / "0.json").read_text())
+                (task / "programs" / "0" / "executables" / "0.json").read_text(encoding="utf-8"))
             assert "measurementProbabilities" in executable
             assert "measurements" not in executable, (
                 f"{task.name} has a shot sequence after all; the paper's "
@@ -116,11 +116,11 @@ class TestHardwareShotProvenance:
     def test_the_probabilities_are_exact_hundredths_of_100_shots(self):
         """Which is what makes the reconstructed counts exact rather than estimates."""
         for task in self._tasks():
-            meta = json.loads((task / "metadata.json").read_text())
+            meta = json.loads((task / "metadata.json").read_text(encoding="utf-8"))
             assert meta["requestedShots"] == 100
             assert meta["successfulShots"] == 100
             probs = json.loads(
-                (task / "programs" / "0" / "executables" / "0.json").read_text()
+                (task / "programs" / "0" / "executables" / "0.json").read_text(encoding="utf-8")
             )["measurementProbabilities"]
             counts = [p * 100 for p in probs.values()]
             for c in counts:
@@ -130,5 +130,5 @@ class TestHardwareShotProvenance:
     def test_no_error_mitigation_was_requested(self):
         """A debiasing setting would make the returned numbers post-processed."""
         for task in self._tasks():
-            meta = json.loads((task / "metadata.json").read_text())
+            meta = json.loads((task / "metadata.json").read_text(encoding="utf-8"))
             assert meta.get("deviceParameters") in (None, {}, "None")

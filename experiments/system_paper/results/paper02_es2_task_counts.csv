@@ -1,0 +1,14 @@
+n,device,steps,tapes_total,sampling_tapes,tapes_per_step,expected_per_step,matches_formula,elapsed_s
+8,mock,1,178,1,177.0,177,True,11.4
+8,default.qubit (committed path),1,2,1,1,1,True,
+8,braket_local,1,178,1,177.0,177,True,85.1
+8,param_shift transform,,177,177,,177,True,
+12,mock,1,362,1,361.0,361,True,76.8
+12,default.qubit (committed path),1,2,1,1,1,True,
+12,param_shift transform,,361,361,,361,True,
+16,mock,1,610,1,609.0,609,True,368.8
+16,default.qubit (committed path),1,2,1,1,1,True,
+16,param_shift transform,,609,609,,609,True,
+20,mock,1,922,1,921.0,921,True,5643.7
+20,default.qubit (committed path),1,2,1,1,1,True,
+20,param_shift transform,,921,921,,921,True,

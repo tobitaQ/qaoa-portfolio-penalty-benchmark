@@ -55,6 +55,7 @@ from experiments.paper01_qubo_baseline.run_e1_cross import (
     TAU_MAIN,
 )
 from experiments.paper01_qubo_baseline.run_experiment import write_csv
+from src import run_status
 
 #: Paired contrasts to report: (treatment, control, restrict to A_crit > 0?).
 CONTRASTS = [("Amargin", "Aheur", False), ("5xAcrit", "Aheur", True),
@@ -80,7 +81,7 @@ def _f(v: str) -> float:
 
 
 def load(path: Path) -> list[dict]:
-    with open(path, newline="") as f:
+    with open(path, newline="", encoding="utf-8") as f:
         return list(csv.DictReader(f))
 
 
@@ -202,7 +203,7 @@ INITIAL_FINAL_FIELDS = [
 def initial_final(rows: list[dict], refs: list[dict], tv_rows: list[dict] | None = None) -> list[dict]:
     """Initial → final state of the same run, at a fixed penalty weight.
 
-    Review round 3 (M4): "optimisation at A_heur buys feasible mass" had been
+    "Optimisation at A_heur buys feasible mass" had been
     supported with P_F at A_heur against P_F at A_margin, which is the
     difference between two penalty settings after optimisation, not the
     effect of optimisation. This is the latter: for every completed run, the
@@ -270,7 +271,7 @@ def acquisition_factors(rows: list[dict], treat: str = "Amargin",
                         control: str = "Aheur") -> list[dict]:
     """P_τ(treat) / P_τ(control) = P_F ratio × R_τ ratio, pair by pair.
 
-    Review round 4 (C02): Table IV's medians of R_τ at the two weights are
+    Table IV's medians of R_τ at the two weights are
     separate levels and do not say which factor carried the paired P_τ gain.
     With P_τ = P_F · u_τ · R_τ and u_τ an instance constant, the ratio of
     the two weights' P_τ on the same (instance, seed) factorises exactly into
@@ -324,7 +325,7 @@ def acquisition_factors(rows: list[dict], treat: str = "Amargin",
 def optimum_hits(rows: list[dict]) -> list[dict]:
     """Per (N, penalty setting): runs whose best feasible shot is the exact optimum.
 
-    Review round 4 (P02): Fig. 2's zero-gap share had been referred to
+    Fig. 2's zero-gap share had been referred to
     Table VI (the E3 block) and to the seed-42 sweep, neither of which is the
     population Fig. 2 draws. This is that population -- every completed E1
     run -- with the share among runs that had a feasible shot (what the gap
@@ -383,8 +384,8 @@ def shot_budget_table(rows: list[dict], refs: list[dict]) -> list[dict]:
             row["final_beats_uniform_F_rate"] = float(np.mean([
                 _f(r[f"final_Q_tau_main_{s}"]) > q(_f(ref_by[(r["n_assets"], r["instance"])]["P_tau_main_uniform_F"]))
                 for r in g]))
-            # The same comparison at the two sensitivity thresholds (review
-            # round 3, §6.6): monotonicity in S does not carry a result at
+            # The same comparison at the two sensitivity thresholds:
+            # monotonicity in S does not carry a result at
             # one τ over to another, so each τ is counted on its own. On
             # P directly, which decides every S at once.
             def beats(field, uniform):
@@ -675,9 +676,15 @@ def manifest_table(rows: list[dict], refs: list[dict]) -> list[dict]:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--results-tag", default=None)
+    ap.add_argument("--allow-partial", action="store_true",
+                    help="aggregate a manifest whose job status is not EXIT 0 / complete")
     args = ap.parse_args(argv)
     suffix = f"_{args.results_tag}" if args.results_tag else ""
-    rows = load(RESULTS_DIR / f"paper01_e1_cross{suffix}.csv")
+    # A partial cross aggregates into plausible numbers; the job's own status
+    # record beside the manifest is what says whether it is whole.
+    manifest_path = RESULTS_DIR / f"paper01_e1_cross{suffix}.csv"
+    print(f"job status: {run_status.require_complete(manifest_path, args.allow_partial)}")
+    rows = load(manifest_path)
     refs = load(RESULTS_DIR / f"paper01_e1_reference{suffix}.csv")
 
     manifest = manifest_table(rows, refs)

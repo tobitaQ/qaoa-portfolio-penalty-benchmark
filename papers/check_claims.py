@@ -3,13 +3,11 @@
 
 """Scan the draft for claims worded more strongly than the experiments support.
 
-Three review passes on this paper found the same defect each time, and the third
-one named it: the danger is not missing experiments, it is language that runs
-half a step ahead of the evidence. The instances were individually small --
+What it catches is language that runs half a step ahead of the evidence:
 "single cause" where the experiment is confounded, "the field" where the
 measurement covers fourteen papers, "the honest reading" where the paper is
-grading itself -- and individually easy to fix. What made them expensive was
-finding them by having someone else read the whole paper.
+grading itself. The patterns are calibrated on this paper's vocabulary: another
+paper would need its own ALLOW lists before the output means anything.
 
 So this looks for the patterns rather than the instances. It is a lint, not a
 judge: several matches below are legitimate, which is why each pattern carries
@@ -90,7 +88,7 @@ PATTERNS = [
         r"number of tapes the gradient transform returns|infeasible for any statevector|"
         r"\bwill be wrong\b|percentage points apart|without touching its solver|"
         r"not that the output rule returns one|Bound at S = 1,000)",
-        "Phrasings review round 3 withdrew: near-uniform, not uniform; the "
+        "Phrasings withdrawn as unsupported: near-uniform, not uniform; the "
         "coupling bound is on the selected-output distribution, not a "
         "disagreement count; 'did not improve within the budget', not "
         "'not converged'; 176 gradient tapes + 1 forward = 177 executions.",
@@ -102,7 +100,7 @@ PATTERNS = [
         r"\bis not enumerable\b|p = 2 throughout|only at the margin|"
         r"Every finding of this section|fallback billed|so the scale never enters|"
         r"independently across instances and sizes|against what the proposals ask for)",
-        "Phrasings review round 4 withdrew: Q_τ(1000) levels, not a P_τ multiple; "
+        "Further phrasings withdrawn: Q_τ(1000) levels, not a P_τ multiple; "
         "'enrichment at N ≤ 16, median R_τ near one at N = 20', not 'sorts within F'; "
         "the 177 tasks are an observation consistent with parameter shift, not a "
         "determined cause; N = 50 'was not enumerated here'; p = 2 for E1–E5.",
@@ -170,7 +168,7 @@ def scan(text: str) -> list[tuple[str, str, str]]:
 def arithmetic(text: str) -> list[str]:
     """Every "a = b x c" written in the prose or a table must actually hold.
 
-    A reviewer found three of these, all from the same cause: a decomposition
+    Three of these were found at once, all from the same cause: a decomposition
     that is exact pair by pair was summarised by taking the median of each of
     its three factors, and three medians do not multiply. The claim reads as an
     identity, so it is checked as one. The tolerance is 5 %, which is wider than
@@ -191,13 +189,13 @@ def main() -> int:
     ap.add_argument("--verbose", action="store_true")
     args = ap.parse_args()
 
-    text = body(DRAFT.read_text())
+    text = body(DRAFT.read_text(encoding="utf-8"))
     problems = 0
     ab = abstract(text)
     # Every whitespace-separated token counts, as a word processor counts:
     # "×" and "≤" are words to the editorial office's counter, and the limit
-    # is theirs. A count that excluded them read 247 for an abstract that a
-    # reviewer counted at 264.
+    # is theirs. A count that excluded them read 247 where a word processor
+    # reads 264.
     n_words, n_chars = len(ab.split()), len(ab)
     if n_words > ABSTRACT_WORD_LIMIT or n_chars > ABSTRACT_CHAR_LIMIT:
         print(f"{DRAFT.name}: abstract is {n_words} words / {n_chars} characters "

@@ -53,7 +53,7 @@ NOT_REPORTED = {"no", "partial", ""}
 
 def load() -> tuple[list[dict], list[dict]]:
     """Return (papers in the tally, papers excluded), with the reason recorded."""
-    rows = list(csv.DictReader(CENSUS.open()))
+    rows = list(csv.DictReader(CENSUS.open(encoding="utf-8")))
     return ([r for r in rows if r["in_tally"] == "yes"],
             [r for r in rows if r["in_tally"] != "yes"])
 

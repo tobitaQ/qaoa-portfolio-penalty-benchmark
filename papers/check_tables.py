@@ -3,16 +3,11 @@
 
 """Check every table in the draft against the CSV it was computed from.
 
-Table IV shipped for three revisions carrying the values of a discarded run: the
-experiment had been redone on the unified price cache and the table had not.
-Fig. 6 regenerates from the CSV, so the figure and the table disagreed on the
-same page, and two sentences drew conclusions from cells that no longer existed.
-An external reviewer found it, not us.
-
-Nothing about that was hard to detect -- the numbers are in the repository and
-the table is in the draft. It was only hard to remember. So this parses each
-table out of the Markdown and compares it against the result file, which turns
-"did we regenerate the tables after that run?" from a question into a command.
+A table can otherwise carry the values of a run the paper no longer reports, while
+the figure beside it regenerates from the file and the two disagree on one page
+(the incident is Sec. VI-C of the manuscript). Passing says the cells match the
+files, not that the files are right: what produced them is checked by the tests
+and by the experiment's own re-runs, not here.
 
 A tolerance is given per check, because the draft rounds and the CSV does not.
 
@@ -34,10 +29,10 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 from src.qubo import scoring  # noqa: E402  (the bound formula, shared with the analysis)
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 R = str(ROOT / "experiments" / "paper01_qubo_baseline" / "results") + "/"
-s = (ROOT / "papers" / "paper01_draft.md").read_text()
+s = (ROOT / "papers" / "paper01_draft.md").read_text(encoding="utf-8")
 # The supplement holds the tables the main text summarises (S1, S2, ...); they
 # are checked exactly as the main text's are, from the same result files.
-s_supp = (ROOT / "papers" / "paper01_supplement.md").read_text()
+s_supp = (ROOT / "papers" / "paper01_supplement.md").read_text(encoding="utf-8")
 
 def table(n):
     src = s_supp if str(n).startswith("S") else s
@@ -75,7 +70,7 @@ def pending(t, l, cell) -> bool:
         return True
     return False
 
-# v3.1 numbering (2026-09-12, review round 3): main-text Tables I-VIII (IV = D_cond, new), supplement S1-S38 (S37-S38 added in review round 4; the lean variant dropped the fallback-evidence table). The single-seed seed sweep and penalty sweep
+# v3.1 numbering (2026-09-12): main-text Tables I-VIII (IV = D_cond, new), supplement S1-S38 (S37-S38 added in review round 4; the lean variant dropped the fallback-evidence table). The single-seed seed sweep and penalty sweep
 # tables of v1.x are retired: E1 contains both as sub-blocks (checked below
 # against the cross itself).
 
@@ -210,7 +205,7 @@ for r in table("S11"):
     chk("S11", f"N={n} worst rank", num(r["Worst rank"]),
         float(g.rank_in_feasible.max()), 0)
 
-# Table S2: the optimized expectation column added in Round 3
+# Table S2: the optimized expectation column, added with the E3 arms
 conv = pd.read_csv(R + "paper01_convergence.csv")
 for r in table("S2"):
     n = int(num(r["N"]))
@@ -301,7 +296,7 @@ for r in table("III"):
         v = _sci(r[col]); ref = float(g[f"{field}_median"].iloc[0]) * scale
         # Half a unit in the last printed digit. The earlier flat 0.06-point
         # allowance for gap cells let a stale 0.0064 stand against 0.0143 for
-        # five revisions (review round 5 follow-up, 2026-09-14).
+        # five revisions.
         chk("III", f"N={n} {q} {label} level", v, ref, _half_last_digit(r[col], ref, scale))
     g = con[(con.n_assets == n) & (con.treatment == "Amargin") & (con.field == field)]
     if len(g):
@@ -563,7 +558,7 @@ for r in table("IV"):
         gs = sp[(sp.n_assets == n) & (sp.penalty_label == pen)]
         chk("IV", f"N={n} {pen} R", num(r[col]), round(float(gs.enrichment_R_tau_median.iloc[0]), digits), 6e-4 if digits == 3 else 6e-3)
 
-# Table S34: initial → final of the same run at a fixed A (review round 3, M4).
+# Table S34: initial → final of the same run at a fixed A.
 SUP = str.maketrans("⁰¹²³⁴⁵⁶⁷⁸⁹", "0123456789")
 def _signed(cell):
     """Every signed number in a cell, scientific notation (a·10⁻³) included."""
@@ -583,7 +578,7 @@ for r in table("S34"):
         ref = float(g[key].iloc[0]); chk("S34", f"N={n} {pen} {f} {name}", v, ref, tol(ref))
     chk("S34", f"N={n} {pen} {f} up", num(r["Increased of 30"]), float(g.instances_increased.iloc[0]), 0)
 
-# Table S35: the objective's scale in the normalised Hamiltonian (review round 3, M6).
+# Table S35: the objective's scale in the normalised Hamiltonian.
 cs = pd.read_csv(R + "paper01_coefficient_scale_summary.csv")
 PENC = {"A_heur": "Aheur", "A_margin": "Amargin", "1.1·A_crit": "1.1xAcrit"}
 for r in table("S35"):
@@ -594,7 +589,7 @@ for r in table("S35"):
         for name, key, v in (("median", f + "_median", med), ("min", f + "_min", lo), ("max", f + "_max", hi)):
             chk("S35", f"N={n} {pen} {col} {name}", v, round(float(g[key].iloc[0]) * 100, 2), 6e-3)
 
-# Table S36: the precision diagnostic scored on acquisition (review round 3, M7 / A3).
+# Table S36: the precision diagnostic scored on acquisition.
 # Each cell is "median (max)" of |single − double| over the 8 pairs of a size, in
 # two significant digits; the last column counts the pairs whose batch verdict agrees.
 pa = pd.read_csv(R + "paper01_e3_precision_pairs.csv")
@@ -688,7 +683,7 @@ for T, r in [(t, row) for t in ("VII", "S30") for row in table(t)]:
     chk(T, f"{arm} noF lo", lo, float(gg.no_feasible_shot_batches.min()), 0)
     chk(T, f"{arm} noF hi", hi, float(gg.no_feasible_shot_batches.max()), 0)
 
-# Table S37: exact-optimum share per E1 setting (review round 4, P02).
+# Table S37: exact-optimum share per E1 setting.
 hits = pd.read_csv(R + "paper01_e1_optimum_hits.csv")
 S38 = {"A = 0": "A0", "1.1·A_crit": "1.1xAcrit", "2·A_crit": "2xAcrit", "5·A_crit": "5xAcrit",
        "10·A_crit": "10xAcrit", "A_margin": "Amargin", "A_heur": "Aheur"}
@@ -707,7 +702,7 @@ for r in table("S37"):
             float(g.runs.iloc[0]), 0)
         chk("S37", f"N={n} {lab} share", pct, round(100 * float(g.share_of_runs_with_feasible_shot.iloc[0])), 0)
 
-# Table S38: the paired P_τ ratio as P_F ratio × R_τ ratio (review round 4, C02).
+# Table S38: the paired P_τ ratio as P_F ratio × R_τ ratio.
 fac = pd.read_csv(R + "paper01_e1_acquisition_factors.csv")
 for r in table("S38"):
     n = int(num(r["N"])); g = fac[fac.n_assets == n]

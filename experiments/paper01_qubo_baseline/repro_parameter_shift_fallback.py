@@ -110,7 +110,7 @@ def local_execution_counts(n: int, p: int, qml, device: str, shots: int = 1000) 
 
 
 def package_versions() -> dict[str, str]:
-    """The plugin and SDK versions the metered path ran under (review round 3, §6.4)."""
+    """The plugin and SDK versions the metered path ran under."""
     from importlib.metadata import PackageNotFoundError, version
     out = {}
     for name in ("amazon-braket-pennylane-plugin", "amazon-braket-sdk", "pennylane-lightning"):

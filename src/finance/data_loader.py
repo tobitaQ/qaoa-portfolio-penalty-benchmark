@@ -341,6 +341,18 @@ class FinanceDataLoader:
                 progress=False,
             )
 
+            # Without a snapshot or derived statistics, an unreachable
+            # provider used to surface as a TypeError inside pandas (found by
+            # the reconstruction test E-S3, 2026-09-16); name the three
+            # sources instead so a reader knows which one they are missing.
+            if prices_raw is None or len(prices_raw) == 0:
+                raise RuntimeError(
+                    f"No price data for {len(tickers)} tickers over {start}..{end}: no "
+                    f"snapshot under {self.CACHE_DIR}, no derived statistics under "
+                    f"{self.DERIVED_DIR}, and the provider returned nothing (offline?). "
+                    f"The reproduction package ships the derived statistics; restore "
+                    f"data/derived/ to run without network access.")
+
             # Handle single vs multi-ticker download format
             if len(tickers) == 1:
                 close = prices_raw[["Close"]].rename(columns={"Close": tickers[0]})

@@ -1,0 +1,7 @@
+step,time_utc,device,outcome,detail
+spending-limit-ionq,2026-09-16T10:56:53+00:00,IonQ Forte-1,already present,"1 USD, arn:aws:braket:us-east-1:000000000000:spending-limit/eea93486-a0bc-4984-b175-7fa0fe87a26f"
+spending-limit-sv1,2026-09-16T10:56:53+00:00,SV1,refused,ValidationException: An error occurred (ValidationException) when calling the CreateSpendingLimit operation: Spending limits can not be created for simulator devices.
+probe-ionq-100-shots,2026-09-16T10:56:33+00:00,IonQ Forte-1 (OFFLINE),rejected at creation,DeviceOfflineException: An error occurred (DeviceOfflineException) when calling the CreateQuantumTask operation: Device is not available. Status = OFFLINE
+probe-ionq-tasks-since,2026-09-16T10:56:34+00:00,IonQ Forte-1,0 task(s) created since the probe,
+sv1-sampling-trainable,2026-09-16T10:56:59+00:00,SV1,177 task(s) created,diff_method=best; requires_grad=True; 672 s wall; samples shape ok=True; list price at 3 s minimum $0.664
+sv1-sampling-frozen,2026-09-16T11:08:18+00:00,SV1,1 task(s) created,diff_method=best; requires_grad=False; 4 s wall; samples shape ok=True; list price at 3 s minimum $0.004

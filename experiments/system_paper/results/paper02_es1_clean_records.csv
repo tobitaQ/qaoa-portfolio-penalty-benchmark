@@ -1,0 +1,6 @@
+record,description,window_end,rows,references,artifacts,checks_run,checks_failing,false_positives
+e1,"E1 cross (main, ADAM 0.1 x 50, 2023-08-06 to 2026-08-05)",2026-08-05,2565,90,2565,13,0,none
+e1_e5,"E5 prior-window replication (same design, 2020-08-05 to 2023-08-05)",2023-08-05,300,30,300,13,0,none
+e1_e3_adam003,"E3 arm, ADAM 0.03 x 100",2026-08-05,300,30,300,13,0,none
+e1_e3_lbfgs,"E3 arm, L-BFGS-B, 100 gradients",2026-08-05,300,30,300,13,0,none
+e1_pilot,the pilot block (one seed),2026-08-05,36,6,36,13,0,none

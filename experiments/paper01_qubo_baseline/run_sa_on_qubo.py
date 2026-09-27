@@ -136,7 +136,7 @@ def main() -> int:
                   f"rank={rk if rk else '-'}  dSharpe={d_sh:+7.2f}%")
 
     out = RESULTS_DIR / "paper01_sa_on_qubo.csv"
-    with open(out, "w", newline="") as f:
+    with open(out, "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=list(rows[0]))
         w.writeheader()
         w.writerows(rows)

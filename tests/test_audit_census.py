@@ -55,14 +55,14 @@ pytestmark = pytest.mark.skipif(not DRAFT.exists(), reason="draft not present")
 
 def bibliography() -> dict[int, str]:
     """Reference number -> entry text, from the draft's reference list."""
-    refs = DRAFT.read_text().split("## References", 1)[1]
+    refs = DRAFT.read_text(encoding="utf-8").split("## References", 1)[1]
     return {int(m.group(1)): " ".join(m.group(2).split())
             for m in re.finditer(r"^\[(\d+)\]\s*(.+?)(?=\n\[\d+\]|\Z)", refs,
                                  re.S | re.M)}
 
 
 def rows() -> list[dict]:
-    with CENSUS.open() as handle:
+    with CENSUS.open(encoding="utf-8") as handle:
         return list(csv.DictReader(handle))
 
 

@@ -1,0 +1,18 @@
+{
+  "context": {
+    "primaryRegion": "us-east-1",
+    "braketRegions": [
+      "us-east-1"
+    ],
+    "allTimeCostLimit": "3",
+    "monthlyCostLimit": "0.30",
+    "taskItemTTLDays": "30",
+    "iamRoleNamesToControl": [],
+    "iamGroupNamesToControl": [],
+    "iamUserNamesToControl": [
+      "tbt26"
+    ],
+    "awsAccountId": "<your 12-digit account id>",
+    "notificationEmailAddress": "<your e-mail>"
+  }
+}

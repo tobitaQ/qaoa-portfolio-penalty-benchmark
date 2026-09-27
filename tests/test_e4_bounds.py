@@ -3,9 +3,9 @@
 
 """Regression tests for the two inequalities the paper states in closed form.
 
-Review round 3 asked that both be pinned by small numerical tests, and that
-the coupling bound not be read as a disagreement rate between independent
-batches (M2). Neither test touches a circuit.
+Both are pinned by small numerical tests, and the coupling bound is not to be
+read as a disagreement rate between independent batches. Neither test touches a
+circuit.
 """
 
 from __future__ import annotations

@@ -69,6 +69,13 @@ LOCAL_BACKENDS = frozenset({"lightning_cpu", "lightning_gpu", "braket_local"})
 #: optimizer runs locally and hardware sees exactly one final sampling task.
 QPU_BACKENDS = frozenset({"braket_ionq"})
 
+#: How long one cloud task may be polled before the run gives up on it. The
+#: plugin's default is 432,000 s (five days): a task the service never
+#: finishes would hold a run open for that long, silently. One hour covers
+#: every task this project has seen (the longest, an N = 20 analytic task on
+#: SV1, ran 14.3 s; queue waits on the QPU are minutes to an hour).
+CLOUD_POLL_TIMEOUT_SECONDS = 3600
+
 
 def _validate_samples(z: np.ndarray, n: int, n_shots: int, backend: str) -> None:
     """Reject a sample array that cannot have come from a real measurement.
@@ -722,6 +729,7 @@ class BraketSolver(AbstractSolver):
                 wires=n,
                 s3_destination_folder=(self.s3_bucket, self.s3_prefix),
                 aws_session=self._aws_session(),
+                poll_timeout_seconds=CLOUD_POLL_TIMEOUT_SECONDS,
             )
 
         raise ValueError(f"Unknown backend: {backend}")

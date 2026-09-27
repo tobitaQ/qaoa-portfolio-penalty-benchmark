@@ -217,7 +217,7 @@ class TestIncrementalCSV:
         second.append({"a": 3, "b": 4})
         second.close()
 
-        with open(path, newline="") as f:
+        with open(path, newline="", encoding="utf-8") as f:
             rows = list(csv.DictReader(f))
         assert rows == [{"a": "1", "b": "2"}, {"a": "3", "b": "4"}]
 
@@ -227,7 +227,7 @@ class TestIncrementalCSV:
         writer = IncrementalCSV(path)
         writer.append({"a": 1})
 
-        with open(path, newline="") as f:
+        with open(path, newline="", encoding="utf-8") as f:
             assert list(csv.DictReader(f)) == [{"a": "1"}]
         writer.close()
 
@@ -243,7 +243,7 @@ class TestIncrementalCSV:
             second.append({"a": 3, "b": 4, "steps": 50})
         second.close()
 
-        with open(path, newline="") as f:
+        with open(path, newline="", encoding="utf-8") as f:
             assert list(csv.DictReader(f)) == [{"a": "1", "b": "2"}]
 
 

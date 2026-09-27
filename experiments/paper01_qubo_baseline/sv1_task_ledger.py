@@ -43,7 +43,7 @@ GAP_SECONDS = 120.0
 def read_tasks(archive: Path) -> list[tuple[datetime, int, str]]:
     tasks = []
     for path in sorted(archive.glob("*/results.json")):
-        with open(path) as f:
+        with open(path, encoding="utf-8") as f:
             meta = json.load(f).get("taskMetadata", {})
         created = meta.get("createdAt")
         if not created:

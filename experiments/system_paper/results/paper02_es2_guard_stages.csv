@@ -1,0 +1,57 @@
+misconfiguration,n,configuration,stage,tasks_would_submit,tasks_billed,usd_billed,usable_result,baseline_overwritten,count_source,note
+qpu_optimizer,8,none,submitted,9027,9027,74924.1,yes,n-a,tracker: per-step tapes on a no-derivative device,177 tasks/step x 50 steps + sampling; constructor accepted the QPU with the guard removed
+trainable_sampling_sv1,8,none,submitted,177,177,0.66,yes,n-a,transform: 1 + param-shift tapes; equals SV1 ledger run 1 (177),local devices execute this call once; the metered device did not
+trainable_sampling_qpu,8,none,submitted,177,177,1469.1,yes,n-a,transform: 1 + param-shift tapes; equals SV1 ledger run 1 (177),local devices execute this call once; the metered device did not
+qpu_optimizer,12,none,submitted,18411,18411,152811.3,yes,n-a,tracker: per-step tapes on a no-derivative device,361 tasks/step x 50 steps + sampling; constructor accepted the QPU with the guard removed
+trainable_sampling_sv1,12,none,submitted,361,361,1.35,yes,n-a,transform: 1 + param-shift tapes,local devices execute this call once; the metered device did not
+trainable_sampling_qpu,12,none,submitted,361,361,2996.3,yes,n-a,transform: 1 + param-shift tapes,local devices execute this call once; the metered device did not
+qpu_optimizer,16,none,submitted,31059,31059,257789.7,yes,n-a,tracker: per-step tapes on a no-derivative device,609 tasks/step x 50 steps + sampling; constructor accepted the QPU with the guard removed
+trainable_sampling_sv1,16,none,submitted,609,609,2.28,yes,n-a,transform: 1 + param-shift tapes,local devices execute this call once; the metered device did not
+trainable_sampling_qpu,16,none,submitted,609,609,5054.7,yes,n-a,transform: 1 + param-shift tapes,local devices execute this call once; the metered device did not
+qpu_optimizer,20,none,submitted,46971,46971,389859.3,yes,n-a,tracker: per-step tapes on a no-derivative device,921 tasks/step x 50 steps + sampling; constructor accepted the QPU with the guard removed
+trainable_sampling_sv1,20,none,submitted,921,921,3.45,yes,n-a,transform: 1 + param-shift tapes,local devices execute this call once; the metered device did not
+trainable_sampling_qpu,20,none,submitted,921,921,7644.3,yes,n-a,transform: 1 + param-shift tapes,local devices execute this call once; the metered device did not
+qpu_sampling_1000_shots,8,none,submitted,1,1,80.3,yes,n-a,tracker: tapes reaching the mock hardware device,not a structural error: the guards pass it (angles frozen in every configuration here); only the cap sees the shot count
+untagged_cloud_run,8,none,submitted,2,2,0.007,yes,yes,measured: exit code and file digest; bill from the SV1 ledger's per-task times,the run itself is cheap; the loss is the committed baseline (mock device executed 178 tapes for the 1-step run)
+qpu_optimizer,8,cap,service,9027,6,49.8,no,n-a,tracker: per-step tapes on a no-derivative device,177 tasks/step x 50 steps + sampling; constructor accepted the QPU with the guard removed
+trainable_sampling_sv1,8,cap,submitted,177,177,0.66,yes,n-a,transform: 1 + param-shift tapes; equals SV1 ledger run 1 (177),local devices execute this call once; the metered device did not
+trainable_sampling_qpu,8,cap,service,177,6,49.8,unknown,n-a,transform: 1 + param-shift tapes; equals SV1 ledger run 1 (177),local devices execute this call once; the metered device did not
+qpu_optimizer,12,cap,service,18411,6,49.8,no,n-a,tracker: per-step tapes on a no-derivative device,361 tasks/step x 50 steps + sampling; constructor accepted the QPU with the guard removed
+trainable_sampling_sv1,12,cap,submitted,361,361,1.35,yes,n-a,transform: 1 + param-shift tapes,local devices execute this call once; the metered device did not
+trainable_sampling_qpu,12,cap,service,361,6,49.8,unknown,n-a,transform: 1 + param-shift tapes,local devices execute this call once; the metered device did not
+qpu_optimizer,16,cap,service,31059,6,49.8,no,n-a,tracker: per-step tapes on a no-derivative device,609 tasks/step x 50 steps + sampling; constructor accepted the QPU with the guard removed
+trainable_sampling_sv1,16,cap,submitted,609,609,2.28,yes,n-a,transform: 1 + param-shift tapes,local devices execute this call once; the metered device did not
+trainable_sampling_qpu,16,cap,service,609,6,49.8,unknown,n-a,transform: 1 + param-shift tapes,local devices execute this call once; the metered device did not
+qpu_optimizer,20,cap,service,46971,6,49.8,no,n-a,tracker: per-step tapes on a no-derivative device,921 tasks/step x 50 steps + sampling; constructor accepted the QPU with the guard removed
+trainable_sampling_sv1,20,cap,submitted,921,921,3.45,yes,n-a,transform: 1 + param-shift tapes,local devices execute this call once; the metered device did not
+trainable_sampling_qpu,20,cap,service,921,6,49.8,unknown,n-a,transform: 1 + param-shift tapes,local devices execute this call once; the metered device did not
+qpu_sampling_1000_shots,8,cap,service,1,0,0.0,no,n-a,tracker: tapes reaching the mock hardware device,not a structural error: the guards pass it (angles frozen in every configuration here); only the cap sees the shot count
+untagged_cloud_run,8,cap,submitted,2,2,0.007,yes,yes,measured: exit code and file digest; bill from the SV1 ledger's per-task times,the run itself is cheap; the loss is the committed baseline (mock device executed 178 tapes for the 1-step run)
+qpu_optimizer,8,structural,cli,0,0,0.0,no,n-a,measured: CLI exit code 2; constructor ValueError,refused at two independent points before any device or session
+trainable_sampling_sv1,8,structural,pre-submit,1,1,0.0,yes,n-a,tracker: sampling tapes of the committed path,angles frozen before the QNode
+trainable_sampling_qpu,8,structural,pre-submit,1,1,8.3,yes,n-a,tracker: sampling tapes of the committed path,angles frozen before the QNode
+qpu_optimizer,12,structural,cli,0,0,0.0,no,n-a,measured: CLI exit code 2; constructor ValueError,refused at two independent points before any device or session
+trainable_sampling_sv1,12,structural,pre-submit,1,1,0.0,yes,n-a,tracker: sampling tapes of the committed path,angles frozen before the QNode
+trainable_sampling_qpu,12,structural,pre-submit,1,1,8.3,yes,n-a,tracker: sampling tapes of the committed path,angles frozen before the QNode
+qpu_optimizer,16,structural,cli,0,0,0.0,no,n-a,measured: CLI exit code 2; constructor ValueError,refused at two independent points before any device or session
+trainable_sampling_sv1,16,structural,pre-submit,1,1,0.0,yes,n-a,tracker: sampling tapes of the committed path,angles frozen before the QNode
+trainable_sampling_qpu,16,structural,pre-submit,1,1,8.3,yes,n-a,tracker: sampling tapes of the committed path,angles frozen before the QNode
+qpu_optimizer,20,structural,cli,0,0,0.0,no,n-a,measured: CLI exit code 2; constructor ValueError,refused at two independent points before any device or session
+trainable_sampling_sv1,20,structural,pre-submit,1,1,0.0,yes,n-a,tracker: sampling tapes of the committed path,angles frozen before the QNode
+trainable_sampling_qpu,20,structural,pre-submit,1,1,8.3,yes,n-a,tracker: sampling tapes of the committed path,angles frozen before the QNode
+qpu_sampling_1000_shots,8,structural,submitted,1,1,80.3,yes,n-a,tracker: tapes reaching the mock hardware device,not a structural error: the guards pass it (angles frozen in every configuration here); only the cap sees the shot count
+untagged_cloud_run,8,structural,cli,0,0,0.0,no,no,"measured: exit code, file digest, mock-device tapes",refused before any solver was built
+qpu_optimizer,8,both,cli,0,0,0.0,no,n-a,measured: CLI exit code 2; constructor ValueError,refused at two independent points before any device or session
+trainable_sampling_sv1,8,both,pre-submit,1,1,0.0,yes,n-a,tracker: sampling tapes of the committed path,angles frozen before the QNode
+trainable_sampling_qpu,8,both,pre-submit,1,1,8.3,yes,n-a,tracker: sampling tapes of the committed path,angles frozen before the QNode
+qpu_optimizer,12,both,cli,0,0,0.0,no,n-a,measured: CLI exit code 2; constructor ValueError,refused at two independent points before any device or session
+trainable_sampling_sv1,12,both,pre-submit,1,1,0.0,yes,n-a,tracker: sampling tapes of the committed path,angles frozen before the QNode
+trainable_sampling_qpu,12,both,pre-submit,1,1,8.3,yes,n-a,tracker: sampling tapes of the committed path,angles frozen before the QNode
+qpu_optimizer,16,both,cli,0,0,0.0,no,n-a,measured: CLI exit code 2; constructor ValueError,refused at two independent points before any device or session
+trainable_sampling_sv1,16,both,pre-submit,1,1,0.0,yes,n-a,tracker: sampling tapes of the committed path,angles frozen before the QNode
+trainable_sampling_qpu,16,both,pre-submit,1,1,8.3,yes,n-a,tracker: sampling tapes of the committed path,angles frozen before the QNode
+qpu_optimizer,20,both,cli,0,0,0.0,no,n-a,measured: CLI exit code 2; constructor ValueError,refused at two independent points before any device or session
+trainable_sampling_sv1,20,both,pre-submit,1,1,0.0,yes,n-a,tracker: sampling tapes of the committed path,angles frozen before the QNode
+trainable_sampling_qpu,20,both,pre-submit,1,1,8.3,yes,n-a,tracker: sampling tapes of the committed path,angles frozen before the QNode
+qpu_sampling_1000_shots,8,both,service,1,0,0.0,no,n-a,tracker: tapes reaching the mock hardware device,not a structural error: the guards pass it (angles frozen in every configuration here); only the cap sees the shot count
+untagged_cloud_run,8,both,cli,0,0,0.0,no,no,"measured: exit code, file digest, mock-device tapes",refused before any solver was built

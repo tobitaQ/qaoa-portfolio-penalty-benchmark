@@ -229,6 +229,8 @@ experiments/*/results/*
 # GPU実験機のローカルディスク1台のみに存在することになり、
 # 「再現可能な実験基盤」という論文①の主張そのものが担保できない。
 !experiments/*/results/paper*.csv
+!experiments/*/results/a1_*.csv
+!experiments/*/results/a3_*.csv
 !experiments/*/results/README.md
 
 # Jupyter出力（センシティブなデータや大容量セルを含む可能性）

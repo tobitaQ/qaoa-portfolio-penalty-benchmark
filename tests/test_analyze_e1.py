@@ -64,7 +64,7 @@ def test_expected_follows_the_conditions_actually_run():
 
 
 def test_initial_final_pairs_within_the_run_at_a_fixed_penalty():
-    """Review round 3, M4: the optimisation effect is initial → final of the
+    """The optimisation effect is initial → final of the
     same run, not A_heur → A_margin after optimisation."""
     refs = [{"n_assets": "12", "instance": "0", "P_tau_main_uniform_F": "0.05"},
             {"n_assets": "12", "instance": "1", "P_tau_main_uniform_F": "0.05"}]
@@ -97,7 +97,7 @@ def test_initial_final_pairs_within_the_run_at_a_fixed_penalty():
 
 
 def test_acquisition_factors_decompose_exactly_over_the_same_pairs():
-    """Review round 4, C02: P_τ ratio = P_F ratio × R_τ ratio, pair by pair,
+    """P_τ ratio = P_F ratio × R_τ ratio, pair by pair,
     so the geometric means multiply exactly; a zero on either side is counted."""
     def row(label, seed, pf, pt):
         return {"n_assets": "20", "instance": "0", "penalty_label": label,
@@ -117,7 +117,7 @@ def test_acquisition_factors_decompose_exactly_over_the_same_pairs():
 
 
 def test_optimum_hits_are_counted_on_every_completed_run():
-    """Review round 4, P02: the zero-gap share Fig. 2 draws, on Fig. 2's population."""
+    """The zero-gap share Fig. 2 draws, on Fig. 2's population."""
     def row(label, seed, g_f, opt):
         return {"n_assets": "16", "instance": "0", "penalty_label": label,
                 "qaoa_seed": seed, "status": "ok", "g_F": g_f, "is_optimal": opt}

@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2026 Hiroaki Tobita
 # SPDX-License-Identifier: MIT
 
-"""Where 177 and 921 come from (review M1 / R6).
+"""Where 177 and 921 come from.
 
 The paper prices a QPU optimization loop at one billable task per
 parameter-shift circuit and reports 177 at N = 8 and 921 at N = 20. Those two

@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2026 Hiroaki Tobita
 # SPDX-License-Identifier: MIT
 
-"""The "0.5 % of the largest coefficient" statement, made precise (review round 3, M6)."""
+"""The "0.5 % of the largest coefficient" statement, made precise."""
 
 import numpy as np
 import pytest

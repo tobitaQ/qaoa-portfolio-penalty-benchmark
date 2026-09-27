@@ -255,7 +255,7 @@ class IncrementalCSV:
         if self._writer is None:
             new_file = not self.path.exists() or self.path.stat().st_size == 0
             if not new_file:
-                with open(self.path, newline="") as f:
+                with open(self.path, newline="", encoding="utf-8") as f:
                     existing = next(csv.reader(f), [])
                 if existing != list(row.keys()):
                     raise ValueError(
@@ -263,7 +263,7 @@ class IncrementalCSV:
                         f"would append {list(row.keys())}. Refusing to corrupt "
                         f"the existing rows; move the file aside or write to a "
                         f"new one.")
-            self._fh = open(self.path, "a", newline="")
+            self._fh = open(self.path, "a", newline="", encoding="utf-8")
             self._writer = csv.DictWriter(self._fh, fieldnames=list(row.keys()))
             if new_file:
                 self._writer.writeheader()
@@ -358,7 +358,7 @@ def load_completed_keys(paths: list[Path]) -> set[tuple[str, ...]]:
     for path in paths:
         if not path.exists():
             continue
-        with open(path, newline="") as f:
+        with open(path, newline="", encoding="utf-8") as f:
             for row in csv.DictReader(f):
                 if all(field in row for field in RUN_KEY_FIELDS):
                     done.add(tuple(row[field] for field in RUN_KEY_FIELDS))

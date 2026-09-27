@@ -1,0 +1,134 @@
+kind,column,covered,first_failing_check,failing_checks,headline_numbers_moved,where,seconds
+row,n_select,yes,reference-row,reference-row;scorer;identities,0,N20_i17_Aheur_s42,21.9
+row,instance_digest,yes,reference-row,reference-row,0,N12_i19_A0_s45,22.0
+row,penalty,yes,penalty,penalty;scorer;row-npz;identities,0,N16_i06_1.1xAcrit_s44,22.1
+row,a_crit,yes,penalty,penalty;reference-row,0,N16_i14_Aheur_s45,21.8
+row,a_over_crit,yes,penalty,penalty,0,N20_i16_10xAcrit_s46,22.1
+row,a_margin,yes,reference-row,reference-row,0,N20_i12_5xAcrit_s44,22.1
+row,a_heur,yes,reference-row,reference-row,0,N20_i18_2xAcrit_s43,22.0
+row,backend,yes,manifest,manifest,0,N20_i00_10xAcrit_s46,22.2
+row,precision,yes,manifest,manifest,0,N12_i16_Amargin_s46,22.0
+row,p_layers,yes,manifest,manifest,0,N20_i27_10xAcrit_s42,22.1
+row,steps,yes,manifest,manifest,0,N12_i28_Amargin_s46,21.9
+row,optimizer,yes,manifest,manifest,0,N16_i29_2xAcrit_s43,22.0
+row,f_star,yes,reference-row,reference-row;scorer;identities,0,N12_i12_5xAcrit_s44,22.1
+row,delta_F,yes,reference-row,reference-row;scorer;identities,0,N16_i18_Amargin_s43,22.0
+row,feasible_set_size,yes,reference-row,reference-row;identities,0,N16_i14_2xAcrit_s42,22.1
+row,data_start,yes,manifest,manifest;identities,0,N16_i03_Aheur_s46,22.0
+row,data_end,yes,manifest,manifest;identities,0,N12_i15_2xAcrit_s46,22.2
+row,status,yes,manifest,manifest,0,N12_i24_2xAcrit_s42,22.0
+row,error,n/a (column empty),,,0,,0.0
+row,shots,yes,manifest,manifest;row-npz;identities,0,N20_i17_Aheur_s46,22.1
+row,feasible_shots,yes,row-npz,row-npz;identities,0,N16_i19_Aheur_s45,22.1
+row,distinct_shots,yes,identities,identities,0,N20_i15_Aheur_s46,22.0
+row,best_all_index,no,,,0,N12_i01_1.1xAcrit_s44,23.5
+row,best_all_cardinality,yes,scorer,scorer;identities,0,N12_i16_Amargin_s45,24.2
+row,best_all_feasible,yes,identities,identities,0,N12_i21_10xAcrit_s43,24.3
+row,best_all_E,yes,scorer,scorer,0,N16_i02_Aheur_s44,24.4
+row,best_all_f,yes,scorer,scorer,0,N16_i12_1.1xAcrit_s43,24.4
+row,energy_no_offset_solver,yes,scorer,scorer,0,N20_i24_Aheur_s45,24.1
+row,best_shot_scorer_agrees,yes,scorer,scorer,0,N20_i19_10xAcrit_s45,24.2
+row,feasible_shot_fraction,yes,identities,identities,0,N16_i20_1.1xAcrit_s43,24.4
+row,best_feasible_index,yes,row-npz,row-npz;identities,0,N16_i27_2xAcrit_s45,24.3
+row,f_best_feasible,yes,scorer,scorer;row-npz;identities,0,N20_i13_1.1xAcrit_s46,24.3
+row,g_F,yes,scorer,scorer,0,N16_i23_5xAcrit_s44,22.3
+row,g_off,yes,scorer,scorer,0,N16_i10_5xAcrit_s42,21.8
+row,rank_best_feasible,yes,identities,identities,0,N20_i21_Amargin_s46,22.0
+row,rank_ties,yes,identities,identities,0,N16_i09_5xAcrit_s45,21.8
+row,is_optimal,yes,identities,identities,0,N20_i04_Amargin_s43,22.0
+row,within_tau_main,yes,identities,identities,0,N12_i08_1.1xAcrit_s43,22.0
+row,within_tau_alt,yes,identities,identities,0,N12_i26_Aheur_s42,22.2
+row,sharpe_best_feasible,yes,identities,identities,0,N12_i11_2xAcrit_s42,22.1
+row,return_best_feasible,yes,identities,identities,0,N20_i05_2xAcrit_s45,22.2
+row,volatility_best_feasible,yes,identities,identities,0,N16_i15_2xAcrit_s43,22.1
+row,shots_within_tau_main,yes,identities,identities,0,N16_i24_5xAcrit_s44,22.1
+row,shots_optimal,yes,identities,identities,0,N12_i16_1.1xAcrit_s44,22.2
+row,sharpe_optimum,yes,identities,identities,0,N20_i07_5xAcrit_s42,21.9
+row,deflation_D,yes,identities,identities,0,N12_i03_5xAcrit_s45,22.3
+row,abs_E_star,yes,identities,identities,0,N16_i06_10xAcrit_s46,22.0
+row,final_probs_sum,yes,identities,identities,0,N20_i18_1.1xAcrit_s42,22.1
+row,final_P_F,yes,row-npz,row-npz,0,N16_i15_1.1xAcrit_s42,22.3
+row,final_P_opt,yes,identities,identities,0,N20_i24_Amargin_s46,21.7
+row,final_P_tau_main,yes,identities,identities,0,N16_i10_5xAcrit_s44,21.9
+row,final_P_tau_alt,yes,identities,identities,0,N20_i19_10xAcrit_s42,22.3
+row,final_expected_f,no,,,0,N16_i19_2xAcrit_s44,22.0
+row,final_expected_violation,no,,,0,N16_i00_Aheur_s45,22.0
+row,final_Q_tau_main_10,yes,identities,identities,0,N12_i10_2xAcrit_s46,22.3
+row,final_Q_opt_10,yes,identities,identities,0,N16_i05_1.1xAcrit_s42,22.0
+row,final_Q_tau_main_100,yes,identities,identities,0,N12_i06_1.1xAcrit_s42,22.1
+row,final_Q_opt_100,yes,identities,identities,0,N20_i07_Amargin_s42,22.0
+row,final_Q_tau_main_1000,yes,identities,identities,0,N16_i01_Aheur_s43,22.2
+row,final_Q_opt_1000,yes,identities,identities,0,N12_i21_1.1xAcrit_s44,22.0
+row,final_Q_tau_main_10000,yes,identities,identities,0,N20_i11_1.1xAcrit_s42,21.9
+row,final_Q_opt_10000,yes,identities,identities,0,N20_i26_Amargin_s46,21.9
+row,initial_probs_sum,yes,identities,identities,0,N16_i27_Amargin_s44,22.1
+row,initial_P_F,yes,row-npz,row-npz,0,N12_i27_Amargin_s45,22.2
+row,initial_P_opt,yes,identities,identities,0,N12_i02_A0_s42,21.9
+row,initial_P_tau_main,yes,identities,identities,0,N12_i11_1.1xAcrit_s43,22.0
+row,initial_P_tau_alt,yes,identities,identities,0,N20_i02_2xAcrit_s45,24.0
+row,initial_expected_f,no,,,0,N16_i05_10xAcrit_s45,24.4
+row,initial_expected_violation,no,,,0,N12_i01_1.1xAcrit_s44,24.2
+row,initial_Q_tau_main_10,yes,identities,identities,0,N16_i22_5xAcrit_s43,24.2
+row,initial_Q_opt_10,yes,identities,identities,0,N16_i26_2xAcrit_s44,24.3
+row,initial_Q_tau_main_100,yes,identities,identities,0,N16_i00_Aheur_s45,24.2
+row,initial_Q_opt_100,yes,identities,identities,0,N20_i23_5xAcrit_s42,24.2
+row,initial_Q_tau_main_1000,yes,identities,identities,0,N12_i25_Aheur_s44,24.2
+row,initial_Q_opt_1000,yes,identities,identities,0,N20_i12_2xAcrit_s42,24.5
+row,initial_Q_tau_main_10000,yes,identities,identities,0,N12_i06_Amargin_s45,24.1
+row,initial_Q_opt_10000,yes,identities,identities,0,N16_i21_10xAcrit_s42,24.3
+row,hamiltonian_scale,yes,npz-internal,npz-internal,0,N20_i10_5xAcrit_s45,24.1
+row,final_expectation,yes,npz-internal,npz-internal,0,N16_i26_1.1xAcrit_s44,24.2
+row,expectation_at_final_angles,no,,,0,N20_i12_2xAcrit_s45,24.5
+row,best_expectation,yes,identities,identities,0,N16_i27_5xAcrit_s45,24.3
+row,best_expectation_step,yes,identities,identities,0,N16_i03_5xAcrit_s45,24.1
+row,initial_angles,yes,row-npz,row-npz,0,N12_i06_Aheur_s45,20.0
+row,final_angles,yes,row-npz,row-npz,0,N16_i25_5xAcrit_s43,21.4
+row,optimisation_seconds,no,,,0,N20_i18_1.1xAcrit_s45,24.5
+row,sampling_seconds,no,,,0,N20_i25_10xAcrit_s45,24.1
+row,state_seconds,no,,,0,N16_i02_2xAcrit_s46,24.3
+row,runtime_s,no,,,0,N16_i22_Amargin_s45,24.1
+row,evaluation_seconds,no,,,0,N20_i01_Amargin_s46,24.3
+row,stepsize,yes,manifest,manifest,0,N12_i08_10xAcrit_s46,24.4
+row,best_expectation_by_50,yes,identities,identities,0,N12_i08_10xAcrit_s43,24.3
+row,best_expectation_by_100,no,,,0,N12_i08_Aheur_s42,24.5
+row,objective_evaluations,no,,,0,N12_i08_10xAcrit_s45,24.3
+row,gradient_evaluations,no,,,0,N12_i08_Amargin_s42,24.3
+row,input_digest,yes,reference-row,reference-row;input-digest,0,N20_i20_2xAcrit_s42,24.1
+reference,n_select,yes,reference-row,reference-row;identities,0,N20 i9,24.3
+reference,instance_digest,yes,reference-row,reference-row;identities,0,N12 i28,24.5
+reference,tickers,yes,identities,identities,0,N12 i6,24.4
+reference,feasible_set_size,yes,reference-row,reference-row;identities,0,N12 i10,24.4
+reference,f_star,yes,reference-row,reference-row;identities,0,N12 i26,24.2
+reference,f_max_feasible,yes,identities,identities,0,N20 i13,24.2
+reference,delta_F,yes,reference-row,reference-row;identities,0,N12 i17,24.2
+reference,f_bar_feasible,yes,identities,identities,0,N20 i26,24.3
+reference,optimum_index,yes,identities,identities,0,N16 i12,24.3
+reference,n_optimal_ties,yes,identities,identities,0,N20 i20,24.2
+reference,a_crit,yes,reference-row,reference-row;identities,0,N20 i3,24.3
+reference,a_crit_binding_m,yes,identities,identities,0,N20 i4,24.0
+reference,a_crit_is_zero,yes,identities,identities,0,N20 i2,24.4
+reference,a_heur,yes,reference-row,reference-row;identities,0,N20 i1,22.6
+reference,a_heur_over_crit,yes,identities,identities,0,N16 i21,21.9
+reference,a_margin,yes,reference-row,reference-row;identities,0,N16 i6,21.9
+reference,a_margin_target,yes,identities,identities,0,N16 i3,21.8
+reference,eps_A,yes,identities,identities,0,N20 i26,21.8
+reference,cardinality_minima,yes,identities,identities,0,N16 i29,12.3
+reference,count_within_tau_main,yes,identities,identities,0,N16 i3,21.9
+reference,count_within_tau_alt,yes,identities,identities,0,N20 i8,22.1
+reference,P_F_uniform_all,yes,identities,identities,0,N12 i24,22.3
+reference,P_tau_main_uniform_all,yes,identities,identities,0,N12 i4,22.0
+reference,P_tau_main_uniform_F,yes,identities,identities,0,N16 i22,22.2
+reference,P_opt_uniform_all,yes,identities,identities,0,N12 i13,22.3
+reference,P_opt_uniform_F,yes,identities,identities,0,N12 i11,22.1
+reference,reference_seconds,no,,,0,N12 i11,22.0
+reference,data_start,yes,identities,identities,0,N12 i16,21.9
+reference,data_end,yes,identities,identities,0,N20 i17,22.1
+reference,input_digest,yes,reference-row,reference-row;input-digest,0,N16 i19,22.1
+npz,initial_angles,yes,row-npz,row-npz;npz-internal,0,N12_i28_10xAcrit_s42,22.1
+npz,final_angles,yes,row-npz,row-npz,0,N16_i15_Amargin_s46,22.0
+npz,angles_trajectory,no,,,0,N12_i03_Aheur_s43,22.0
+npz,convergence,no,,,0,N16_i24_1.1xAcrit_s42,21.9
+npz,final_probs_feasible,yes,row-npz,row-npz,0,N20_i04_1.1xAcrit_s42,21.9
+npz,initial_probs_feasible,yes,row-npz,row-npz,0,N12_i18_Amargin_s43,22.0
+npz,shot_counts,yes,row-npz,row-npz,0,N20_i03_Aheur_s44,22.0
+npz,feasible_f,no,,,0,N12_i03_2xAcrit_s45,22.0

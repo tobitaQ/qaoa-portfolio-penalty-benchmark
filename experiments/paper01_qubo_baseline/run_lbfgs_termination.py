@@ -17,7 +17,7 @@ This re-runs a small fixed block at both precisions and records what SciPy
 reports. It is a diagnostic of the stopping criterion, not a new experiment:
 no claim in the paper rests on its optimised values.
 
-Review round 3 (M7) added the acquisition side: a similar final expectation
+The acquisition side matters as much as the expectation: a similar final expectation
 at two precisions does not imply similar P_τ or Q_τ, since two distributions
 with the same mean can put different mass on the success set. Each run now
 also scores its final state (P_F, P_τ, Q_τ(1000), D_cond) and its 1,000-shot
@@ -44,7 +44,7 @@ Batch columns (``shots_feasible``, ``g_F``, ``within_tau_main``, ``is_optimal``
 and the pairs' ``within_tau_main_agree``) written before 2026-09-13 describe the
 *initial* state: the solver's L-BFGS-B path handed the sampler the initial
 angles (``BraketSolver.solve``, fixed that day). The state columns were never
-affected. The block was re-run with the fix (review round 4).
+affected. The block was re-run with the fix.
 """
 
 from __future__ import annotations

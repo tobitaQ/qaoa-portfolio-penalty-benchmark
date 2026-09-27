@@ -6,7 +6,7 @@
 Both defects fixed here reached a built PDF and were found by a human reader,
 not by the pipeline: the reference list printed "used by ." and the body's
 L-BFGS-B citation printed [48], a number the list does not contain. The paper
-goes through repeated review rounds, so the checks that catch this class run
+goes through repeated revisions, so the checks that catch this class run
 here rather than depending on someone re-reading 47 reference entries.
 """
 
@@ -85,8 +85,7 @@ def test_duplicate_bibitem_is_reported(tmp_path):
         r"\bibitem{ref1} A." "\n"
         r"\bibitem{ref2} B." "\n"
         r"\bibitem{ref1} stray." "\n"
-        r"\end{thebibliography}" "\n"
-    )
+        r"\end{thebibliography}" "\n", encoding="utf-8")
     problems = validate_latex.check(tex)
     assert any("defined 2 times" in p for p in problems)
 
@@ -98,16 +97,15 @@ def test_printed_number_disagreeing_with_the_draft_is_reported(tmp_path):
         r"\begin{thebibliography}{99}" "\n"
         r"\bibitem{ref2} B." "\n"
         r"\bibitem{ref1} A." "\n"
-        r"\end{thebibliography}" "\n"
-    )
+        r"\end{thebibliography}" "\n", encoding="utf-8")
     assert any("disagree" in p for p in validate_latex.check(tex))
 
 
 def test_aux_is_the_ground_truth_for_numbering(tmp_path):
     tex = tmp_path / "d.tex"
-    tex.write_text("x\n")
+    tex.write_text("x\n", encoding="utf-8")
     (tmp_path / "d.aux").write_text(
-        r"\bibcite{ref45}{45}" "\n" r"\bibcite{ref46}{48}" "\n")
+        r"\bibcite{ref45}{45}" "\n" r"\bibcite{ref46}{48}" "\n", encoding="utf-8")
     assert validate_latex.check_aux(tex) == ["reference [46] is typeset as [48]"]
 
 
@@ -117,17 +115,16 @@ def test_cite_inside_the_bibliography_is_reported(tmp_path):
         r"\cite{ref1}" "\n"
         r"\begin{thebibliography}{99}" "\n"
         r"\bibitem{ref1} A, used by \cite{ref1}." "\n"
-        r"\end{thebibliography}" "\n"
-    )
+        r"\end{thebibliography}" "\n", encoding="utf-8")
     assert any("inside thebibliography" in p for p in validate_latex.check(tex))
 
 
 def test_undefined_reference_warnings_are_errors(tmp_path):
     tex = tmp_path / "d.tex"
-    tex.write_text("x\n")
+    tex.write_text("x\n", encoding="utf-8")
     (tmp_path / "d.log").write_text(
         "LaTeX Warning: Reference `tab:XX' on page 3 undefined on input line 9.\n"
-        "LaTeX Warning: Citation `ref99' on page 4 undefined on input line 11.\n")
+        "LaTeX Warning: Citation `ref99' on page 4 undefined on input line 11.\n", encoding="utf-8")
     found = validate_latex.check_build_log(tex)
     assert len(found) == 2
 

@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2026 Hiroaki Tobita
 # SPDX-License-Identifier: MIT
 
-"""The L-BFGS-B path must say why it stopped (review M7-a).
+"""The L-BFGS-B path must say why it stopped.
 
 E3 called its runs converged because they used fewer than the 100 gradient
 evaluations they were allowed. That is also what a failed line search looks
@@ -74,7 +74,7 @@ def test_adam_runs_carry_no_scipy_fields(lbfgs_result):
 
 
 def test_acquisition_scores_come_from_the_exact_final_state():
-    """Review round 3 (M7): the precision diagnostic scores P_τ / Q_τ, not only ⟨H⟩."""
+    """The precision diagnostic scores P_τ / Q_τ, not only ⟨H⟩."""
     from experiments.paper01_qubo_baseline import run_lbfgs_termination as diag
     from experiments.paper01_qubo_baseline.run_degeneracy import RISK_FREE_RATE
     from experiments.paper01_qubo_baseline.run_e1_cross import DATA_END_DATE, InstanceReference, RISK_AVERSION

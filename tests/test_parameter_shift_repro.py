@@ -39,7 +39,7 @@ def test_committed_ledger_records_the_pilot():
     path = RESULTS_DIR / "paper01_sv1_task_ledger.csv"
     if not path.exists():
         pytest.skip("ledger not present")
-    rows = list(csv.DictReader(open(path)))
+    rows = list(csv.DictReader(open(path, encoding="utf-8")))
     first = rows[0]
     assert (int(first["tasks"]), int(first["analytic_tasks"]), int(first["sampling_tasks"])) == (227, 50, 177)
     assert sum(int(r["tasks"]) for r in rows) == 1299

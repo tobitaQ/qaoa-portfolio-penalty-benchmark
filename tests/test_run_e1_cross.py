@@ -112,7 +112,7 @@ class TestResume:
         monkeypatch.setattr(e1, "RESULTS_DIR", tmp_path)
         monkeypatch.setattr(e1, "ARTIFACT_DIR", tmp_path / "e1_runs")
         manifest = tmp_path / "paper01_e1_cross_x.csv"
-        with open(manifest, "w", newline="") as f:
+        with open(manifest, "w", newline="", encoding="utf-8") as f:
             w = csv.DictWriter(f, fieldnames=["spec_version", *e1.RUN_KEY])
             w.writeheader()
             w.writerow({"spec_version": "e1-v0", "n_assets": "12", "instance": "0",
@@ -126,11 +126,11 @@ class TestResume:
         monkeypatch.setattr(e1, "RESULTS_DIR", tmp_path)
         monkeypatch.setattr(e1, "ARTIFACT_DIR", tmp_path / "e1_runs")
         manifest = tmp_path / "paper01_e1_cross.csv"
-        manifest.write_text("spec_version,n_assets\n")
+        manifest.write_text("spec_version,n_assets\n", encoding="utf-8")
         assert e1.main(["--backend", "lightning_cpu", "--n", "12",
                         "--instances", "0", "--seeds", "42"]) == 2
         assert "--write-canonical" in capsys.readouterr().err
-        assert manifest.read_text() == "spec_version,n_assets\n"
+        assert manifest.read_text(encoding="utf-8") == "spec_version,n_assets\n"
         assert not (tmp_path / "e1_runs").exists()
 
     def test_resume_is_the_sanctioned_way_to_touch_the_canonical_files(self, tmp_path, monkeypatch):
@@ -138,7 +138,7 @@ class TestResume:
         monkeypatch.setattr(e1, "RESULTS_DIR", tmp_path)
         monkeypatch.setattr(e1, "ARTIFACT_DIR", tmp_path / "e1_runs")
         manifest = tmp_path / "paper01_e1_cross.csv"
-        with open(manifest, "w", newline="") as f:
+        with open(manifest, "w", newline="", encoding="utf-8") as f:
             w = csv.DictWriter(f, fieldnames=["spec_version", *e1.RUN_KEY])
             w.writeheader()
             w.writerow({"spec_version": "e1-v0", "n_assets": "12", "instance": "0",
@@ -149,7 +149,7 @@ class TestResume:
 
 
 class TestBestFeasibleRule:
-    """The output rule of Sec. III-C, case by case (review round 3, M1 / §5.1).
+    """The output rule of Sec. III-C, case by case.
 
     The rule returns the lowest-f shot among the *feasible* shots, and a batch
     with no feasible shot is a counted outcome. Because E_A and f induce the
@@ -261,3 +261,38 @@ class TestBestFeasibleRule:
             hits += returned_qualifies
         q = 1 - (1 - p_tau) ** S
         assert abs(hits / batches - q) < 4 * np.sqrt(q * (1 - q) / batches) + 1e-12
+
+
+class TestJobStatusRecord:
+    """The driver writes its own end state beside the manifest, and the
+    aggregation refuses a manifest whose job is not complete."""
+
+    def test_driver_records_exit_and_analyze_reads_it(self, tmp_path, monkeypatch, capsys):
+        import json
+        from experiments.paper01_qubo_baseline import analyze_e1
+        from src import run_status
+
+        monkeypatch.setattr(e1, "RESULTS_DIR", tmp_path)
+        monkeypatch.setattr(e1, "ARTIFACT_DIR", tmp_path / "e1_runs")
+        monkeypatch.setattr(analyze_e1, "RESULTS_DIR", tmp_path)
+        code = e1.main(["--backend", "lightning_cpu", "--precision", "double", "--n", "12",
+                        "--instances", "0", "--seeds", "42", "--penalties", "Aheur",
+                        "--steps", "2", "--shots", "50", "--results-tag", "st"])
+        assert code == 0
+        manifest = tmp_path / "paper01_e1_cross_st.csv"
+        rec = run_status.read(manifest)
+        assert rec["state"] == "EXIT" and rec["exit_code"] == 0
+        assert rec["done"] == rec["total"] == 1 and rec["last"] == "N12_i00_Aheur_s42"
+        assert rec["spec_version"] == e1.SPEC_VERSION
+
+        # The aggregation reads the record and says so.
+        assert analyze_e1.main(["--results-tag", "st"]) in (0, None)
+        assert "job status: EXIT 0, 1/1" in capsys.readouterr().out
+
+        # A job that is still RUNNING (or was killed) is refused without --allow-partial.
+        p = run_status.status_path(manifest)
+        rec["state"], rec["exit_code"], rec["done"] = "RUNNING", None, 0
+        p.write_text(json.dumps(rec), encoding="utf-8")
+        with pytest.raises(RuntimeError, match="not complete"):
+            analyze_e1.main(["--results-tag", "st"])
+        assert analyze_e1.main(["--results-tag", "st", "--allow-partial"]) in (0, None)

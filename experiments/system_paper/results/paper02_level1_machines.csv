@@ -1,0 +1,5 @@
+machine,shell,python,requirements,runs,passed,skipped,warnings,cells_agree,cells_disagree,figures_regenerated,recorded_by
+GPU host (Ubuntu 22.04. RTX A6000),bash,3.11.9,requirements-repro.txt,1,364,4,8,2578,0,yes,es3_reconstruction.py (paper02_es3_steps.csv)
+Windows 11,Git Bash,3.12,requirements.txt,1,365,3,8,2578,0,yes,by hand from the terminal output
+macOS,bash,3.12,requirements.txt,1,365,3,7,2578,0,yes,by hand from the terminal output
+Google Colab,notebook,3.13.15,requirements.txt,3,365,3,7,2578,0,yes,by hand from the notebook output (three runs. identical)

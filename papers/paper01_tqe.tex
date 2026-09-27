@@ -2,6 +2,10 @@
 
 \input{glyphtounicode}
 \pdfgentounicode=1
+% PDF 1.4 with a classic cross-reference table (no object streams): the widest
+% reader compatibility, for submission systems that parse the file themselves.
+\pdfminorversion=4
+\pdfobjcompresslevel=0
 
 \usepackage[T1]{fontenc}
 \usepackage{cite}

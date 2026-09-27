@@ -89,9 +89,11 @@ from experiments.paper01_qubo_baseline.run_experiment import (
     write_csv,
 )
 from experiments.paper01_qubo_baseline.run_instances import (
+    input_digest,
     instance_digest,
     instance_tickers,
 )
+from src import run_status
 from src.finance.data_loader import FinanceDataLoader
 from src.finance.metrics import PortfolioMetrics
 from src.qubo import scoring
@@ -173,6 +175,7 @@ class InstanceReference:
             "n_select": self.k,
             "instance": self.instance,
             "instance_digest": instance_digest(self.tickers),
+            "input_digest": input_digest(self.data.returns, self.data.covariance),
             "tickers": " ".join(self.tickers),
             "feasible_set_size": size,
             "f_star": feas.f_star,
@@ -395,7 +398,7 @@ def score_run(res, problem, ref: InstanceReference, a_value: float,
 def read_manifest(path: Path) -> list[dict]:
     if not path.exists():
         return []
-    with open(path, newline="") as f:
+    with open(path, newline="", encoding="utf-8") as f:
         return list(csv.DictReader(f))
 
 
@@ -445,6 +448,9 @@ def main(argv=None) -> int:
         return 2
     artifact_dir.mkdir(parents=True, exist_ok=True)
 
+    if args.resume:
+        # What the previous invocation of this manifest recorded about itself.
+        print(f"previous job: {run_status.describe(run_status.read(manifest_path))}", flush=True)
     rows = read_manifest(manifest_path) if args.resume else []
     for r in rows:
         if r.get("spec_version") != SPEC_VERSION:
@@ -469,7 +475,34 @@ def main(argv=None) -> int:
           f"optimizer {optimizer_label}; "
           f"{len(done)} rows already done", flush=True)
     t_start = time.perf_counter()
-    n_new = 0
+    # The job's own record: RUNNING with a heartbeat after every run, EXIT or
+    # FAILED at the end, beside the manifest (src/run_status.py). ``total``
+    # starts as the nominal six penalties per (N, instance) and is corrected
+    # as each instance's actual condition count becomes known.
+    cells = [(n, inst) for n in sorted(args.n) for inst in args.instances]
+    per_cell = {c: (len(args.penalties) if args.penalties else 6) * len(args.seeds) for c in cells}
+    status = run_status.JobStatus(manifest_path, total=sum(per_cell.values()),
+                                  spec_version=SPEC_VERSION)
+    status.heartbeat(len(rows))
+    try:
+        _run_all(args, cells, per_cell, status, rows, done, reference_rows, reference_done,
+                 reference_path, manifest_path, artifact_dir, loader, formulator, metrics,
+                 solver, optimizer_label)
+    except BaseException as exc:  # KeyboardInterrupt included: the record must say so
+        status.finish(130 if isinstance(exc, KeyboardInterrupt) else 1)
+        raise
+    status.heartbeat(len(rows), total=len(rows))
+    status.finish(0)
+    elapsed = time.perf_counter() - t_start
+    print(f"\n{len(rows)} rows → {manifest_path} in {elapsed/60:.1f} min; "
+          f"status {run_status.describe(run_status.read(manifest_path))}")
+    return 0
+
+
+def _run_all(args, cells, per_cell, status, rows, done, reference_rows, reference_done,
+             reference_path, manifest_path, artifact_dir, loader, formulator, metrics,
+             solver, optimizer_label) -> None:
+    """The cross itself; split out so the caller can record how it ended."""
     for n in sorted(args.n):
         for instance in args.instances:
             ref = InstanceReference(n, instance, loader, formulator, args.end_date)
@@ -480,6 +513,8 @@ def main(argv=None) -> int:
             conds = ref.conditions()
             if args.penalties:
                 conds = [c for c in conds if c[0] in args.penalties]
+            per_cell[(n, instance)] = len(conds) * len(args.seeds)
+            status.heartbeat(len(rows), total=sum(per_cell.values()))
             print(f"\nN={n} K={ref.k} inst {instance:>2} |F|={ref.feasible.size:,} "
                   f"A_crit={ref.a_crit:.5f} (m={ref.binding}) A_margin={ref.a_margin:.5f} "
                   f"A_heur={ref.a_heur:.3f} Δ_F={ref.feasible.delta:.4f} "
@@ -498,6 +533,7 @@ def main(argv=None) -> int:
                         "run_id": f"N{n}_i{instance:02d}_{label}_s{seed}",
                         "n_assets": n, "n_select": ref.k, "instance": instance,
                         "instance_digest": instance_digest(ref.tickers),
+                        "input_digest": input_digest(ref.data.returns, ref.data.covariance),
                         "penalty_label": label, "penalty": a_value,
                         "a_crit": ref.a_crit,
                         "a_over_crit": (a_value / ref.a_crit if ref.a_crit > 0 else ""),
@@ -516,34 +552,32 @@ def main(argv=None) -> int:
                         scored, artifact = score_run(res, problem, ref, a_value, metrics)
                         np.savez_compressed(artifact_dir / f"{base['run_id']}.npz", **artifact)
                         row = {**base, "status": "ok", "error": "", **scored}
-                        g_f = "none" if row["g_F"] == "" else f"{row['g_F']:.4f}"
-                        flag = "" if row["best_all_feasible"] else "best-shot INFEASIBLE "
-                        print(f"  {label:>9s} s{seed}  A={a_value:8.4f}  "
-                              f"P_F={row['final_P_F']:.3f} P_τ={row['final_P_tau_main']:.3f} "
-                              f"P_opt={row['final_P_opt']:.4f}  best_feas g_F={g_f} "
-                              f"rank={row['rank_best_feasible']}  {flag}"
-                              f"{row['runtime_s']:.1f}s", flush=True)
+                        line = (f"  {label:>9s} s{seed}  A={a_value:8.4f}  "
+                                f"P_F={row['final_P_F']:.3f} P_τ={row['final_P_tau_main']:.3f} "
+                                f"P_opt={row['final_P_opt']:.4f}  best_feas "
+                                f"g_F={'none' if row['g_F'] == '' else format(row['g_F'], '.4f')} "
+                                f"rank={row['rank_best_feasible']}  "
+                                f"{'' if row['best_all_feasible'] else 'best-shot INFEASIBLE '}"
+                                f"{row['runtime_s']:.1f}s")
                     except Exception as exc:  # noqa: BLE001 - recorded, not hidden
                         traceback.print_exc()
                         row = {**base, "status": f"error:{type(exc).__name__}",
                                "error": str(exc)[:200]}
-                        print(f"  {label:>9s} s{seed}  FAILED {type(exc).__name__}", flush=True)
+                        line = f"  {label:>9s} s{seed}  FAILED {type(exc).__name__}"
                     rows.append(row)
                     done.add(key)
-                    n_new += 1
-                    # Rows may lack keys when a run failed; keep one header.
-                    fields = list(rows[0].keys())
-                    for r in rows:
-                        for k_ in r:
-                            if k_ not in fields:
-                                fields.append(k_)
-                    with open(manifest_path, "w", newline="") as f:
-                        w = csv.DictWriter(f, fieldnames=fields)
-                        w.writeheader()
-                        w.writerows(rows)
-    elapsed = time.perf_counter() - t_start
-    print(f"\n{n_new} new runs in {elapsed/60:.1f} min; {len(rows)} rows → {manifest_path}")
-    return 0
+                    # One writer for every result file: it takes the union of the
+                    # keys (rows may lack some when a run failed) and lands the
+                    # file with a single rename, so a kill inside the rewrite
+                    # cannot leave a truncated manifest where the finished runs
+                    # were. The same function is what the interruption test kills.
+                    write_csv(manifest_path, rows)
+                    # After the file, so that a heartbeat of k always corresponds
+                    # to k complete rows on disk.
+                    status.heartbeat(len(rows), last=base["run_id"])
+                    # The line comes after the record, not before it: a reader of
+                    # the log should never see a run the file does not hold.
+                    print(line, flush=True)
 
 
 if __name__ == "__main__":

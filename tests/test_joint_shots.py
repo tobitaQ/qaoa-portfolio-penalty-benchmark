@@ -5,7 +5,7 @@
 
 Supplementary Sec. S-IX (2): the Braket device rejects computational-basis ``sample(wires=...)``,
 so the solver returns ``[qml.sample(qml.PauliZ(i)) for i in range(n)]`` and maps
-eigenvalues to bits. A referee (round 3, §6.5) asked whether each wire's column
+eigenvalues to bits. The question this pins is whether each wire's column
 comes from the same shot -- a joint measurement -- or from separate executions
 whose marginals are then combined, which would destroy every correlation in
 the bitstring distribution. On a Bell or GHZ state the two are trivially

@@ -1,0 +1,8 @@
+quantity,median,min,max
+tasks_created,127,121,172
+tasks_created_after_limit_crossed,47,41,92
+seconds_limit_to_alarm,94,91,96
+tasks_created_after_alarm,10,6,56
+seconds_alarm_to_denial,16,7,146
+tasks_created_after_first_denial,4,1,5
+list_price_usd,0.4763,0.4537,0.645

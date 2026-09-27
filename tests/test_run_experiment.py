@@ -160,7 +160,7 @@ class TestMergeEndToEnd:
         assert main(["--classical-n", "8", "--quantum-n", "8",
                      "--backend", "lightning_cpu", "--steps", "2",
                      "--shots", "50"]) == 0
-        before = list(csv.DictReader(results_csv.open()))
+        before = list(csv.DictReader(results_csv.open(encoding="utf-8")))
         quantum_before = [r for r in before if not r["solver"].startswith("classical")]
         assert quantum_before, "fixture needs a quantum row to protect"
 
@@ -168,7 +168,7 @@ class TestMergeEndToEnd:
         assert main(["--classical-n", "8", "--skip-quantum", "--merge",
                      "--write-canonical"]) == 0
 
-        after = list(csv.DictReader(results_csv.open()))
+        after = list(csv.DictReader(results_csv.open(encoding="utf-8")))
         quantum_after = [r for r in after if not r["solver"].startswith("classical")]
         assert quantum_after == quantum_before, "quantum rows changed under --merge"
 
@@ -184,7 +184,7 @@ class TestMergeEndToEnd:
                      "--shots", "50"]) == 0
         assert main(["--classical-n", "8", "--skip-quantum", "--write-canonical"]) == 0
 
-        after = list(csv.DictReader(results_csv.open()))
+        after = list(csv.DictReader(results_csv.open(encoding="utf-8")))
         assert all(r["solver"].startswith("classical") for r in after)
 
 
@@ -257,3 +257,23 @@ class TestHardwareGuardCLI:
         args = parse_args(["--sample-backend", "braket_local"])
         assert args.sample_backend == "braket_local"
         assert args.results_tag is None
+
+
+class TestCloudEstimate:
+    """A metered invocation prints its task count and price floor and needs --yes-bill-me."""
+
+    def test_cloud_backend_with_a_tag_still_needs_the_acknowledgement(self, capsys):
+        from experiments.paper01_qubo_baseline.run_experiment import main
+        code = main(["--backend", "braket_sv1", "--s3-bucket", "b", "--quantum-n", "8", "20",
+                     "--classical-n", "8", "--results-tag", "est"])
+        assert code == 2
+        out = capsys.readouterr().out
+        assert "102 SV1 task(s)" in out and "--yes-bill-me" in out
+
+    def test_estimate_arithmetic(self):
+        from experiments.paper01_qubo_baseline.run_experiment import cloud_estimate
+        e = cloud_estimate([8, 12], steps=50, shots=1000, backend="braket_sv1", sample_backend=None)
+        assert e["sv1_tasks"] == 102 and e["qpu_tasks"] == 0
+        assert e["usd_floor"] == pytest.approx(102 * 3 / 60 * 0.075)
+        e = cloud_estimate([8], steps=50, shots=100, backend="lightning_cpu", sample_backend="braket_ionq")
+        assert e["sv1_tasks"] == 0 and e["qpu_tasks"] == 1 and e["usd_floor"] == pytest.approx(8.30)

@@ -123,6 +123,28 @@ def instance_digest(tickers: list[str]) -> str:
     return hashlib.sha256("\x00".join(sorted(tickers)).encode()).hexdigest()[:12]
 
 
+def input_digest(returns: np.ndarray, covariance: np.ndarray) -> str:
+    """Content hash of the instance's *input values*: μ and Σ as float64.
+
+    ``instance_digest`` names which assets an instance holds; it says nothing
+    about the statistics they carried when the run was made. The fault
+    injection of the system paper (E-S1, 2026-09-16) showed the gap: a mean
+    return moved by 1e-6 in the derived statistics passed every row-level
+    check and was caught only by re-enumerating the reference. This digest
+    binds a reference row and every run row to the values, so a revised
+    snapshot is a mismatch at the input stage. Bytes of the C-contiguous
+    float64 arrays, which is what the pipeline computes with; the loader's
+    round-trip parsing makes the digest of a derived-statistics slice equal
+    to the digest of the same slice of the price snapshot.
+    """
+    h = hashlib.sha256()
+    for a in (returns, covariance):
+        arr = np.ascontiguousarray(np.asarray(a, dtype=np.float64))
+        h.update(np.asarray(arr.shape, dtype=np.int64).tobytes())
+        h.update(arr.tobytes())
+    return h.hexdigest()[:16]
+
+
 def measure(problem, data, k: int, metrics: PortfolioMetrics) -> dict:
     """Enumerate one instance's feasible set and summarise what a gap denominates.
 

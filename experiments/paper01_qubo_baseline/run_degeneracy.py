@@ -315,7 +315,7 @@ def load_quantum_rows(results_csv: Path) -> dict[int, dict]:
     if not results_csv.exists():
         return {}
     rows = {}
-    with open(results_csv, newline="") as f:
+    with open(results_csv, newline="", encoding="utf-8") as f:
         for r in csv.DictReader(f):
             if not r["solver"].startswith("classical"):
                 rows[int(r["n_assets"])] = r

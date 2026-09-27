@@ -57,7 +57,7 @@ def strip_math_and_verbatim(line: str) -> str:
 
 def check(path: pathlib.Path) -> list[str]:
     """Return a list of problems, empty if the file passes every check."""
-    text = path.read_text()
+    text = path.read_text(encoding="utf-8")
     lines = text.split("\n")
     problems: list[str] = []
 
@@ -204,7 +204,7 @@ def check_aux(tex: pathlib.Path) -> list[str]:
     if not aux.exists():
         return []
     out = []
-    for key, num in re.findall(r"\\bibcite\{ref(\d+)\}\{(\d+)\}", aux.read_text()):
+    for key, num in re.findall(r"\\bibcite\{ref(\d+)\}\{(\d+)\}", aux.read_text(encoding="utf-8")):
         if key != num:
             out.append(f"reference [{key}] is typeset as [{num}]")
     return out
@@ -242,7 +242,7 @@ def main(argv: list[str]) -> int:
         state = ("and the local build reports no errors"
                  if log.exists() else "compilation unverified — no build log here")
         print(f"{path.name}: structural checks pass "
-              f"({len(path.read_text().splitlines())} lines), {state}.")
+              f"({len(path.read_text(encoding='utf-8').splitlines())} lines), {state}.")
         return 0
     print(f"{path.name}: {len(problems)} problem(s)")
     for p in problems[:60]:

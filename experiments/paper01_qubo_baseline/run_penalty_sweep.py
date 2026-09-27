@@ -135,7 +135,7 @@ def main() -> int:
 
     out = RESULTS_DIR / "paper01_penalty_sweep.csv"
     out.parent.mkdir(parents=True, exist_ok=True)
-    with open(out, "w", newline="") as f:
+    with open(out, "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=list(rows[0]))
         w.writeheader()
         w.writerows(rows)

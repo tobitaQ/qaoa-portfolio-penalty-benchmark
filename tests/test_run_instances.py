@@ -16,6 +16,7 @@ import numpy as np
 import pytest
 
 from experiments.paper01_qubo_baseline.run_instances import (
+    input_digest,
     instance_digest,
     instance_tickers,
     measure,
@@ -137,3 +138,29 @@ class TestMeasure:
         )
         # |E*| is the penalty constant to within the O(1) objective.
         assert abs(row["abs_energy_optimum"] - problem.offset) < 1.0
+
+
+class TestInputDigest:
+    def test_binds_values_not_names(self):
+        """A 1e-6 move in one mean return changes the digest; the ticker set does not."""
+        rng = np.random.default_rng(0)
+        mu, cov = rng.normal(size=4), np.eye(4)
+        d = input_digest(mu, cov)
+        mu2 = mu.copy()
+        mu2[0] *= 1 + 1e-6
+        assert d != input_digest(mu2, cov)
+        assert d == input_digest(mu.copy(), cov.copy())
+        assert len(d) == 16
+
+    def test_committed_reference_carries_the_digest_of_the_pinned_statistics(self):
+        """The reference file's input_digest is what data/derived gives (instance 0, N = 12)."""
+        import csv
+        from pathlib import Path
+        from src.finance.data_loader import FinanceDataLoader
+        path = Path("experiments/paper01_qubo_baseline/results/paper01_e1_reference.csv")
+        if not path.exists():
+            pytest.skip("reference file not present")
+        with open(path, newline="", encoding="utf-8") as f:
+            row = next(r for r in csv.DictReader(f) if r["n_assets"] == "12" and r["instance"] == "0")
+        data = FinanceDataLoader().load(instance_tickers(12, 0), end_date=row["data_end"], lookback_years=3)
+        assert row["input_digest"] == input_digest(data.returns, data.covariance)

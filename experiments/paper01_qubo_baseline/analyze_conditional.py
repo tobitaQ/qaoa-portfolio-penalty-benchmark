@@ -2,11 +2,10 @@
 # SPDX-License-Identifier: MIT
 
 """
-Paper ① / review round 2, C3: is the optimised state uniform *within* the
+Paper ①: is the optimised state uniform *within* the
 feasible set, or does it merely land in the τ-band at the uniform rate?
 
-Sec. V-B explained E2's 0 of 450 by the enrichment ratio R_τ being 1.00 at
-A_heur: conditioned on feasibility, the state finds the τ-band as often as an
+E2's 0 of 450 was explained by the enrichment ratio R_τ being 1.00 at A_heur: conditioned on feasibility, the state finds the τ-band as often as an
 indifferent draw from F would. That is one number about one subset. It is
 consistent with the conditional distribution being uniform on F, and also with
 it being anything else that happens to put the same mass in F_τ — the

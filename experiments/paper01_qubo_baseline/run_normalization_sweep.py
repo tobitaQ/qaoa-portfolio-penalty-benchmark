@@ -126,7 +126,7 @@ def main() -> int:
                   f"Sharpe [{stats['sharpe_min']:.3f}, {stats['sharpe_max']:.3f}]")
 
     out = RESULTS_DIR / "paper01_normalization_sweep.csv"
-    with open(out, "w", newline="") as f:
+    with open(out, "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=list(rows[0]))
         w.writeheader()
         w.writerows(rows)

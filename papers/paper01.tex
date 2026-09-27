@@ -8,6 +8,10 @@
 % two builds' text layers are identical, and the PDF can be built anywhere.
 \input{glyphtounicode}
 \pdfgentounicode=1
+% PDF 1.4 with a classic cross-reference table (no object streams): the widest
+% reader compatibility, for submission systems that parse the file themselves.
+\pdfminorversion=4
+\pdfobjcompresslevel=0
 
 % T1 rather than the OT1 default: OT1 has no > or < glyph and sets them as
 % inverted question marks, which is how "A > x" reached the page wrong.

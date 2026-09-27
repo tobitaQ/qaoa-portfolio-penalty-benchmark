@@ -1,0 +1,113 @@
+diff --git a/amazon_braket_cost_control/amazon_braket_cost_control_stack.py b/amazon_braket_cost_control/amazon_braket_cost_control_stack.py
+index aa9d898..e399df3 100644
+--- a/amazon_braket_cost_control/amazon_braket_cost_control_stack.py
++++ b/amazon_braket_cost_control/amazon_braket_cost_control_stack.py
+@@ -169,10 +169,16 @@ class AmazonBraketCostControlStack(Stack):
+                 .resolve()
+                 .as_posix(),
+             ),
+-            architecture=aws_lambda.Architecture.ARM_64,
++            architecture=aws_lambda.Architecture.X86_64,
+             log_retention=aws_logs.RetentionDays.ONE_MONTH,
+             log_retention_role=log_retention_role,
+             environment={
++                # numba (pulled in by the Braket SDK's default simulator) caches
++                # compiled functions beside the source; /var/task is read-only in
++                # Lambda and the import fails with 'no locator available'. Observed
++                # 2026-09-17: 392 failed invocations, nothing metered, no alarm.
++                'NUMBA_CACHE_DIR': '/tmp/numba',
++
+                 'TAG_KEY': tag_key,
+                 'SOLUTION_ID': solution_id,
+                 'TASKS_TABLE_NAME': tasks_table.table_name,
+@@ -242,7 +248,7 @@ class AmazonBraketCostControlStack(Stack):
+                 .resolve()
+                 .as_posix()
+             ),
+-            architecture=aws_lambda.Architecture.ARM_64,
++            architecture=aws_lambda.Architecture.X86_64,
+             log_retention=aws_logs.RetentionDays.ONE_MONTH,
+             log_retention_role=log_retention_role,
+             environment={
+@@ -372,7 +378,7 @@ class AmazonBraketCostControlStack(Stack):
+                 .resolve()
+                 .as_posix()
+             ),
+-            architecture=aws_lambda.Architecture.ARM_64,
++            architecture=aws_lambda.Architecture.X86_64,
+             log_retention=aws_logs.RetentionDays.ONE_MONTH,
+             log_retention_role=log_retention_role,
+             environment={
+@@ -431,7 +437,7 @@ class AmazonBraketCostControlStack(Stack):
+                 .resolve()
+                 .as_posix()
+             ),
+-            architecture=aws_lambda.Architecture.ARM_64,
++            architecture=aws_lambda.Architecture.X86_64,
+             log_retention=aws_logs.RetentionDays.ONE_MONTH,
+             log_retention_role=log_retention_role,
+             environment={
+@@ -507,7 +513,10 @@ class AmazonBraketCostControlStack(Stack):
+             'cost-control-alarm-monthly',
+             alarm_name='Quantum Task Cost Monthly Aggregate',
+             threshold=float(monthly_cost_limit),
+-            evaluation_periods=(task_cost_monthly_aggregate_metric.period.to_minutes() * 60 * 24),
++            # Repetition support for the measurement (2026-09-17): a 5-minute window
++            # instead of 24 h, so a cleared running cost lets the alarm return to OK
++            # between runs. Latency to ALARM is unchanged (datapoints_to_alarm=1).
++            evaluation_periods=5,
+             datapoints_to_alarm=1,
+             treat_missing_data=aws_cloudwatch.TreatMissingData.IGNORE,
+             actions_enabled=True,
+diff --git a/lambda/cost_explorer_report/Dockerfile b/lambda/cost_explorer_report/Dockerfile
+index 0e9ae45..963e575 100644
+--- a/lambda/cost_explorer_report/Dockerfile
++++ b/lambda/cost_explorer_report/Dockerfile
+@@ -1,7 +1,7 @@
+ # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ # SPDX-License-Identifier: MIT-0
+ 
+-FROM public.ecr.aws/lambda/python:3.12-arm64
++FROM public.ecr.aws/lambda/python:3.12-x86_64
+ 
+ COPY requirements.txt  .
+ RUN  pip3 install -r requirements.txt --target "${LAMBDA_TASK_ROOT}"
+diff --git a/lambda/quantum_task_cost_control/Dockerfile b/lambda/quantum_task_cost_control/Dockerfile
+index 0e9ae45..963e575 100644
+--- a/lambda/quantum_task_cost_control/Dockerfile
++++ b/lambda/quantum_task_cost_control/Dockerfile
+@@ -1,7 +1,7 @@
+ # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ # SPDX-License-Identifier: MIT-0
+ 
+-FROM public.ecr.aws/lambda/python:3.12-arm64
++FROM public.ecr.aws/lambda/python:3.12-x86_64
+ 
+ COPY requirements.txt  .
+ RUN  pip3 install -r requirements.txt --target "${LAMBDA_TASK_ROOT}"
+diff --git a/lambda/quantum_task_cost_meter/Dockerfile b/lambda/quantum_task_cost_meter/Dockerfile
+index fabd566..8443f47 100644
+--- a/lambda/quantum_task_cost_meter/Dockerfile
++++ b/lambda/quantum_task_cost_meter/Dockerfile
+@@ -1,7 +1,7 @@
+ # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ # SPDX-License-Identifier: MIT-0
+ 
+-FROM public.ecr.aws/lambda/python:3.12-arm64
++FROM public.ecr.aws/lambda/python:3.12-x86_64
+ 
+ COPY requirements.txt  .
+ RUN  pip3 install -r requirements.txt --target "${LAMBDA_TASK_ROOT}"
+diff --git a/lambda/quantum_task_logger/Dockerfile b/lambda/quantum_task_logger/Dockerfile
+index fabd566..8443f47 100644
+--- a/lambda/quantum_task_logger/Dockerfile
++++ b/lambda/quantum_task_logger/Dockerfile
+@@ -1,7 +1,7 @@
+ # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ # SPDX-License-Identifier: MIT-0
+ 
+-FROM public.ecr.aws/lambda/python:3.12-arm64
++FROM public.ecr.aws/lambda/python:3.12-x86_64
+ 
+ COPY requirements.txt  .
+ RUN  pip3 install -r requirements.txt --target "${LAMBDA_TASK_ROOT}"

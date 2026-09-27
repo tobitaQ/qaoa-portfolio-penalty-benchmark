@@ -140,7 +140,7 @@ def main(argv: list[str] | None = None) -> int:
     existing = []
     if out.exists():
         import csv as _csv
-        with open(out, newline="") as f:
+        with open(out, newline="", encoding="utf-8") as f:
             existing = [r for r in _csv.DictReader(f)
                         if r["task_arn"] != args.task_arn]
     write_csv(out, existing + [row])

@@ -86,6 +86,11 @@ COLUMN_IN, TEXT_IN = 3.5, 7.16
 plt.rcParams.update({
     "figure.dpi": 120,
     "savefig.dpi": 300,
+    # Embed figure text as TrueType (Type 42), not matplotlib's default Type 3:
+    # IEEE's submission checker refuses PDFs that carry Type 3 fonts, and the
+    # figure PDFs were the only source of them in the built paper. Rendering
+    # is unchanged; only how the glyphs are stored in the file.
+    "pdf.fonttype": 42,
     "font.size": 8 if PAPER else 11,
     "axes.titlesize": 8 if PAPER else 11,
     "axes.labelsize": 8 if PAPER else 11,
@@ -103,7 +108,7 @@ plt.rcParams.update({
 
 
 def _read_csv(path: Path) -> list[dict]:
-    with open(path, newline="") as f:
+    with open(path, newline="", encoding="utf-8") as f:
         return list(csv.DictReader(f))
 
 
@@ -147,7 +152,7 @@ def _panel(ax, letter: str) -> None:
     """Label a panel "(a)", "(b)", ... in the paper build.
 
     The caption then says what each panel shows, and the image carries only
-    the identifier -- the referee's request for the multi-panel figures.
+    the identifier, which is what a multi-panel figure needs to be readable.
     """
     if not PAPER:
         return

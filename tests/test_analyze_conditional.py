@@ -14,7 +14,7 @@ def test_conditional_tv_is_zero_for_uniform_and_one_minus_1_over_f_for_a_point_m
     assert p_f == pytest.approx(0.3) and d == pytest.approx(1 - 1 / 4)
 
 
-def test_the_reviewers_counterexample_has_r_tau_one_but_is_not_uniform():
+def test_a_distribution_with_r_tau_one_that_is_not_uniform():
     # F has four elements, the first two form F_tau. (1/2, 0, 1/2, 0) lands in
     # F_tau at the uniform rate 1/2 -- R_tau = 1 -- and is not uniform on F.
     p = np.array([0.5, 0.0, 0.5, 0.0]) * 0.4       # P_F = 0.4
@@ -37,7 +37,7 @@ def test_per_run_reads_artifacts_and_summarise_counts_undefined(tmp_path):
              final_probs_feasible=np.full(5, 0.04), initial_probs_feasible=np.array([0.1, 0, 0, 0, 0]))
     np.savez(tmp_path / "N12_i04_Aheur_s42.npz", feasible_indices=idx,
              final_probs_feasible=np.zeros(5), initial_probs_feasible=np.full(5, 0.04))
-    (tmp_path / "notes.txt").write_text("ignored")
+    (tmp_path / "notes.txt").write_text("ignored", encoding="utf-8")
     rows = ac.per_run(tmp_path)
     assert [(r["n_assets"], r["instance"], r["penalty_label"], r["qaoa_seed"]) for r in rows] \
         == [(12, 3, "Aheur", 42), (12, 4, "Aheur", 42)]

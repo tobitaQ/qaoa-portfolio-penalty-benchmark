@@ -126,6 +126,51 @@ def results_paths(tag: str | None) -> tuple[Path, Path]:
     )
 
 
+#: Braket list prices (2026-08) for the pre-flight estimate.
+SV1_USD_PER_MINUTE = 0.075
+SV1_MINIMUM_SECONDS = 3.0
+IONQ_TASK_USD = 0.30
+IONQ_SHOT_USD = 0.08
+
+
+def cloud_estimate(quantum_n: list[int], steps: int, shots: int, backend: str,
+                   sample_backend: str | None) -> dict:
+    """Tasks and list-price lower bound for one invocation on a metered backend.
+
+    Per size: ``steps`` analytic tasks on SV1 when the optimizer runs there
+    (adjoint gradients: one task per step) plus one sampling task on the
+    sampling backend. SV1 tasks are billed by the second with a 3 s minimum,
+    so the dollar figure is a floor (an N = 20 analytic task ran 14.3 s); a QPU
+    sampling task is ``$0.30 + shots x $0.08`` exactly.
+    """
+    sampler = sample_backend or backend
+    n_sizes = len(quantum_n)
+    sv1_tasks = (steps * n_sizes if backend == "braket_sv1" else 0) + \
+        (n_sizes if sampler == "braket_sv1" else 0)
+    qpu_tasks = n_sizes if sampler in QPU_BACKENDS else 0
+    usd = sv1_tasks * SV1_MINIMUM_SECONDS / 60 * SV1_USD_PER_MINUTE + \
+        qpu_tasks * (IONQ_TASK_USD + shots * IONQ_SHOT_USD)
+    text = (f"Metered estimate for N={quantum_n}: {sv1_tasks} SV1 task(s), {qpu_tasks} QPU task(s) "
+            f"at {shots} shots; list price at least ${usd:,.2f}"
+            + (" (SV1 analytic tasks bill by the second above the 3 s minimum)" if sv1_tasks else ""))
+    return {"sv1_tasks": sv1_tasks, "qpu_tasks": qpu_tasks, "usd_floor": usd, "text": text}
+
+
+def write_metered_estimate(tag: str | None, est: dict, quantum_n: list[int], args) -> Path:
+    """Persist the pre-submission estimate next to the tagged results (one JSON per invocation)."""
+    import json
+    from datetime import datetime, timezone
+    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+    path = RESULTS_DIR / f"paper01_metered_estimate_{tag or 'untagged'}_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}.json"
+    path.write_text(json.dumps({
+        "results_tag": tag, "backend": args.backend, "sample_backend": args.sample_backend,
+        "quantum_n": quantum_n, "steps": args.steps, "shots": args.shots,
+        "expected_tasks": est["sv1_tasks"] + est["qpu_tasks"], "expected_sv1_tasks": est["sv1_tasks"],
+        "expected_qpu_tasks": est["qpu_tasks"], "usd_floor": est["usd_floor"],
+        "acknowledged_utc": datetime.now(timezone.utc).isoformat(timespec="seconds")}, indent=1), encoding="utf-8")
+    return path
+
+
 def canonical_overwrite_refusal(paths, tag: str | None, write_canonical: bool,
                                 resume: bool = False) -> str | None:
     """Explain why an untagged run may not proceed, or return None.
@@ -228,10 +273,18 @@ def write_csv(path: Path, rows: list[dict]) -> None:
     fields: dict[str, None] = {}
     for row in rows:
         fields.update(dict.fromkeys(row))
-    with open(path, "w", newline="") as f:
+    # Written beside the target and moved into place, because the write is a
+    # rewrite of the whole file: a process killed inside it would otherwise
+    # leave a truncated file where the completed runs were. os.replace is
+    # atomic within a directory on POSIX and on Windows.
+    tmp = path.with_name(path.name + ".tmp")
+    with open(tmp, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=list(fields), restval="")
         writer.writeheader()
         writer.writerows(rows)
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(tmp, path)
 
 
 # ----------------------------------------------------------------------
@@ -256,7 +309,7 @@ def read_csv(path: Path) -> list[dict]:
     """Read a CSV into a list of dicts, or [] if it does not exist."""
     if not path.exists():
         return []
-    with open(path, newline="") as f:
+    with open(path, newline="", encoding="utf-8") as f:
         return list(csv.DictReader(f))
 
 
@@ -381,6 +434,9 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
                         "--backend. This is the only way to reach a QPU: real "
                         "hardware cannot host the optimization loop (one billable "
                         "task per parameter-shift circuit, ~$73,000 at N=8)")
+    p.add_argument("--yes-bill-me", action="store_true",
+                   help="Required with a cloud or hardware backend: acknowledges the printed "
+                        "task count and list-price estimate for this invocation")
     p.add_argument("--results-tag", default=None,
                    help="Suffix the output CSVs (paper01_results_<tag>.csv). "
                         "Untagged writes the canonical files behind the "
@@ -430,6 +486,21 @@ def main(argv: list[str] | None = None) -> int:
               f"untagged run overwrites paper01_results.csv, the source of "
               f"Table I and Figures 1-4. Try --results-tag sv1.")
         return 2
+    if cloud:
+        # A bounded, acknowledged spend per invocation: the estimate is printed
+        # from the arguments before any AWS object exists, and the run does not
+        # start without the flag. (The E1 cross driver accepts local backends only.)
+        quantum_n = [] if args.skip_quantum else sorted(args.quantum_n)
+        est = cloud_estimate(quantum_n, args.steps, args.shots, args.backend, args.sample_backend)
+        print(est["text"])
+        if not args.yes_bill_me:
+            print("pass --yes-bill-me to run this on the metered backend")
+            return 2
+        # The acknowledged estimate becomes part of the record, so that the task
+        # count the provider bills can later be checked against the count the
+        # invocation expected (check_metered.py). The 227-task pilot that motivated
+        # the frozen-angles guard would have failed this relation on its own.
+        write_metered_estimate(args.results_tag, est, quantum_n, args)
     try:
         results_csv, convergence_csv = results_paths(args.results_tag)
     except ValueError as exc:

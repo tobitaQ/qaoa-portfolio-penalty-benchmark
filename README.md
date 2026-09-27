@@ -34,13 +34,32 @@ those files.
 | 2. One small instance end to end | `python -m experiments.paper01_qubo_baseline.run_experiment --backend lightning_cpu --classical-n 8 12 --quantum-n 8 12 --results-tag mytest` | minutes on a CPU |
 | 3. The E1 cross from the manifest | `python -m experiments.paper01_qubo_baseline.run_e1_cross --backend lightning_gpu --precision single --resume --results-tag reproduction`, then compare `results/paper01_e1_cross_reproduction.csv` with the committed `paper01_e1_cross.csv` (the state-derived columns agree bit for bit on the same GPU class; the timing columns do not) | 13.9 GPU h (RTX A6000) |
 
-Setup:
+Setup. One block per shell; the rest of this file assumes the environment is active.
 
 ```bash
-python -m venv .venv && . .venv/bin/activate
+# macOS, Linux, WSL, and Git Bash on Windows
+python3 -m venv .venv
+source .venv/bin/activate                # Git Bash on Windows: source .venv/Scripts/activate
 pip install -r requirements.txt          # minimum versions; add requirements-gpu.txt for lightning.gpu
-python -m pytest -q                      # the test suite pins the scoring rules, the sampler and the aggregations
+python -m pytest -q                      # pins the scoring rules, the sampler and the aggregations
 ```
+
+```powershell
+# Windows PowerShell
+py -3.12 -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+$env:PYTHONUTF8 = "1"                    # see below
+python -m pytest -q --basetemp=.pytest-tmp
+```
+
+On Windows, two things differ. The virtual environment is `Scripts\`, not `bin/`, in every shell
+including Git Bash. And `pytest` leaves a link in its temporary directory that Windows will not
+remove, which ends the session with `PermissionError: [WinError 5]` after the tests have passed;
+`--basetemp=.pytest-tmp` avoids it, and a stale `.pytest-tmp` from a previous run has to be deleted
+before the next one. Python 3.12 is a good choice there: 3.14 is newer than some of the libraries.
+Text files are read as UTF-8 by the code itself, so `PYTHONUTF8` is only needed for the shell's own
+output on a non-UTF-8 locale.
 
 Python ≥ 3.11. `requirements.txt` states the minimum versions the code runs with;
 `requirements-repro.txt` is the `pip freeze` of the environment that produced the paper's

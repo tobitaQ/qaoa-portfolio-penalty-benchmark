@@ -102,6 +102,10 @@ PREAMBLE = r"""\documentclass[journal]{IEEEtran}
 % two builds' text layers are identical, and the PDF can be built anywhere.
 \input{glyphtounicode}
 \pdfgentounicode=1
+% PDF 1.4 with a classic cross-reference table (no object streams): the widest
+% reader compatibility, for submission systems that parse the file themselves.
+\pdfminorversion=4
+\pdfobjcompresslevel=0
 
 % T1 rather than the OT1 default: OT1 has no > or < glyph and sets them as
 % inverted question marks, which is how "A > x" reached the page wrong.
@@ -144,6 +148,10 @@ PREAMBLE_TQE = r"""\documentclass{ieeeaccess}
 
 \input{glyphtounicode}
 \pdfgentounicode=1
+% PDF 1.4 with a classic cross-reference table (no object streams): the widest
+% reader compatibility, for submission systems that parse the file themselves.
+\pdfminorversion=4
+\pdfobjcompresslevel=0
 
 \usepackage[T1]{fontenc}
 \usepackage{cite}
@@ -739,7 +747,7 @@ def convert(md: str) -> str:
         # A table row starts *and ends* with a pipe. A prose line that merely
         # begins with an absolute value ("|f* − A₁K²|/…") is not one; three
         # such lines were swallowed as one-row tables and printed without
-        # their bars (review round 4, §5).
+        # their bars.
         if _is_table_row(line):
             close_list()
             block = []
@@ -1003,7 +1011,7 @@ def main() -> int:
     moved = sync_figures()
     if moved:
         print(f"synced {moved} figure(s) into papers/figures/")
-    tex = convert(SRC.read_text())
+    tex = convert(SRC.read_text(encoding="utf-8"))
     # Anything non-ASCII left here is a character inputenc will refuse. Better to
     # fail now, naming it, than to hand over a file whose first compile dies.
     import collections
@@ -1021,8 +1029,8 @@ def main() -> int:
             print(f"  U+{ord(ch):04X} {ch!r} x{n} — add it to UNICODE or fix the draft",
                   file=sys.stderr)
         return 1
-    OUT.write_text(tex)
-    print(f"wrote {OUT} ({len(OUT.read_text().splitlines())} lines)")
+    OUT.write_text(tex, encoding="utf-8")
+    print(f"wrote {OUT} ({len(OUT.read_text(encoding='utf-8').splitlines())} lines)")
     return 0
 
 

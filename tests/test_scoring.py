@@ -295,7 +295,7 @@ def test_success_probability_clamps_the_ends():
 
 
 class TestCriticalPenaltyBoundaryCases:
-    """A_crit = 0 covers three situations, and they are not the same (review M8).
+    """A_crit = 0 covers three situations, and they are not the same.
 
     The draft said "at A = A_crit an infeasible assignment ties x*", which holds
     only when the inner maximum is positive. When the clamp is active the

@@ -97,12 +97,12 @@ def shot_counts_from_dir(task_dir: "str | Path") -> Counter:
         RuntimeError: If the result holds no measurements.
     """
     root = Path(task_dir)
-    read_json = lambda rel: json.loads((root / rel).read_text())  # noqa: E731
+    read_json = lambda rel: json.loads((root / rel).read_text(encoding="utf-8"))  # noqa: E731
     result = read_json("results.json")
 
     metadata_path = root / "metadata.json"
     if metadata_path.exists():
-        shots = int(json.loads(metadata_path.read_text())["requestedShots"])
+        shots = int(json.loads(metadata_path.read_text(encoding="utf-8"))["requestedShots"])
     else:
         shots = int(result["taskMetadata"]["shots"])
     return _counts_from_result(result, shots, read_json)
