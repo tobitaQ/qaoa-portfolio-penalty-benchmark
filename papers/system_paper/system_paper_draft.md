@@ -346,8 +346,9 @@ it.
 implemented as a function that returns the rows on which it does not; Section 4.1 lists them as the
 checks of E-S1 and gives the stage at which each runs. Each is marked with what a violation means:
 **[E]** exact — the two sides are equal or the record is inconsistent; **[N]** numerical — one side
-is recomputed and compared within the tolerance given; **[S]** statistical — a hypothesis test that a
-correct record can fail, at a rate the threshold sets.
+is recomputed and compared within the tolerance given; **[S]** statistical — a rule a correct record
+can fail, so a finding is a suspicion and not a proof. Several relations hold clauses of more than
+one kind and carry more than one mark; where they do, the clauses are named.
 
 1. *schema* **[E]** — every required column is present and filled on every completed run.
 2. *manifest* **[E]** — each (N, instance) block holds exactly the (penalty, seed) cells its
@@ -403,16 +404,18 @@ each tolerance above is stated with the arithmetic it allows for. A violation of
 is a *suspicion*: a correct record can produce one, and the threshold says how unlikely that is. For
 the binomial tails the bound is a union bound — roughly 5,000 tests at 10⁻⁹ each put the chance that
 any of them fires on a correct record of this size below 5·10⁻⁶ — and it covers those tails and
-nothing else. The other two statistical rules carry no such number: the correlation floor of 0.9 was read off the clean record's nineteen blocks, whose
-correlations run from 0.983 to 0.999, and is a property of blocks of this size and spread rather
-than a constant. Two guards are part of the rule — a block of fewer than ten runs, or one in which
-final P_F does not vary at all, is not tested — and a third condition is not enforced and should be:
-a block whose runs all have nearly the same P_F carries little information about the correlation, and
-a correct record of that shape would fail this rule. It is stated here as a condition of use. Section 5.1 reports the one
-false alarm this relation produced before its threshold was corrected, and the five clean records on
-which the corrected version is silent.
+nothing else. The other two statistical rules carry no such number. The correlation floor of 0.9 was
+read off the clean record's nineteen blocks, whose correlations run from 0.983 to 0.999, and is a
+property of blocks of this size and spread rather than a constant: two guards are part of the rule —
+a block of fewer than ten runs, or one in which final P_F does not vary at all, is not tested — and a
+third condition is not enforced and should be, since a block whose runs all have nearly the same P_F
+carries little information about the correlation and a correct record of that shape would fail the
+rule. Two seeds carrying the same shot batch is the other, and it is weaker still: it is possible
+without a defect whenever the state is concentrated, and it is reported as something to look at.
+Section 5.1 reports the one false alarm the binomial test produced before its threshold was
+corrected, and the five clean records on which none of the three fires.
 
-**Where the statistical relation applies.** *state-batch* compares a batch with the distribution the
+**Where the batch-against-state rule applies.** *state-batch* compares a batch with the distribution the
 same run recorded, which requires that distribution to be exact — it is, because the state comes
 from a state-vector simulator that computes it. On hardware the recorded ideal state is not the
 distribution the device sampled, and a failure would mean noise as readily as a mix-up; the relation
@@ -1157,12 +1160,12 @@ difference. Fresh environment for each; this host.**
 | 3 | re-issue with `--resume` | 168 s | "6 rows already done"; 24 rows; 94/94 non-timing columns identical to the uninterrupted block |
 | control | level 2 without `data/derived`, network unreachable | 6 s | fails: `TypeError: '<' not supported between instances of 'int' and 'NoneType'` |
 | control | E2 aggregation without the artifacts | 1.2 s | fails: "no run artifacts under …/e1_runs" |
-| 0 (v1.1) | `git clone --branch v1.1`; `python -m venv`; `pip install -r requirements-repro.txt` | 0.3 s; 8 s; 149 s | commit a64ddba, 24 MB |
-| 0 (v1.1) | `pytest -q` | 101 s | 400 passed, 32 skipped |
-| 1 (v1.1) | `python -m notebooks.generate_tqe_figures`; `python check_tables.py` | 24 s; 2.6 s | 5/5 byte-identical; 2,578 cells agree, 0 disagree, 0 pending |
+| 0 (v1.1) | `git clone --branch v1.1`; `python -m venv`; `pip install -r requirements-repro.txt` | 0.3 s; 8 s; 152 s | commit 71b05e0, 24 MB |
+| 0 (v1.1) | `pytest -q -rs` | 100 s | 400 passed, 32 skipped: 28 need the per-run artifacts, 3 the price snapshots, 1 a host without `lightning.gpu` |
+| 1 (v1.1) | `python -m notebooks.generate_tqe_figures`; `python check_tables.py` | 24 s; 2.7 s | 5/5 byte-identical; 2,578 cells agree, 0 disagree, 0 pending |
 | 2 (v1.1) | the level-2 command above | 18 s | energy and Sharpe identical to the committed file, to 0 |
-| 3 (v1.1) | the level-3 block with the job status record: `SIGKILL` after 5 runs | 52 s | status file `RUNNING 5/12, last N12_i00_5xAcrit_s42`, matching the 5 rows on disk, which the manifest parses with no artifact left without a row; `analyze_e1` refuses the manifest |
-| 3 (v1.1) | re-issue with `--resume` | 71 s | driver prints "previous job: RUNNING pid … 5/12"; status `EXIT 0 12/12`; `analyze_e1` runs |
+| 3 (v1.1) | the level-3 block with the job status record: `SIGKILL` after 5 runs | 50 s | status file `RUNNING 5/12, last N12_i00_5xAcrit_s42`, matching the 5 rows on disk, which the manifest parses with no artifact left without a row; `analyze_e1` refuses the manifest |
+| 3 (v1.1) | re-issue with `--resume` | 69 s | driver prints "previous job: RUNNING pid … 5/12"; status `EXIT 0 12/12`; `analyze_e1` runs |
 
 The inputs the harness supplied were the repository URL and tag, a name for `--results-tag`, and
 the choice of CPU over the README's GPU for level 3; every other token came from the README.
@@ -1221,7 +1224,7 @@ fault-injection relations against real artifacts; three need the price snapshots
 third-party data the package deliberately does not redistribute (it ships the derived statistics
 instead); and one is the test that a GPU backend does not silently fall back, which has nothing to
 fall back from on a host where `lightning.gpu` is installed and runs. Every claim this paper makes about the final
-implementation is therefore a claim about a tagged commit (`a64ddba`) that a reader can clone, and the
+implementation is therefore a claim about a tagged commit (`71b05e0`) that a reader can clone, and the
 `CHANGELOG` says which paper was evaluated against which release. What is *not* repeated on `v1.1` is
 level 3's full block and its column-by-column agreement (Table 10), which measures a host-and-precision
 difference the release does not change.
@@ -1365,6 +1368,14 @@ has been prototyped on two record types (a portfolio card and this paper's cost-
 and reproduces the hand-written checks on every text tried, but it is not what E-S1 evaluated and is
 reported elsewhere.
 
+One binding cannot close, and it is this paper's own. The package contains this manuscript *and* the
+record of the pass that evaluated the package, so that record cannot name the tree that holds it:
+writing the pass's output back into the package changes the package the pass examined. What is fixed
+is the tag and the deposit, which are assigned once and do not move; the commit Table 9 reports is the
+one the pass actually cloned, and the released tree differs from it in the manuscript and in the
+pass's own step file and nowhere else. The relations bind a record to its inputs; they do not bind a
+record to the act of writing it down.
+
 One limit of P1 is not ours to remove here. A record is bound to its inputs by a digest of those
 inputs, which lets a reader detect a mix-up but not re-derive the inputs: the price snapshots
 behind the derived statistics are third-party data that the package may not redistribute
@@ -1402,7 +1413,7 @@ behind it are the author's, who is responsible for all content.
 ## Availability
 
 Everything this paper reports is in one package, release `v1.1`
-(https://github.com/tobitaQ/qaoa-portfolio-penalty-benchmark, tag `v1.1`, commit `a64ddba`,
+(https://github.com/tobitaQ/qaoa-portfolio-penalty-benchmark, tag `v1.1`, commit `71b05e0`,
 doi:[[v1.1 DOI]]): the platform; the three harnesses
 (`experiments/system_paper/es1_fault_injection.py`, `es1_random_faults.py`, `es2_guard_stages.py`,
 `es2_observe_cloud.py`, `es2_observe_cost_control.py`, `es3_reconstruction.py`) and the cost-control
