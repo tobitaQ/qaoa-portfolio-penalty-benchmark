@@ -109,8 +109,11 @@ class Step:
 
 
 class Harness:
-    def __init__(self, work_dir: Path, log=print):
+    def __init__(self, work_dir: Path, log=print, source: str | Path = PUBLIC_REPO,
+                 tag: str = RELEASE_TAG):
         self.work = work_dir
+        self.source = source
+        self.tag = tag
         self.clone = work_dir / "clone"
         self.venv = work_dir / "venv"
         self.py = self.venv / "bin" / "python"
@@ -164,11 +167,11 @@ class Harness:
 
     # -- steps ------------------------------------------------------------
 
-    def step_clone(self, source: str | Path = PUBLIC_REPO) -> None:
+    def step_clone(self, source: str | Path | None = None) -> None:
         if self.clone.exists():
             shutil.rmtree(self.clone)
-        self.run("clone", "0-setup", ["git", "clone", "--quiet", "--branch", RELEASE_TAG,
-                                      str(source), str(self.clone)], cwd=self.work,
+        self.run("clone", "0-setup", ["git", "clone", "--quiet", "--branch", self.tag,
+                                      str(source or self.source), str(self.clone)], cwd=self.work,
                  manual="repository URL and release tag from the availability statement")
         commit = self._git("rev-parse", "--short", "HEAD")
         self.steps[-1].metric = f"commit {commit}"
@@ -359,17 +362,22 @@ class Harness:
                  manual="re-issue the same command (README: --resume is the restart path)")
 
     def step_status(self, kill_after_runs: int = 5) -> None:
-        """The job's own status record around a kill and a resume (working repository).
+        """The job's own status record around a kill and a resume.
 
         Not in the ``v1.0`` clone: the record was added after the first E-S3
         pass, when the evaluation's own harness failed unnoticed for nine
-        hours. Run here against the working tree: the driver is killed, its
-        status file read (RUNNING, n/total, last run), the aggregation asked
-        to run (it must refuse), the driver resumed, and both read again.
+        hours. It runs in the clone when the clone carries it (``v1.1`` and
+        later) and in the working tree otherwise, and the step says which. The
+        driver is killed, its status file read (RUNNING, n/total, last run), the
+        aggregation asked to run (it must refuse), the driver resumed, and both
+        read again.
         """
         import json
         repo = Path(__file__).resolve().parents[2]
         py = repo / ".venv" / "bin" / "python"
+        where = "the working repository"
+        if (self.clone / "src" / "run_status.py").exists() and self.py.exists():
+            repo, py, where = self.clone, self.py, f"the {self.tag} clone"
         results = repo / "experiments" / "paper01_qubo_baseline" / "results"
         tag = "es3status"
         manifest = results / f"paper01_e1_cross_{tag}.csv"
@@ -418,7 +426,7 @@ class Harness:
                                self._portable(" ".join(cmd)) + "  # SIGKILL",
                                round(time.perf_counter() - t0, 1), "SIGKILL",
                                "ok" if rec["state"] == "RUNNING" and refused else "unexpected",
-                               f"status file after the kill: {after_kill}; analyze_e1 "
+                               f"in {where}: status file after the kill: {after_kill}; analyze_e1 "
                                f"{'refused the partial manifest' if refused else 'DID NOT refuse'}",
                                manual_inputs="none"))
         self.log(f"    -> {after_kill}; aggregation {'refused' if refused else 'ran'}")
@@ -490,23 +498,31 @@ def main(argv=None) -> int:
     p.add_argument("--work-dir", type=Path, default=default_work)
     p.add_argument("--source", default=PUBLIC_REPO,
                    help="the repository to clone (default: the public URL)")
+    p.add_argument("--tag", default=RELEASE_TAG, help="the release tag to clone")
     p.add_argument("--only", nargs="+", default=None,
                    choices=["clone", "venv", "tests", "level1", "level2", "level3",
                             "interrupt", "status", "offline", "missing"])
     p.add_argument("--keep", action="store_true", help="keep the work directory")
+    p.add_argument("--out-suffix", default="",
+                   help="write the step record to paper02_es3_steps<suffix>.csv; with it, a "
+                        "partial run (--only) is recorded too")
     args = p.parse_args(argv)
 
     args.work_dir.mkdir(parents=True, exist_ok=True)
-    h = Harness(args.work_dir)
+    h = Harness(args.work_dir, source=args.source, tag=args.tag)
     order = ["clone", "venv", "tests", "level1", "level2", "level3", "interrupt", "status", "offline", "missing"]
     todo = [s for s in order if args.only is None or s in args.only]
     for name in todo:
         getattr(h, f"step_{name}")()
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-    if args.only is None:
-        write_csv(STEPS_CSV, [asdict(s) for s in h.steps])
-        write_csv(COLUMNS_CSV, h.columns)
-        print(f"wrote {STEPS_CSV.name} ({len(h.steps)}) and {COLUMNS_CSV.name} ({len(h.columns)})")
+    if args.only is None or args.out_suffix:
+        steps_csv = STEPS_CSV.with_name(STEPS_CSV.stem + args.out_suffix + ".csv")
+        write_csv(steps_csv, [asdict(s) for s in h.steps])
+        print(f"wrote {steps_csv.name} ({len(h.steps)})")
+        if h.columns:
+            cols_csv = COLUMNS_CSV.with_name(COLUMNS_CSV.stem + args.out_suffix + ".csv")
+            write_csv(cols_csv, h.columns)
+            print(f"wrote {cols_csv.name} ({len(h.columns)})")
     else:
         for s in h.steps:
             print(asdict(s))

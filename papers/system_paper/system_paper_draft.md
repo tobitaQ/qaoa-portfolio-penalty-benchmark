@@ -7,19 +7,19 @@ numerical study [1], which this paper cites for its data and does not repeat.*
 
 ## Abstract
 
-A cloud quantum benchmark has inputs the provider revises, execution whose billable unit the
-framework chooses, and records too numerous for a mix-up to show in an aggregate; at each, a script
-records an inference where a fact belongs. We report the platform behind a 2,565-run QAOA portfolio
-benchmark: records bound to their inputs by machine-checkable relations, billing refused by
-configuration before submission, reconstruction at three levels of stated cost — each measured
-against a control that keeps the inference. A record is not checkable from inside one table: of ten injected
-faults a schema-only pipeline sees one and a declarative data-quality control eight, and the two
-neither sees are the two whose check reads another file — the statistics behind an input's name, and
-the run's stored artifact. A dollar cap is no substitute for a configuration that cannot
-express the expensive call: it prices the mistake at six tasks instead of 9,027 ($74,924), and
-cannot be created for the simulator where the real fallback occurred. Reproduction is a cost, not a
-property: 24 s, 18 s and 222 s, an interruption costing the run in flight. Measuring the three principles
-caught the platform recording an inference three times.
+A cloud quantum benchmark has inputs the provider revises, a billable unit the framework chooses,
+and too many records for a mix-up to show in an aggregate; at each, a script records an inference
+where a fact belongs. We report the platform behind a 2,565-run QAOA portfolio benchmark: records
+bound to their inputs by machine-checkable relations, billing refused by configuration before
+submission, reconstruction at three costed levels, each against a control that keeps the inference.
+A record is not checkable from inside one table: of ten injected faults a schema-only pipeline sees
+one and a data-quality library's vocabulary eight; the two neither sees are those whose check reads
+another file — the pinned statistics and the run's artifact. A dollar cap is no substitute for a
+configuration that cannot express the expensive call: the documented cap prices the mistake at six
+tasks against a measured 9,027 ($74,924 at list price), and the service refuses one for the
+simulator where the fallback happened. Reproduction is a cost: 24 s, 18 s, and 222 s for a 24-run
+block of a 13.9-GPU-hour cross; an interruption costs the run in flight. Measuring the three
+principles caught the platform recording an inference three times.
 
 **Keywords.** reproducibility; experiment management; provenance; quantum cloud services; QAOA;
 cost control; fault injection; software engineering for quantum computing.
@@ -94,17 +94,22 @@ evaluated against a control (Section 4): the record with its verification relati
 schema-only pipeline (E-S1, fault injection); the structural guards against no guard and against a
 spending limit alone (E-S2, guard-stage measurement on a stand-in device); the reconstruction levels
 against a package stripped of its management features (E-S3, a clean-room clone). The evaluation
-touches the cloud account once, to observe on the service two facts the guard harness had modelled
-(Section 5.2, $0.67).
+touches the cloud account in two places: 178 SV1 tasks to observe on the service two facts the guard
+harness had modelled, and 1,071 SV1 tasks across six runs of an account-level cost control to measure
+how far past its own limit it lets a loop go (Section 5.2; $4.69 in all, Table 13).
 
 **What is specific to quantum here.** Much of what this platform binds would look the same in any
 metered cloud experiment: an input the provider revises, a job whose end state is inferred, a package
 a reader has to rebuild. Two things do not. (i) The billable unit is
 decided by the framework's choice of differentiation method, because a gradient of a quantum circuit
 *is* more circuits: one optimizer step on a device without adjoint support executes
-1 + 2p·[C(N,2) + 2N] tasks, and the flag that decides it is the trainability of a tensor. (ii) One of the thirteen relations has no classical analogue — the shot batch
-is checked against the *state* it should have been drawn from, by an exact binomial tail — and it is
-the relation that caught the defect the others did not. Three further things shape the platform here
+1 + 2p·[C(N,2) + 2N] tasks, and the flag that decides it is the trainability of a tensor. (ii) A result is a sample, and one of the thirteen relations tests it as one: the shot batch is
+checked against the *state* it should have been drawn from, by an exact binomial tail, and it is the
+relation that caught the defect the others did not. Goodness-of-fit against a known distribution is
+standard wherever Monte Carlo results are validated; what is specific here is that the distribution
+is computed by the simulator and stored in the run's own artifact, so the test is a relation *within*
+the record rather than an appeal to theory outside it — and that the same relation has no force on
+hardware, where a mismatch is as likely to be noise. Three further things shape the platform here
 without being quantum in themselves: the provider's dollar cap exists for hardware and not for the
 simulator on which this project's real fallback occurred; the device this paper needed answered
 `OFFLINE` to 336 queries over seven days, so a hardware observation is a waiting problem; and
@@ -119,10 +124,11 @@ result being a sample from a state.
 1. Three design principles for a cloud quantum benchmark platform, each with a stated scope, and
    their realisation in an open reproduction package (Section 3).
 2. A fault-injection evaluation of a 2,565-run record: ten faults, thirteen verification relations,
-   ten detected against one for a schema-only pipeline and eight for a declarative data-quality
-   control, no relation firing on any of five committed clean records; a measurement of which faults
-   move headline numbers silently, and of which relations a constraint language cannot express
-   (Section 5.1).
+   ten detected against one for a schema-only pipeline and eight for an expectation stated in a
+   data-quality library's vocabulary over the run table, no relation firing on any of five committed
+   clean records, and 26 of 26 headline-moving mutations caught in a held-out draw of 300 made after
+   the relations were frozen; a measurement of which faults move headline numbers silently, and of
+   which relations that vocabulary cannot state (Section 5.1).
 3. A guard-stage evaluation on a device that, like a QPU, offers no derivative method: measured
    per-step task counts (177 / 361 / 609 / 921 at N = 8 / 12 / 16 / 20), the stopping stage of five
    misconfigurations under four guard configurations, the division of labour between structural
@@ -130,8 +136,9 @@ result being a sample from a state.
 4. A costed clean-room reconstruction of the public package at three levels, including
    interruption and idempotent resumption, with a control that lacks the derived statistics
    (Section 5.3).
-5. Two hypotheses about the platform's next use, each settled from the committed record alone in
-   minutes of CPU with no quantum run, and verified against the record (Section 5.4).
+5. A case study in secondary analysis from a bound record: two hypotheses about the platform's next
+   use, each settled in minutes of CPU with no quantum run, and each re-scoring verified against the
+   values the record already held (Section 5.4).
 6. Three places where the evaluation found the platform still recording an inference: a digest of
    asset *names* standing in for the statistics' *values*, a failure that did not say which input
    was missing, and a job whose end state was read off a log line for nine hours; the fixes, and the
@@ -174,12 +181,19 @@ protocol.
 than to its subject, declarative data validation states expectations about a dataset and has a
 machine check them: Deequ [31] compiles constraints on completeness, uniqueness, admitted values,
 ranges and simple predicates into a single pass over the data, and pandera [32] and comparable tools
-do the same for data frames. These are constraints *within* one table. What P1 adds is relations
-*between* the heterogeneous records of one run — the row, its artifact, the instance's reference, the
-pinned inputs and the provider's task ledger — several of which no such vocabulary can express,
-because they recompute a quantity from a stored state, hash an external input, or compare a shot
-batch with the distribution it should have been drawn from. Section 4.1 therefore makes that
-vocabulary the second control of E-S1, and Section 5.1 reports which faults it reaches. The wider
+do the same for data frames. Their declarative part is a vocabulary of constraints over one table: completeness, type,
+admitted set, uniqueness, size, range, a predicate over the columns of a row, and — in pandera — a
+check over the whole frame. Both are extensible, and a user may register an arbitrary Python
+function as a check, so nothing here is beyond what such a tool can *run*. What P1 adds is a
+different thing: the expectations themselves, stated between the heterogeneous records of one run —
+the row, its artifact, the instance's reference, the pinned inputs and the provider's task ledger —
+and several of them leave the declarative vocabulary behind, because they recompute a quantity from
+a stored state, hash an external input, or compare a shot batch with the distribution it should have
+been drawn from. Written inside such a tool those would be custom functions that open another file:
+the tool supplies the runner and the report, and the relation is still ours to write. Section 4.1
+therefore makes the declarative vocabulary the second control of E-S1 — stating its boundary as the
+comparison's definition rather than as a limit of any product — and Section 5.1 reports which faults
+it reaches. The wider
 question behind it is the oracle problem of scientific software, where the expected output is not
 known and testing proceeds by relations that must hold between outputs [33]; the relations here are
 of that kind, but between the *records* of a run rather than between runs of a program. The line is
@@ -192,7 +206,7 @@ beside code. Each of them keeps a run reproducible or a configuration recoverabl
 must be true of the numbers the run produced, which is what a reader of a benchmark has to check.
 
 **Reproducibility in quantum computing research.** Köster et al. [14] screened 127 papers by hand
-and ~5,000 automatically: 24.4 % release code, 64.5 % of released code fails to execute in a clean
+and about 5,000 automatically: 24.4 % release code, 64.5 % of released code fails to execute in a clean
 environment, 54.8 % of released code has a machine-readable environment specification, 2.4 % of
 papers specify hardware completely. Mauerer and Scherzinger [15] propose a generator for DOI-safe,
 dependency-free reproduction packages. Ye et al. [16] audited 455 comparative claims in 119 quantum
@@ -216,23 +230,40 @@ at $2,000, $60,000 and $1,000,000 on three services for the same work [23]. P2 i
 optimisation: it concerns runs that should not happen, and E-S2 measures where a dollar cap and a
 structural guard each stop them.
 
+**What is proposed here, against those lines.** Each line above answers part of the problem:
+experiment-management and packaging systems keep a run re-runnable and its configuration recoverable;
+data-validation libraries state what must be true of a table; the reproducibility studies of quantum
+software measure whether a package executes at all. Three things this paper proposes are not in any
+of them, and the claim is the combination rather than any one. First, a set of verification relations
+*across* the records of one metered quantum run — the pinned input statistics, the reference
+enumerated from them, the run row, and the stored state and shot batch — including one that tests the
+batch against the state it was drawn from. Second, a configuration in which the expensive call cannot
+be expressed, acting where the framework decides the billable unit rather than after a threshold is
+crossed. Third, a measurement of what each of those catches and what it does not, against controls:
+that is what the three evaluations are for, and the fault injection is evidence about the reach of
+the relations rather than the contribution itself.
+
 **Vocabulary.** We use *reproduction* for obtaining the published results with the author's
 artifacts, following ACM's badging terminology [24] and the lexicon of Goodman et al. [25] as applied
 to computational work by Plesser [26]. The three levels of P3 are levels of *cost* within
 reproduction, not of independence. Against ACM's badges [24], the package's deposit is
-*Artifacts Available*; a clean-room clone that installs and passes the suite is *Artifacts
-Evaluated — Functional*, and the README's per-OS instructions and pinned environment are what
-*Reusable* asks for; level 1 (every manuscript cell recomputed from the committed results) and
-level 2 (one instance rerun end to end) are what *Results Reproduced* means for this paper, and
-level 3 is that badge for the columns the README says are portable — the reference quantities and
-the initial angles — and explicitly not for the rest.
+*Artifacts Available*, and the README's per-OS instructions and pinned environment are what
+*Reusable* asks for. The three levels are not badge claims: *Results Reproduced* is defined as
+reproduction by a *different* team, and every run reported here is the authors' own, on a host of
+their own. What the levels measure is the work such a team would face — what has to be installed,
+what has to be decided, how long each level takes, and which columns agree — with E-S3 run from a
+clean clone by a harness that may use nothing but the README. Read that way the three levels are
+evidence for *Artifacts Evaluated — Functional* and a cost estimate for the badge we cannot award
+ourselves; level 3's agreement is claimed only for the columns the README says are portable — the
+reference quantities and the initial angles — and explicitly not for the rest.
 
 **The numerical study.** All data in this paper are those of [1]: the E1 cross (2,565 runs on a
 local GPU at single precision: N ∈ {12, 16, 20} × 30 instances × seeds 42–46 × up to six penalty
 settings), its controls, the SV1 and IonQ arms, and the derived statistics of two market windows.
 This paper contributes no new optimisation runs; its evidence is what the record, the guards and the
-package do under injected faults, misconfigurations and a clean-room reconstruction, plus 178
-sampling tasks on SV1 that re-observe one framework behaviour (Section 5.2).
+package do under injected faults, misconfigurations and a clean-room reconstruction, plus 1,249 SV1
+tasks of its own: 178 that re-observe one framework behaviour on the service, and 1,071 that measure
+an account-level cost control over six runs (Section 5.2, Table 13).
 
 **What is in [1] and what is here.** Four subjects appear in both papers, and the division is the
 same in each: [1] reports a fact about its runs, and this paper reports the mechanism that was built
@@ -264,6 +295,23 @@ principles as design decisions, each with its scope.
 
 ### 3.1 P1 — Bound records and checkable relations
 
+**The quantities the record holds.** The relations below recompute these, so this paper states them
+rather than referring to [1]. An instance is N assets of which exactly K must be selected; F is the
+set of bitstrings with that cardinality, f(x) the portfolio objective of x on the pinned statistics
+μ̂ and Σ̂ (a risk-adjusted return, no penalty in it), f\* its minimum over F, and Δ_F = max_F f − f\*
+the feasible range. The optimizer minimises H_A(x) = f(x) + A(Σx − K)², whose value on F is
+f(x) − A·K², so the offset |f\* − A·K²| depends on the penalty weight A and not on the solution.
+From these: the *feasible-range gap* g_F = (f(x) − f\*)/Δ_F, free of A; the *offset-normalized gap*
+g_off = (f(x) − f\*)/|f\* − A·K²|, the one a solver's own energies give; and the *deflation*
+D(A) = |f\* − A·K²|/Δ_F = g_F/g_off. Under the state a run ends in, P_F = Pr[x ∈ F],
+P_opt = Pr[x is an optimum], P_τ = Pr[x ∈ F and g_F(x) ≤ τ] with τ = 0.01, and
+Q_τ(S) = 1 − (1 − P_τ)^S is the success probability of an S-shot batch of i.i.d. draws. Three penalty
+weights recur: A_heur = 2·s_obj·N + 1, the formulation's own heuristic; A_crit, the smallest weight
+at which the constrained optimum is a global minimiser of H_A; and A_margin, which places the best
+infeasible assignment at the midpoint between f\* and the feasible mean. [1] derives all of them; what
+matters here is that each is a function of the pinned statistics alone, so a relation can recompute
+it.
+
 **The record.** Four kinds of file describe a run.
 
 - *Derived statistics* (`data/derived/stats_<start>_<end>_<n>_<digest>.csv`): the annualised mean
@@ -294,34 +342,69 @@ principles as design decisions, each with its scope.
 
 **The relations.** Figure 1 places them. On a correct record the thirteen below hold, each
 implemented as a function that returns the rows on which it does not; Section 4.1 lists them as the
-checks of E-S1 and gives the stage at which each runs.
+checks of E-S1 and gives the stage at which each runs. Each is marked with what a violation means:
+**[E]** exact — the two sides are equal or the record is inconsistent; **[N]** numerical — one side
+is recomputed and compared within the tolerance given; **[S]** statistical — a hypothesis test that a
+correct record can fail, at a rate the threshold sets.
 
-1. *schema* — every required column is present and filled on every completed run.
-2. *manifest* — each (N, instance) block holds exactly the (penalty, seed) cells its reference row
-   prescribes, and the file carries one window and one specification version.
-3. *penalty* — the penalty value is the one its label names.
-4. *reference-row* — the instance quantities copied onto a run row equal the reference row's.
-5. *input-digest* — the digest on the reference row and on every run row is the digest of the pinned
-   statistics.
-6. *reference-input* — the reference row is what those statistics give when the feasible set is
-   enumerated again.
-7. *scorer* — the solver's best shot, its energy and the scorer's decomposition agree, and g_F and
-   g_off follow from f, f\*, Δ_F and A.
-8. *row-npz* — the row and its artifact describe the same run: angles, penalty, P_F and P_opt as sums
-   of the stored probabilities, shot totals, feasible shots from the stored indices.
-9. *npz-internal* — the artifact is self-consistent: the trajectory starts at the initial angles and
-   the convergence curve ends at the final expectation.
-10. *identities* — every column that is a function of other recorded values equals that function:
+1. *schema* **[E]** — every required column is present and filled on every completed run.
+2. *manifest* **[E]** — each (N, instance) block holds exactly the (penalty, seed) cells its
+   reference row prescribes, and the file carries one window and one specification version.
+3. *penalty* **[N]** — the penalty value is the one its label names (relative 10⁻¹²), and the
+   recorded A/A_crit is their quotient (10⁻⁹).
+4. *reference-row* **[E]** — the instance quantities copied onto a run row equal the reference row's,
+   bit for bit: both are the same float64 written twice.
+5. *input-digest* **[E]** — the digest on the reference row and on every run row is the digest of the
+   pinned statistics.
+6. *reference-input* **[N]** — the reference row is what those statistics give when the feasible set
+   is enumerated again. Compared bit for bit, which holds because the enumeration is deterministic on
+   one host; across hosts the numerical study reports differences of a few ulp [1], so on a different
+   machine this relation is the same comparison at a relative 10⁻⁹.
+7. *scorer* **[N]** — the solver's best shot, its energy and the scorer's decomposition agree
+   (relative 10⁻⁶ between the solver's energy and the scorer's, 10⁻⁹ within the scorer), and g_F and
+   g_off follow from f, f\*, Δ_F and A (10⁻⁹).
+8. *row-npz* **[E/N]** — the row and its artifact describe the same run: the angle vectors and the
+   shot totals bit for bit, P_F and P_opt as sums of the stored probabilities at a relative 10⁻¹².
+9. *npz-internal* **[E/N]** — the artifact is self-consistent: the trajectory starts at the initial
+   angles (bit for bit) and the convergence curve ends at the final expectation (10⁻¹²).
+10. *identities* **[N]** — every column that is a function of other recorded values equals that
+    function, at a relative 10⁻⁹ with an absolute floor of 10⁻¹⁵, which is the ulp scale the
+    numerical study reports between libm builds:
     Q_τ(S) of P_τ; P_τ and P_opt of the stored probabilities and f; the rank of the best feasible
     shot; the shot-level success counts of the stored batch; D and |E\*|; the best expectation of the
     stored convergence; the portfolio metrics of the pinned statistics; and, on the reference row,
     the penalty scales of its own cardinality minima and the uniform baselines of its counts.
-11. *state-batch* — the shot batch is a draw from the *final* state: exact binomial tails of the
-    feasible and optimum counts under S × P_F and S × P_opt, and per block a closer tracking of final
-    than of initial P_F.
-12. *seed-distinct* — different seeds have different initial angles and different batches.
-13. *state-recompute* — the state re-simulated at the recorded final angles reproduces the stored
-    probabilities.
+11. *state-batch* **[S]** — the shot batch is a draw from the *final* state: the two-sided exact
+    binomial tail of the feasible and of the optimum count under S × P_F and S × P_opt is at least
+    10⁻⁹, a family-wise threshold over the roughly 5,000 tests one record carries; and within each
+    (N, penalty) block of at least ten runs whose final P_F actually varies, the feasible fraction
+    correlates with final P_F above 0.9 and at least as well as with initial P_F.
+12. *seed-distinct* **[E]** — different seeds have different initial angles and different batches.
+13. *state-recompute* **[N]** — the state re-simulated at the recorded final angles reproduces the
+    stored probabilities to 10⁻⁵ absolute; E1 ran in single precision on a GPU and the check in
+    double precision on a CPU, which agree to about 10⁻⁶, while a substituted state is off by O(1).
+
+**What the three kinds mean for a reader of a finding.** A violation of an exact relation is a
+defect in the record: nothing but a wrong write produces it. A violation of a numerical relation is a
+defect unless the record was produced under conditions the tolerance does not cover, which is why
+each tolerance above is stated with the arithmetic it allows for. A violation of the statistical
+relation is a *suspicion*: a correct record can produce one, and the threshold says how often. The
+binomial threshold of 10⁻⁹ is set so that the roughly 5,000 tests a record of this size carries
+expect a false alarm about once in 200,000 such records; the correlation floor of 0.9 was read off the clean record's nineteen blocks, whose
+correlations run from 0.983 to 0.999, and is a property of blocks of this size and spread rather
+than a constant. Two guards are part of the rule — a block of fewer than ten runs, or one in which
+final P_F does not vary at all, is not tested — and a third condition is not enforced and should be:
+a block whose runs all have nearly the same P_F carries little information about the correlation, and
+a correct record of that shape would fail this rule. It is stated here as a condition of use. Section 5.1 reports the one
+false alarm this relation produced before its threshold was corrected, and the five clean records on
+which the corrected version is silent.
+
+**Where the statistical relation applies.** *state-batch* compares a batch with the distribution the
+same run recorded, which requires that distribution to be exact — it is, because the state comes
+from a state-vector simulator that computes it. On hardware the recorded ideal state is not the
+distribution the device sampled, and a failure would mean noise as readily as a mix-up; the relation
+holds for the simulator arms this paper checks and is not claimed for hardware, where it would have
+to be restated against a noise model or dropped.
 
 **What P1 prevents.** A record in which any of these relations fails is flagged before it reaches a
 table. Section 6 lists the seven defects of the numerical study, how each was found at the time, and
@@ -464,8 +547,10 @@ threat model is the experimenter's own mistakes and the provider's drift, not an
 
 ## 4. Evaluation design
 
-Three evaluations, one per principle, each with a control; the only cloud calls are the 178 SV1
-tasks and the two spending-limit requests of Section 4.2.
+Three evaluations, one per principle, each with a control. The cloud calls are 178 SV1 tasks for
+the sampling-fallback observation, 1,071 SV1 tasks across the six repetitions of the account-level
+cost control, and the two spending-limit requests of Section 4.2 (Table 13); no quantum processor
+was billed.
 
 ### 4.1 E-S1 — Does the record catch a mix-up? (P1)
 
@@ -496,7 +581,9 @@ cheapest that can see a fault sees it first:
 that occurred in this project; six are mix-ups a user of the code base can make. The harness's first
 pass is the clean record, on which every check must return nothing.
 
-**Table 1. Injected faults.**
+**Table 1. Injected faults. Each fault changes the records its row names and leaves every other
+byte of the copy as the committed record has it; "the row" is the run row of the cross file and "the
+artifact" its `.npz`. Where that partial reach matters for what the checks see, Section 5.1 says so.**
 
 | Fault | What is changed | Origin |
 |---|---|---|
@@ -505,15 +592,15 @@ pass is the clean record, on which every check must return nothing.
 | optimizer_mixin | one run of the E3 L-BFGS-B arm pasted the same way | plausible merge error |
 | label_swap | the A_margin and A_heur rows of one (instance, seed) relabelled | setting mix-up |
 | angle_swap | initial and final angles exchanged in the row and in the artifact | handoff error |
-| batch_from_initial | every row's feasible-shot and optimum-shot counts replaced by a binomial draw from the *initial* state's P_F and P_opt | the E3 L-BFGS-B wrapper defect [1, Sec. VI-C] |
+| batch_from_initial | every row's shot summary — feasible, within-τ and optimum counts — redrawn as one multinomial over the *initial* state, keeping the counts nested; the artifact's shot arrays left as recorded | the E3 L-BFGS-B wrapper defect [1, Sec. VI-C] |
 | evaluator_from_Q | f of the best feasible shot replaced by its penalised energy, g_F recomputed | an evaluator fed the QUBO matrix |
 | column_drop | the `final_P_F` column removed | the E4 `write_csv` defect |
 | shot_seed_noop | seed 43's shot batch replaced by seed 42's in three instances, summary columns copied | the `shot_seed` defect [1, Sec. VI-C] |
 | reference_stale | the reference f\* of one instance × (1 + 10⁻⁹) | a stale regeneration |
 
 **Controls and measures.** Three configurations. The *naive* pipeline reads the CSV and computes
-the study's headline numbers with no check but the schema. The *declarative* control is what a data-quality
-library expresses [31, 32], applied generously and in eight families:
+the study's headline numbers with no check but the schema. The *declarative* control is the
+vocabulary of a data-quality library, applied generously and in eight families:
 
 - presence and completeness of every required column;
 - the declared type of each column;
@@ -531,8 +618,23 @@ library expresses [31, 32], applied generously and in eight families:
   single-table vocabulary cannot — equality of the instance quantities copied onto each run row with
   the reference row they came from.
 
-What the control excludes is an expectation on an aggregate, because in this record the aggregates
-are the results being checked. The *relations* configuration runs all thirteen. For each fault
+**What the declarative control is, exactly.** It is our re-implementation of that vocabulary over
+the run table, not a run of Deequ or pandera: the record is a CSV, a reference CSV and 2,565 `.npz`
+files, and putting a JVM or a schema object in front of the CSV would change the dependency list and
+not the comparison. The vocabulary was taken from Deequ's constraint set [31] and from the built-in checks of pandera
+0.33.1 [32], the current release in September 2026 (`equal_to`, `not_equal_to`, the four order
+comparisons, `in_range`, `isin`/`notin`, `str_*`, `is_monotonic`, `unique_values_eq`, with
+nullability, dtype, uniqueness and strictness declared on the schema). The reading is deliberately
+generous: every
+constraint either tool can state over these columns is granted, including pandera's whole-frame
+checks and a join with the reference table, which Deequ's single-table vocabulary does not offer. Two
+things are *not* granted, and they are the boundary the comparison measures: an expectation on an
+aggregate, because in this record the aggregates are the results being checked; and a custom Python
+function that opens another file — the artifact, the pinned statistics — because that function is the
+verification relation itself, and granting it would make the control a re-implementation of the
+treatment. What the control therefore measures is not what pandera can execute, which is anything,
+but how far an expectation stated in the declarative vocabulary over the run table reaches into this
+record. The *relations* configuration runs all thirteen. For each fault
 we record which checks fail, the first failing check and its stage, and how many of thirty headline
 numbers moved (per N and per penalty setting: the median g_off, median g_F, mean feasible fraction,
 median final P_F, and the number of runs with an optimum hit) — that is, whether the fault would have
@@ -551,7 +653,9 @@ onto another row; a row deleted; the penalty labels of a block permuted; a refer
 an artifact element perturbed; two artifacts exchanged; one entry of the derived statistics
 perturbed; a column dropped), each applied to a copy and run through the cheap checks. Both were run
 three times, because the first pass's uncovered list told us which columns a further identity could
-bind; the passes are reported in that order.
+bind; the passes are reported in that order. Because the checks were developed against that draw, a
+fourth run of the mutation harness was made after they were frozen: 300 further mutations from the
+same operators with a different seed, run once, with nothing changed in the checks afterwards.
 
 ### 4.2 E-S2 — Does a misconfigured run stop before it is billed? (P2)
 
@@ -725,12 +829,12 @@ three gaps.
 S × P_opt with a floor of one shot. On the clean N = 20 block it flagged one run whose batch held two
 optimum shots against an expectation of 0.1 — a 0.5 % event, not a five-sigma one, and with 2,565
 runs an expected occurrence. The check was replaced by the exact binomial tail with a threshold of
-10⁻⁹ over ~5,000 tests; it still flags 2,299 rows under batch_from_initial and three under
+10⁻⁹ over roughly 5,000 tests; it still flags 2,299 rows under batch_from_initial and three under
 shot_seed_noop.
 
-*Where a constraint language stops.* The declarative control of Section 4.1 — the vocabulary of a
-data-quality library, applied generously — catches eight of the ten faults where the schema-only
-pipeline catches one. It sees both pasted rows, because each makes a
+*Where an expectation stated over the table stops.* The declarative control of Section 4.1 — the
+vocabulary of a data-quality library over the run table, applied generously — catches eight of the
+ten faults where the schema-only pipeline catches one. It sees both pasted rows, because each makes a
 column take two values where the file must hold one: the prior-window row does it to `data_start`
 and `data_end`, the L-BFGS-B row to `optimizer` and `steps`. It sees the stale reference, after a
 join with the reference table, and the dropped column. It sees the evaluator fed the QUBO matrix,
@@ -742,20 +846,20 @@ the row itself: the feasible-shot fraction must sit within five binomial standar
 final P_F, which holds on every clean row and fails on 2,319 of the faulted ones.
 
 Two faults it does not see, and the reason is not the vocabulary but where the value lives. The
-revised input statistic is caught by comparing a digest with the pinned statistics, which are a
-different file; the exchanged angles are caught by comparing the row with its artifact, which is
-another file again. A predicate over the columns of one table cannot reach either, however
-expressive it is. That is the increment the relations buy over current practice, and it is narrow:
-everything else the control reaches is a relation we would now recommend declaring that way rather
-than writing by hand.
-
-Three faults it does not see, and cannot: the revised input statistic, whose check is a content
-digest of values the table does not hold; the exchanged angles, whose check is the row against its
-artifact; and the batch drawn from the initial state, whose check is the batch against the
-distribution it should have come from. Two of those three are replays of defects that happened here.
-The increment the relations buy over current practice is therefore narrow and specific — the pinned
-inputs, the artifact, and the sampling distribution — and everything the control now reaches is a
-relation we would recommend declaring that way rather than writing by hand.
+revised input statistic is caught by recomputing a content digest of the pinned statistics, which
+are a different file. The exchanged angles are caught inside the artifact: the fault exchanges the
+two angle vectors in the row *and* in the `.npz`, so the row and its artifact still agree, and what
+breaks is the artifact's own relation that the stored trajectory begins at the recorded initial
+angles (`npz-internal`), confirmed by re-simulating the state at the recorded final angles
+(`state-recompute`). Neither value is in the table, so a predicate over the table's columns cannot
+reach either, however expressive it is. That is the increment the relations buy over the setting
+evaluated here, and it is narrow: everything else the control reaches is a relation we would now
+recommend declaring that way rather than writing by hand. What the measurement does not say is that
+Deequ or pandera could not run these two checks. Either can run any Python function; a user who
+writes one that opens the `.npz`, recomputes the trajectory's first point and hashes the pinned
+statistics has written our relations and asked the library to schedule them. The eight-against-ten is
+therefore a statement about where a *declared* expectation over the table reaches in this record, and
+the contribution it supports is the set of relations, not an inability of any tool.
 
 *A replay has to be faithful in the right respect.* batch_from_initial draws the three nested
 counts — optimum ⊆ within τ ⊆ feasible — from one multinomial over the initial state, because the
@@ -764,6 +868,30 @@ independently instead, they break that ordering, and a pipeline catches the repl
 inconsistency the defect never produced — a control that fires on the injection rather than on the
 fault it stands for measures the injection. The faithful replay is still within the declarative
 control's reach, by the tolerance band above, but now for the reason the defect gives.
+
+*How far the replay reaches, and what Table 3 therefore says for this fault.* The injection rewrites
+the row's shot summary and leaves the artifact's shot arrays as recorded, and this is a limit of the
+record rather than a choice: the `.npz` stores the probabilities of the feasible set, not the full
+state, so a batch over all 2^N outcomes cannot be redrawn from the initial state out of the record
+alone. The defect itself wrote a batch its artifact agreed with. The consequence is visible in
+Table 3: `row-npz` and `identities` fail on the mismatch the injection creates between the row and
+the artifact, and `row-npz` is therefore the first failing check for a reason the defect never gave
+anyone. The check that sees the defect as it occurred is `state-batch`, which compares the batch with
+the state the same run recorded and fails on 2,299 of the 2,565 rows; it is the check that caught the
+defect in the numerical study (Table 12, defect 7) and the one that stays when the artifact is made
+to agree. For this row of Table 3 the *Also failing* column, not the first one, carries the claim.
+
+*Two kinds of finding.* The faults divide by the kind of rule that catches them, in the sense of
+Section 3.1. Seven are caught by an exact relation, where the violation is a plain inconsistency
+between two recorded things and no tolerance is involved: both pasted rows against the manifest, the
+stale reference against the run rows, the revised statistic against the digest of the pinned file,
+the exchanged angles against the artifact's own trajectory, the missing column against the schema,
+and the copied batch against the rule that two seeds carry two batches. Two are caught by a numerical relation, where every record agrees and the value is
+nevertheless wrong, so only a recomputation finds it: the relabelled penalty and the evaluator fed
+the QUBO matrix. One — the batch drawn from the initial state — is caught by the statistical
+relation, and it is the only one of the ten for which no pair of records disagrees at all once the
+replay is faithful. That is the ordering of difficulty, and it is why the record stores the state and
+not only the summary.
 
 *Five clean records, not one.* Zero false positives above is a statement about the one record the
 faults were injected into. The same thirteen relations were then run, with nothing injected, on the
@@ -786,7 +914,10 @@ changes a cell of Table 3.
 **Column coverage and random mutations.** Before the evaluation the relations bound 47 of the
 record's 132 value-carrying columns (of 133 columns, one is empty on every row); the checks written
 in response to the first coverage pass (the identity check of Section 3.1, in two rounds) raised that
-to 103 and then 114 (Table 4). The 18 columns that
+to 103 and then 114 (Table 4). The last column of that table counts the columns that *only* the
+identity check binds, which is smaller than the increase: four columns (`p_layers`, `steps`,
+`stepsize`, `status`) were bound in the same pass by adding them to the manifest relation's list of
+columns that must hold one value across the file, so 47 + 4 + 52 = 103 and 47 + 4 + 63 = 114. The 18 columns that
 remain uncovered are of three kinds. Seven only a re-simulation can bind: the full-state expectations
 of f and of the constraint violation at the initial and at the final angles, the expectation at the
 final angles, and the interior points of the trajectory and of the convergence curve — the artifact
@@ -804,7 +935,7 @@ a block of the record at once.
 
 The declarative control detects 81 of the 300, and **24 of the 26 that move a headline** against the
 relations' 25. On this mutation set it is barely worse, and Table 5 shows why: what moves a headline
-here is a block of the table changing at once, which a constraint language sees. The two separate
+here is a block of the table changing at once, which an expectation over the table sees. The two separate
 elsewhere. Of the 52 perturbed artifacts, the 15 exchanged artifacts and the 24 perturbed inputs —
 91 mutations that touch a file the table does not contain — the control detects none and the
 relations detect 71. None of those 91 moved a headline number in this draw, which is a fact about
@@ -818,20 +949,38 @@ value of the stored f that is neither an extremum nor the selected solution). Ev
 changes *which* record a value belongs to — a swapped artifact, a copied row, a deleted row, a
 permuted label, a perturbed input — was detected in 100 % of its draws.
 
+**What these rates are a rate of, and a held-out draw.** The 300 mutations were drawn once and then
+used three times, and between passes the relations changed: the uncovered list of the first pass is
+what told us which columns a further identity could bind. The 79 % is therefore the rate of the final
+relations on the mutation set they were developed against, not an estimate of their rate on faults
+nobody has seen. So, with the relations frozen and nothing changed in them afterwards, the same
+harness drew 300 more from the same operators with a different seed and ran them once: **245 (82 %)
+detected**, and of the 26 that moved a headline number, **26 were caught** (Table 5, last row;
+`paper02_es1_random_faults_heldout.csv`). The control detects 86 and 25 of the 26. The 77 mutations
+that touch a file the run table does not contain — a perturbed artifact, an exchanged artifact, a
+perturbed input — are caught 64 times by the relations and never by the control, the same separation
+the ten faults show. What this does not remove is that the mutation operators are ours, so both rates
+are conditioned on a distribution of faults we chose, and that the tolerances were set on this
+record.
+
 **Table 4. Column coverage of the verification relations (133 columns of run row, reference row and
-artifact; one column empty on every row is excluded). Passes 1 and 3 are the two committed coverage
-scans, pass 2 the state between them. "12 relations without the identity check" is the thirteen of
-Section 3.1 less `identities`, which is one relation holding many per-column recomputations.**
+artifact; one column empty on every row is excluded). Each pass is a committed scan of the whole
+record. "12 relations without the identity check" is the thirteen of Section 3.1 less `identities`,
+which is one relation holding many per-column recomputations. The last column counts the columns no
+other relation binds; the rest of the increase from pass 1 is four columns added to the manifest
+relation's single-valued list in the same pass.**
 
-| Pass | Checks | Covered | Added by |
-|---|---|---:|---|
-| 1 | 12 relations without the identity check | 47 / 132 | — |
-| 2 | + identities (Q_τ, P_τ/P_opt, rank, D and the offset magnitude, best expectation, uniform baselines, Sharpe constancy) | 103 / 132 | identities 52 |
-| 3 | + shot-level successes, fractions, distinct shots, probability sums, portfolio metrics from the pinned statistics, reference row against its own cardinality minima and stored f | 114 / 132 | identities 63 |
+| Pass | Checks | Covered | Covered by `identities` alone |
+|---|---|---:|---:|
+| 1 | 12 relations without the identity check | 47 / 132 | 0 |
+| 2 | + identities (Q_τ, P_τ/P_opt, rank, D and the offset magnitude, best expectation, uniform baselines, Sharpe constancy) | 103 / 132 | 52 |
+| 3 | + shot-level successes, fractions, distinct shots, probability sums, portfolio metrics from the pinned statistics, reference row against its own cardinality minima and stored f | 114 / 132 | 63 |
 
-**Table 5. 300 random mutations, final pass. "Declarative" is the control of Section 4.1 on the
-same mutations; "moved and missed" counts the mutations that changed a headline number and that the
-relations did not catch (the control's count of those is in the text).**
+**Table 5. 300 random mutations, final pass, by operator. "Declarative" is the control of Section 4.1
+on the same mutations; "moved and missed" counts the mutations that changed a headline number and
+that the relations did not catch (the control's count of those is in the text). The last row is a
+second draw of 300 from the same operators with a different seed, run once after the relations were
+frozen, and is the only line of this table the checks were not developed against.**
 
 | Operator | n | Detected | Declarative | Moved a headline | Moved and missed |
 |---|---:|---:|---:|---:|---:|
@@ -846,6 +995,7 @@ relations did not catch (the control's count of those is in the text).**
 | derived statistic perturbed | 24 | 24 | 0 | 0 | 0 |
 | column dropped | 27 | 25 | 12 | 1 | 0 |
 | **all** | **300** | **236 (79 %)** | **81** | **26** | **1** |
+| **all, held-out draw (seed 7, relations frozen)** | **300** | **245 (82 %)** | **86** | **26** | **0** |
 
 ### 5.2 E-S2: structural guards stop before construction; a cap stops after six tasks; each sees what the other does not
 
@@ -871,22 +1021,27 @@ service in any case — what is measured is the framework's decision, not a bill
 **Stopping stages.** Figure 2 shows the N = 8 cells; Table 7 gives N = 8 and N = 20, and the CSV
 holds N = 12 and 16, which lie between.
 
-![Fig. 2. The stage at which each misconfiguration stops under the four guard configurations (N = 8, list prices). Green: nothing wasted; amber: a correct call with a costly default; red: wasted spend or the baseline file lost. The structural guards act at the first two stages; the cap acts at the fourth, and not at all for the simulator.](figures/fig_guard_stages.pdf)
+![Fig. 2. The stage at which each misconfiguration stops under the four guard configurations (N = 8, list prices). Nothing in the figure is carried by colour: the marker's shape is the guard configuration and its fill is the outcome — open for nothing wasted, grey for a correct call with a costly default, solid for wasted spend or the baseline file lost. A dagger marks a cell that follows from the provider's documented behaviour and was not observed, because the spending limit exists only for hardware and the device stayed offline; a double dagger marks a cell confirmed on the service (Section 5.2). Unmarked cells are measured by the harness. The structural guards act at the first two stages; the cap acts at the fourth, and not at all for the simulator.](figures/fig_guard_stages.pdf)
 
 **Table 7. Stage at which each misconfiguration stops, tasks billed and list-price bill, under four
 guard configurations. Cap = $50 per QPU. "—" in the result column: nothing usable; "?" the six
 accepted tasks carry the forward evaluation and part of one gradient, so a value comes back and no
-gradient does.**
+gradient does. Where each cell comes from: unmarked cells are measured by the harness, which runs the
+committed code against a device that offers no derivative method and counts the tapes it sends;
+‡ marks a cell confirmed on Amazon Braket (Section 5.2); † marks a cell that follows from the
+provider's documented behaviour and was not observed, because the spending limit exists only for
+hardware and the device stayed offline for the seven days of the probe. Every dollar figure is a list
+price applied to a task count, not a bill anyone received.**
 
 | Misconfiguration | N | none | cap only | structural | both |
 |---|---:|---|---|---|---|
-| QPU as optimizer backend, 50 steps, 100 shots | 8 | submitted; 9,027 tasks; **$74,924** | service; 6 tasks; $49.80; — | **cli**; 0 tasks; $0 | cli; 0; $0 |
-| | 20 | submitted; 46,971 tasks; **$389,859** | service; 6; $49.80; — | cli; 0; $0 | cli; 0; $0 |
-| Trainable angles at sampling, SV1, 1,000 shots | 8 | submitted; 177 tasks; $0.66 | submitted; 177; $0.66 (**cap blind**) | **pre-submit**; 1 task | pre-submit; 1 |
+| QPU as optimizer backend, 50 steps, 100 shots | 8 | submitted; 9,027 tasks; **$74,924** | † service; 6 tasks; $49.80; — | **cli**; 0 tasks; $0 | cli; 0; $0 |
+| | 20 | submitted; 46,971 tasks; **$389,859** | † service; 6; $49.80; — | cli; 0; $0 | cli; 0; $0 |
+| Trainable angles at sampling, SV1, 1,000 shots | 8 | ‡ submitted; 177 tasks; $0.66 | ‡ submitted; 177; $0.66 (**cap blind**) | ‡ **pre-submit**; 1 task | ‡ pre-submit; 1 |
 | | 20 | submitted; 921; $3.45 | submitted; 921; $3.45 | pre-submit; 1 | pre-submit; 1 |
-| Trainable angles at sampling, IonQ, 100 shots | 8 | submitted; 177; $1,469 | service; 6; $49.80; ? | pre-submit; 1; $8.30 | pre-submit; 1; $8.30 |
-| | 20 | submitted; 921; $7,644 | service; 6; $49.80; ? | pre-submit; 1; $8.30 | pre-submit; 1; $8.30 |
-| QPU as sampling backend, default 1,000 shots | 8 | submitted; 1 task; $80.30 | **service; 0; $0** | submitted; 1; **$80.30** | service; 0; $0 |
+| Trainable angles at sampling, IonQ, 100 shots | 8 | submitted; 177; $1,469 | † service; 6; $49.80; ? | pre-submit; 1; $8.30 | pre-submit; 1; $8.30 |
+| | 20 | submitted; 921; $7,644 | † service; 6; $49.80; ? | pre-submit; 1; $8.30 | pre-submit; 1; $8.30 |
+| QPU as sampling backend, default 1,000 shots | 8 | submitted; 1 task; $80.30 | † **service; 0; $0** | submitted; 1; **$80.30** | † service; 0; $0 |
 | Untagged SV1 run over the baseline | 8 | submitted; **baseline overwritten** | overwritten | **cli**; baseline intact | cli; intact |
 
 The division of labour is the result. The structural guards stop the two runs that would have been
@@ -938,12 +1093,17 @@ consistent propagation of it, neither of which the record separates. The tasks c
 limit was crossed were **41–92 (median 47)**, after the alarm **6–56 (median 10)**, and after the
 first denial a further 1–5 slipped through before the denial held. The residue the documentation
 calls "a few" is therefore, for a sequential loop at 3–4 s per task, about 47 tasks in the median and
-twice that in one run of five — $0.18 to $0.35 on the simulator, and at IonQ's $8.30 per task $390 to
-$760, which is what a cap of the second kind — had it existed for the device — would have stopped at
+twice that in one run of five — $0.18 to $0.35 on the simulator. Priced at IonQ's $8.30 per task the
+same counts would be $390 to $760, which is an illustration of what a residue of that size costs on
+hardware and not a prediction of what a QPU loop would overrun by: the residue is a count of tasks a
+3–4 s submission loop got in before a denial propagated, and on hardware both the submission rate and
+the queue are different. It is the order of magnitude that matters here, and it is what a cap of the
+second kind — had it existed for the device — would have stopped at
 $50, and the structural guard at $0.
 
 **Table 8. Five repetitions of the account-level control, one column per repetition (limit $0.30;
-SV1 Bell circuit, 10 shots, $0.00375 per task, sequential). Two cells of run 1 are recomputed from that run's task records,
+SV1 Bell circuit, 10 shots, $0.00375 per task, sequential). Every cell is an observation of the
+deployed control on Amazon Braket; nothing in this table is modelled. Two cells of run 1 are recomputed from that run's task records,
 which the summary written during the first repetition did not yet carry
 (`es2_cost_control_aggregate.py`, which also checks the recomputation against every field the later
 summaries do hold).**
@@ -959,7 +1119,11 @@ summaries do hold).**
 
 ### 5.3 E-S3: three levels rebuilt from a clone; one in-flight run lost on interruption; two controls fail as they should
 
-**Table 9. The clean-room harness's steps (public package `v1.0`; fresh environment; this host).**
+**Table 9. The clean-room harness's steps. Levels 0–3 and the two controls clone the public package
+`v1.0`, which is what E-S3 evaluates and the version the numerical study was submitted with. The last
+block repeats the checks on `v1.1`, the release this paper is submitted with, and runs the
+interruption there: the job status record of Section 3.3 does not exist in `v1.0`, so before `v1.1`
+that row could only be measured in the working tree. Fresh environment for each; this host.**
 
 | Level | Command (from the README) | Wall-clock | Outcome |
 |---|---|---:|---|
@@ -972,10 +1136,14 @@ summaries do hold).**
 | 3 | `run_e1_cross --backend lightning_cpu --precision double --n 12 --instances 0 1 --seeds 42 43 --results-tag es3block` | 222 s (9.1 s/run) | 24 rows; see Table 10. The committed cross records 13.9 h of run time for 2,565 runs on the GPU |
 | 3 | same with `--resume`, `SIGKILL` after 7 runs | 68 s | 6 rows on disk: the run in flight is lost; control without flush: 0 rows, 68 s to redo |
 | 3 | re-issue with `--resume` | 168 s | "6 rows already done"; 24 rows; 94/94 non-timing columns identical to the uninterrupted block |
-| 3′ | (working tree, not the clone) the same block with the job status record: `SIGKILL` after 5 runs | 50 s | status file `RUNNING 5/12, last N12_i00_5xAcrit_s42`, matching the 5 rows on disk, which the manifest parses with no artifact left without a row; `analyze_e1` refuses the manifest |
-| 3′ | re-issue with `--resume` | 70 s | driver prints "previous job: RUNNING pid … 5/12"; status `EXIT 0 12/12`; `analyze_e1` runs |
 | control | level 2 without `data/derived`, network unreachable | 6 s | fails: `TypeError: '<' not supported between instances of 'int' and 'NoneType'` |
 | control | E2 aggregation without the artifacts | 1.2 s | fails: "no run artifacts under …/e1_runs" |
+| 0 (v1.1) | `git clone --branch v1.1`; `python -m venv`; `pip install -r requirements-repro.txt` | 0.3 s; 8 s; 151 s | commit 81caff9, 24 MB |
+| 0 (v1.1) | `pytest -q` | 99 s | 400 passed, 32 skipped |
+| 1 (v1.1) | `python -m notebooks.generate_tqe_figures`; `python check_tables.py` | 24 s; 2.6 s | 5/5 byte-identical; 2,578 cells agree, 0 disagree, 0 pending |
+| 2 (v1.1) | the level-2 command above | 17 s | energy and Sharpe identical to the committed file, to 0 |
+| 3 (v1.1) | the level-3 block with the job status record: `SIGKILL` after 5 runs | 50 s | status file `RUNNING 5/12, last N12_i00_5xAcrit_s42`, matching the 5 rows on disk, which the manifest parses with no artifact left without a row; `analyze_e1` refuses the manifest |
+| 3 (v1.1) | re-issue with `--resume` | 73 s | driver prints "previous job: RUNNING pid … 5/12"; status `EXIT 0 12/12`; `analyze_e1` runs |
 
 The inputs the harness supplied were the repository URL and tag, a name for `--results-tag`, and
 the choice of CPU over the README's GPU for level 3; every other token came from the README.
@@ -1011,16 +1179,28 @@ table measures it.
 *Interruption.* Seven runs had printed their completion line when the process was killed; six rows
 were on disk. That measurement is of the released `v1.0`, whose flush rewrote the manifest in place,
 so the six rows survived because the kill fell outside the rewrite rather than because it could not
-fall inside it; the working tree's driver, which lands the file with a rename (Section 3.3), is
-measured in the same way in the status rows below, where the manifest parses and holds exactly the
-rows the status file claims. What an interruption costs either way is the run in flight and its
+fall inside it; the `v1.1` driver, which lands the file with a rename (Section 3.3), is measured in
+the same way in the last block of Table 9, where the manifest parses and holds exactly the rows the
+status file claims. What an interruption costs either way is the run in flight and its
 artifact: the `.npz` is written before the row, so a kill between the two leaves an artifact with no
 row — the resumed run rewrites it, and the row-npz relation would flag it if it did not. The seventh had completed its computation and not yet its flush — the run in flight is
 the unit of loss, and the flush granularity bounds it at one — in the version measured here, only
-because the kill did not land inside the rewrite (Section 3.3; the released `v1.0` rewrote the
-manifest in place, and the working tree now moves it into place instead). The resumed run read the six rows,
+because the kill did not land inside the rewrite (Section 3.3; `v1.0` rewrote the manifest in place
+and `v1.1` moves it into place instead). The resumed run read the six rows,
 skipped their cells, and produced a file identical to the uninterrupted block in all 94 non-timing
 columns; the timing columns differ, as they must.
+
+*The same checks on the release this paper ships.* E-S3's three levels are an evaluation of `v1.0`,
+because that is the package a reader of the numerical study has and the one whose gaps this section
+reports. The fixes those gaps produced are in `v1.1`, so the last block of Table 9 clones `v1.1` and
+repeats what can be repeated: the suite (400 passed, 32 skipped), level 1 (5/5 figures byte-identical,
+2,578 manuscript cells agreeing), level 2 (identical to the committed file, to zero), and the
+interruption and resumption — which `v1.0` cannot be asked for at all, since the job status record
+was written in response to this evaluation. Every claim this paper makes about the final
+implementation is therefore a claim about a tagged commit (`81caff9`) that a reader can clone, and the
+`CHANGELOG` says which paper was evaluated against which release. What is *not* repeated on `v1.1` is
+level 3's full block and its column-by-column agreement (Table 10), which measures a host-and-precision
+difference the release does not change.
 
 *The second gap.* The package without its derived statistics and without network access fails, as it
 should — but in `v1.0` it fails with a `TypeError` raised inside pandas on the empty frame the
@@ -1056,63 +1236,54 @@ minimum versions, except on the GPU host).**
 | macOS | bash | 3.12 | 365 passed, 3 skipped | 2,578 agree, 0 disagree |
 | Google Colab (three runs) | notebook | 3.13.15 | 365 passed, 3 skipped | 2,578 agree, 0 disagree |
 
-### 5.4 What the record answered afterwards: two hypotheses tested without a run
+### 5.4 A case study in secondary analysis: two hypotheses settled from the record alone
 
 A record bound to its inputs (P1) has a use the three evaluations do not measure: it can answer
-questions that were not asked when it was written. Two such questions arose while planning the work
-that follows this paper, and both were settled from the committed record alone — no quantum run, no
-cloud task, minutes of CPU — with the same checks used to verify the answers against the record.
-This section is not a result about portfolios; both answers are negative and belong to the studies
-that were dropped because of them. It is a measurement of what P1 costs and returns: what the
-binding buys is that a hypothesis about the platform's next use can be killed in minutes, by
-re-scoring records that are already bound to their inputs, rather than by running the experiment
-that would have tested it.
+questions that were not asked when it was written. This section is a case study of that reuse, not a
+result about portfolios. Two questions arose while planning the work that follows this paper; both
+were settled from the committed record alone — no quantum run, no cloud task, minutes of CPU — and
+the method is the point: re-score the stored solutions under the changed conditions, verify the
+re-scoring against the record it came from, and read the answer off.
 
 *Does a stored portfolio survive a change of conditions?* If the market window, the risk aversion,
 the cardinality or the asset universe changes, is it better to hand back the stored portfolio, to
-repair it classically, or to run the sampler again? For every E1 run of the ten instances that the
-prior-window replication also covers (295 runs), the stored best feasible portfolio was re-scored
-under the changed conditions against the exact optimum of the changed problem (the feasible set is
-enumerated, so the regret is exact). Reused unchanged, the stored portfolio is within τ = 1 % of the
-new optimum in 4 % of cases under a window change, in 6–10 % under a change of risk aversion, and in
-20 % when carried to another universe that contains its assets. A greedy classical repair, one to
-four single-asset swaps, reaches the exact new optimum in **every case of every kind of change**:
-295 runs per change, and the 112 runs whose assets the other universe contains. A fresh 1,000-shot
-batch from the stored final state matches the repaired portfolio with median probability 0.2, and
-the actual re-run under the new window, which exists for these instances, lands within τ in 50 % of
-cases. The same greedy search reaches the optimum from a *random* feasible start as well,
-in 100 of 100 trials at N = 24 and 100 of 100 at N = 30 (593,775 feasible portfolios, median 13
-swaps), so it is the search and not the stored start that is doing the work. There is, for this
-problem family at these sizes, no decision to make: repair from the stored solution, never
-re-sample. The question was answered in minutes of CPU, and a planned paper on the choice was
-dropped before a line of it was written.
+repair it classically, or to run the sampler again? What the record supplies is the best feasible
+portfolio of every run, the stored final state, and the enumerated feasible set of every instance —
+so the regret under a changed problem is exact rather than estimated. Over the 295 runs of the ten
+instances the prior-window replication also covers, the stored portfolio is within τ = 1 % of the new
+optimum in 4 % of cases under a window change, 6–10 % under a change of risk aversion and 20 % when
+carried to a universe that contains its assets; a fresh 1,000-shot batch from the stored final state
+matches the repaired portfolio with median probability 0.2; and a greedy repair of one to four
+single-asset swaps reaches the exact new optimum in **every case of every kind of change**. The same
+search reaches the optimum from a *random* feasible start too (100 of 100 at N = 24 and at N = 30,
+median 13 swaps), so it is the search and not the stored start doing the work. There was no decision
+to make, and a planned paper on the choice was dropped before a line of it was written.
 
 *Does a second constraint change the picture of [1]?* The question is what "at most one asset per
 sector" does to the cardinality-constrained problem, with a pairwise quadratic penalty, on the same
-instances. The feasible set shrinks to 80 %, 54 % and 33 % of its size at N = 12, 16 and 20 (median
-over the ten instances), yet the cardinality-only optimum already satisfies the new constraint in
-8–9 of 10 instances. The competition between two penalty weights that a second constraint could
-create, the critical weight of one rising with the other, appears only where the constraint binds:
-one or two instances in ten, by 10–58 %. The pairwise form adds no constant offset, so the
-denominator that [1] showed to inflate the conventional gap does not grow. Greedy repair under both
-constraints reaches the optimum in 600 of 600 random-start trials. The stored QAOA states, optimised for the cardinality constraint
-alone, keep 80 %, 54 % and 33 % of their feasible mass under both constraints at the three sizes —
-the ratio of the feasible-set sizes to within 0.1 pt, which is what [1] found these states to be:
-close to uniform on the feasible set. That fraction is what enforcing the second constraint by
-filtering rather than by a penalty would cost. A sector cap is, for a Markowitz objective that
-diversifies on its own, mostly a constraint that does not bind; the extension study was re-scoped on that basis.
+instances. Here the record supplies the enumerated feasible sets, the penalty scales with their
+derivations, and the stored probability of every feasible bitstring, so the new feasible set, the new
+critical weights and the mass the stored states keep under both constraints all follow without a run.
+The feasible set shrinks to 80 %, 54 % and 33 % of its size at N = 12, 16 and 20, yet the
+cardinality-only optimum already satisfies the new constraint in 8–9 of 10 instances, and the
+competition between two penalty weights that a second constraint could create appears only where the
+constraint binds — one or two instances in ten, by 10–58 %. The pairwise form adds no constant
+offset, so the denominator that [1] showed to inflate the conventional gap does not grow. The stored
+states keep exactly the ratio of the feasible-set sizes, to within 0.1 pt, which is what enforcing the
+second constraint by filtering rather than by a penalty would cost. A sector cap is, for a Markowitz
+objective that diversifies on its own, mostly a constraint that does not bind; the extension study
+was re-scoped on that basis.
 
 Both answers were checked the way Section 4.1 checks the record: re-scoring the stored portfolios
 under *unchanged* conditions reproduced the recorded g_F, rank and f on all 826 rows with no
 mismatch; the enumerated objective agreed with every stored feasible-set value to 2·10⁻¹⁶; and the
 single-constraint critical weight recomputed by the new code equalled the reference file's on all
-30 instances. Neither answer is a result of this paper — both are negative, and both are recorded in
-the repository with the scripts that produced them and their result files
+30 instances. The scripts and their result files are in the package
 (`experiments/a1_reuse/`: `a1_probe_rows.csv`, `a1_probe_summary.csv`, `a1_repair_scaling.csv`;
 `experiments/a3_constraints/`: `a3_probe_instances.csv`, `a3_probe_frontier.csv`,
-`a3_probe_repair.csv`) — but the cost of obtaining them is: a record that binds every run to
-its inputs and its exact reference lets a hypothesis be killed in minutes, before the platform is
-extended to test it.
+`a3_probe_repair.csv`). What the record bought is the cost of the answers: two studies were re-scoped
+in minutes of CPU, because every run was already bound to its inputs and to an exact reference, and
+the re-scoring could be checked against the values the record already held.
 
 ## 6. What the record caught: seven defects, how each was found, and which relation now holds it
 
@@ -1145,7 +1316,9 @@ evaluation — the content digest of Section 5.1).
 
 The evaluation is of one platform for one application family on one provider, by the platform's
 authors. The faults of E-S1 are ours, four replays and six judgement, and the mutation operators are ours
-too. Of E-S2's cap, the simulator half is observed and the QPU rejection is still the documented
+too: the held-out draw holds the operators fixed and changes only the seed, so it answers the
+objection that the relations were tuned to a particular draw and not the one that they were written
+for a particular kind of fault. Of E-S2's cap, the simulator half is observed and the QPU rejection is still the documented
 behaviour; the fallback counts rest on the transform, a month-old ledger and one re-observation. E-S3's reader is a clean-room script with the
 author's package cache, and the three further machines of Table 11 were run by the author as well:
 what is evidenced is that the written instructions carry to a machine they were not written on, not
@@ -1153,10 +1326,11 @@ that an independent person can follow them. No one outside the project has run t
 question of whether a stranger understands the README is a question about people, and answering it
 would need their consent and an ethics review rather than another harness. Three design gaps were found by the evaluation, and a fourth — a per-run flush that was not
 atomic, so that the bound it was supposed to give held only by luck — by checking the driver against
-the claim this paper makes about it; they are stated above; the fixes (the content digest on every record, the informative failure without the
-statistics, the job status file) are in the working repository and not in the released `v1.0` that
-E-S3 evaluated, and the digest was appended to the released record files from the pinned statistics
-rather than produced by a re-run. The third gap was found not by a harness but by operating one: the
+the claim this paper makes about it; they are stated above; the fixes (the content digest on every record, the informative failure without
+the statistics, the job status file, the atomic flush) are in `v1.1` and not in the `v1.0` that
+E-S3's three levels evaluated, the last block of Table 9 repeats what can be repeated on `v1.1`, and
+the digest was appended to the released record files from the pinned statistics rather than produced
+by a re-run. The third gap was found not by a harness but by operating one: the
 two-hour coverage scan of Section 5.1 crashed in its first minute on a column that is empty on every
 row, the shell script that ran it had no `set -e` and printed its completion marker anyway, and success
 was read off that marker for nine hours. The status record of Section 3.3 is the consequence. The dollar figures are list prices applied to
@@ -1188,9 +1362,9 @@ exists, and its results can be rebuilt from the published package at a cost that
 against controls on a 2,565-run record: ten of ten injected faults detected with no false positives,
 against one for a schema-only pipeline; the two ruinous misconfigurations stopped before any device
 is built, where a dollar cap alone stops them after six tasks and does not see the simulator fallback
-that actually occurred; and three reconstruction levels rebuilt from a clone in 24 s, 18 s and 222 s,
-with the loss on interruption bounded at the run in flight once the
-file is written by a single rename. The same evaluation found three weak points of the platform — a digest that
+that actually occurred; and three reconstruction levels rebuilt from a clone in 24 s, 18 s and — for
+the 24-run block that stands for the 13.9-GPU-hour cross — 222 s, with the loss on interruption
+bounded at the run in flight once the file is written by a single rename. The same evaluation found three weak points of the platform — a digest that
 named inputs without binding their values, a failure that did not name what was missing, and a job
 whose end state was inferred rather than recorded — and each fix is measured or exercised above.
 
@@ -1205,14 +1379,24 @@ behind it are the author's, who is responsible for all content.
 
 ## Availability
 
-The platform, the harnesses (`experiments/system_paper/es1_fault_injection.py`,
-`es1_random_faults.py`, `es2_guard_stages.py`, `es2_observe_cloud.py`, `es2_observe_cost_control.py`,
-`es3_reconstruction.py`), the cost-control patch (`cdk/cost_control_patch/`), the
-job status module (`src/run_status.py`, `scripts/run_detached.sh`), their tests and their result
-files (`paper02_es1_*.csv`, `paper02_es2_*.csv`, `paper02_es3_*.csv`) are in the repository named in
-[1];
-the public package evaluated in E-S3 is release `v1.0` (commit `c804a63`), archived at
-doi:10.5281/zenodo.22743582.
+Everything this paper reports is in one package, release `v1.1`
+(https://github.com/tobitaQ/qaoa-portfolio-penalty-benchmark, tag `v1.1`, commit `81caff9`,
+doi:[[v1.1 DOI]]): the platform; the three harnesses
+(`experiments/system_paper/es1_fault_injection.py`, `es1_random_faults.py`, `es2_guard_stages.py`,
+`es2_observe_cloud.py`, `es2_observe_cost_control.py`, `es3_reconstruction.py`) and the cost-control
+aggregation; the cost-control patch (`cdk/cost_control_patch/`); the job status module
+(`src/run_status.py`, `scripts/run_detached.sh`); their tests; the result files behind every table
+(`paper02_es1_*.csv`, `paper02_es2_*.csv`, `paper02_es3_*.csv`, `paper02_level1_machines.csv`); and
+`papers/system_paper/check_tables.py`, which binds each cell of Tables 3–11 and 13 to one of them and
+regenerates both figures for a byte comparison. Appendix C lists the commands.
+
+The package E-S3 evaluated at all three levels is the *earlier* release, `v1.0` (same repository,
+commit `c804a63`, doi:10.5281/zenodo.22743582), which is the version the numerical study [1] was
+submitted with and
+which does not contain this paper's material; `v1.1` adds it, together with two fixes this paper
+reports (the locale encoding of Section 5.3 and the non-atomic flush of Section 3.3) and an
+`input_digest` column appended to the committed record from the pinned statistics, leaving every
+column of `v1.0` unchanged. `CHANGELOG.md` states which version each paper was evaluated against.
 
 The cloud spend of this paper, and of the project behind it, is Table 13.
 
@@ -1377,6 +1561,10 @@ exceeds $1.00.
 
 ### A.1 Provider-side controls (Amazon Braket, as of September 2026)
 
+**Table 14. The four controls that can stop a Braket charge, what each governs, when in the life of a
+task it acts, and what this project observed of it. The first three are the "cap" of Section 5.2 in
+its three available forms; the fourth is a client-side timeout and costs nothing by itself.**
+
 | Kind | Control | Scope | When it acts | Observed here |
 |---|---|---|---|---|
 | service, per device | spending limit (`CreateSpendingLimit`, Nov. 2025): rejects a task whose list-price estimate exceeds the remaining cap | on-demand QPU tasks only; the API refuses to create one for a simulator | at task creation | created ($1.00 on IonQ Forte-1); the simulator refusal observed; the QPU rejection pending device availability (Sec. 5.2) |
@@ -1418,6 +1606,9 @@ python -m experiments.system_paper.es1_fault_injection --clean-records
 # ~2.5 h: column coverage (133 columns) + 300 random mutations
 # (both need the per-run artifacts: e1_runs*.npz, about 100 MB, from the Zenodo deposit of [1])
 python -m experiments.system_paper.es1_random_faults --faults 300
+# ~1.8 h: the held-out draw, after the relations were frozen (last row of Table 5)
+python -m experiments.system_paper.es1_random_faults --faults 300 \
+    --seed 7 --tag heldout --no-coverage
 # ~1.8 h (N = 20 is 94 min of tape construction); --sizes 8 runs in 1 min
 python -m experiments.system_paper.es2_guard_stages
 # the two observations on the service (creates a $1 spending limit on IonQ; ~$0.67 on SV1)

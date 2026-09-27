@@ -210,10 +210,11 @@ LABELS = {
 def fig_guard_stages() -> None:
     """Where each misconfiguration stops under the four guard configurations.
 
-    Two channels, neither of them colour: the marker's *shape* is the guard
-    configuration and its *fill* is the outcome — open for nothing wasted, grey
+    Three channels, none of them colour: the marker's *shape* is the guard
+    configuration, its *fill* is the outcome — open for nothing wasted, grey
     for a correct call with a costly default, solid for wasted spend or a lost
-    baseline. A reader printing this in black and white, or one who does not
+    baseline — and a dagger or double dagger beside it says where the cell came
+    from. A reader printing this in black and white, or one who does not
     separate red from green, sees exactly what the screen shows.
     """
     with open(RESULTS / "paper02_es2_guard_stages.csv", newline="", encoding="utf-8") as f:
@@ -237,6 +238,14 @@ def fig_guard_stages() -> None:
                 fill = FILL["wasted"]
             marker = {"none": "s", "cap": "D", "structural": "o", "both": "^"}[conf]
             ax.plot(x, y, marker=marker, ms=5, mfc=fill, mec="black", mew=0.7, ls="none")
+            # Third channel, in text rather than in the marker: where the cell
+            # comes from. A dagger is the cap acting inside the service, which
+            # the offline device never let us observe; a double dagger is a cell
+            # the cloud observation of Section 5.2 covers.
+            prov = ("\u2020" if r["stage"] == "service" else
+                    "\u2021" if m == "trainable_sampling_sv1" else "")
+            if prov:
+                ax.text(x - 0.10, y, prov, fontsize=6.0, va="center", ha="right", color="black")
             note = ""
             if overwritten:
                 note = f"${billed:.2f}, baseline replaced"

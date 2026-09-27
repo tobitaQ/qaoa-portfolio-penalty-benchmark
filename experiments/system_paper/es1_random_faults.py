@@ -318,7 +318,7 @@ def coverage(clean, rng, log) -> list[dict]:
 # Random mutations
 # ----------------------------------------------------------------------
 
-def random_faults(clean, n_faults: int, rng, log, tmp: Path) -> list[dict]:
+def random_faults(clean, n_faults: int, rng, log, tmp: Path, partial: Path | None = None) -> list[dict]:
     base = es1.headline(clean)
     names = list(OPERATORS)
     probs = np.array([WEIGHTS[n] for n in names])
@@ -350,7 +350,7 @@ def random_faults(clean, n_faults: int, rng, log, tmp: Path) -> list[dict]:
         log(f"  [{k:>3}/{n_faults}] {name:<18} {str(info['target']):<34} {str(info['magnitude']):<6} "
             f"{'detected by ' + first if first else 'NOT DETECTED'}  moved={moved}")
         if k % 10 == 0:
-            write_csv(FAULTS_CSV.with_name(FAULTS_CSV.stem + "_partial.csv"), rows)
+            write_csv(partial or FAULTS_CSV.with_name(FAULTS_CSV.stem + "_partial.csv"), rows)
         if rec.derived_dir != clean.derived_dir:
             shutil.rmtree(rec.derived_dir, ignore_errors=True)
     return rows
@@ -425,7 +425,8 @@ def main(argv=None) -> int:
         return 0
     tmp = Path(tempfile.mkdtemp(prefix="es1rand_"))
     try:
-        faults = random_faults(clean, args.faults, rng, print, tmp)
+        faults = random_faults(clean, args.faults, rng, print, tmp,
+                               faults_csv.with_name(faults_csv.stem + "_partial.csv"))
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
     write_csv(faults_csv, faults)

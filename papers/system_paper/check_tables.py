@@ -12,8 +12,7 @@ Markdown and compares each cell with the CSV the harness wrote.
 Three tables are prose (Table 1 the injected faults, Table 2 the
 misconfigurations, Table 12 the seven defects); they are listed as unbound
 rather than silently skipped, and so is any cell whose source is not a committed
-file (Table 4's middle pass, which is an intermediate state of the coverage
-scan, and the project's billing-console total in Table 13).
+file (the project's billing-console total in Table 13).
 
 Usage:
     python papers/system_paper/check_tables.py     # exit 1 if any cell disagrees
@@ -119,15 +118,16 @@ for r in table(3):
     chk(3, f"{r['Fault']} moved", num(r["Moved"]), float(row.headline_numbers_moved))
 
 # ---------------------------------------------------------------- Table 4
-before = pd.read_csv(R / "paper02_es1_column_coverage_before.csv")
-after = pd.read_csv(R / "paper02_es1_column_coverage.csv")
+COV4 = ("paper02_es1_column_coverage_before.csv", "paper02_es1_column_coverage_pass2.csv",
+        "paper02_es1_column_coverage.csv")
 scored = lambda f: int((f.covered != "n/a (column empty)").sum())
-rows4 = table(4)
-for r, frame in ((rows4[0], before), (rows4[2], after)):
+for r, name in zip(table(4), COV4):
+    frame = pd.read_csv(R / name)
     hit, of = [num(x) for x in r["Covered"].split("/")]
     chk(4, f"pass {r['Pass']} covered", hit, float((frame.covered == "yes").sum()))
     chk(4, f"pass {r['Pass']} of", of, float(scored(frame)))
-unbound(4, "pass 2 (103 / 132) is the state between the two committed coverage scans")
+    alone = ((frame.covered == "yes") & (frame.failing_checks == "identities")).sum()
+    chk(4, f"pass {r['Pass']} identities alone", num(r["Covered by `identities` alone"]), float(alone))
 
 # ---------------------------------------------------------------- Table 5
 s5 = pd.read_csv(R / "paper02_es1_random_summary.csv")
@@ -139,9 +139,13 @@ KEY5 = {"cell perturbed": "cell_perturb", "cell replaced by another row's": "cel
         "two artifacts exchanged": "npz_swap", "derived statistic perturbed": "input_perturb",
         "column dropped": "column_drop"}
 allr = s5[s5.group == "all"].iloc[0]
+held = pd.read_csv(R / "paper02_es1_random_summary_heldout.csv")
+heldall = held[held.group == "all"].iloc[0]
 for r in table(5):
     label = r["Operator"].replace("**", "")
-    if label == "all":
+    if label.startswith("all, held-out"):
+        g = heldall
+    elif label == "all":
         g = allr
     else:
         key = next((v for k, v in KEY5.items() if label.startswith(k)), None)
@@ -180,6 +184,15 @@ for r, (mis, n) in zip(table(7), ORDER7):
             continue
         g = g.iloc[0]
         cell = r[col].replace("**", "")
+        # The provenance mark of the caption: a dagger where the cap acts inside
+        # the service (never observed, the device stayed offline), a double
+        # dagger where the cloud observation covers the cell.
+        mark, cell = (cell[0], cell[1:].strip()) if cell.strip()[:1] in "†‡" else ("", cell)
+        observed = set(pd.read_csv(R / "paper02_es2_cloud_observation.csv").step)
+        want = "†" if g.stage == "service" else (
+            "‡" if (mis == "trainable_sampling_sv1" and n == 8
+                         and {"sv1-sampling-trainable", "sv1-sampling-frozen"} <= observed) else "")
+        chks(7, f"{mis} N={n} {cfg} provenance", mark or "(none)", want or "(none)")
         head = cell.split(";")[0].strip()
         if mis == "untagged_cloud_run":
             # The cell says what happened to the baseline, which is the point of the row.
@@ -212,14 +225,21 @@ for r in table(8):                      # one row per quantity, one column per r
 
 # ---------------------------------------------------------------- Table 9
 t9 = pd.read_csv(R / "paper02_es3_steps.csv").set_index("step")
-ORDER9 = [["clone"], ["venv", "pip"], ["tests"], ["level1-figures"], ["level1-tables"], ["level2"],
-          ["level3-block"], ["interrupt-kill"], ["interrupt-resume"], ["status-after-kill"],
-          ["status-after-resume"], ["offline-no-derived"], ["missing-npz"]]
-for r, steps in zip(table(9), ORDER9):
+t9b = pd.read_csv(R / "paper02_es3_steps_v11.csv").set_index("step")
+# The v1.0 rows come from the full pass, the "(v1.1)" block from the pass that
+# clones the release this paper ships with.
+ORDER9 = [(t9, ["clone"]), (t9, ["venv", "pip"]), (t9, ["tests"]), (t9, ["level1-figures"]),
+          (t9, ["level1-tables"]), (t9, ["level2"]), (t9, ["level3-block"]),
+          (t9, ["interrupt-kill"]), (t9, ["interrupt-resume"]),
+          (t9, ["offline-no-derived"]), (t9, ["missing-npz"]),
+          (t9b, ["clone", "venv", "pip"]), (t9b, ["tests"]),
+          (t9b, ["level1-figures", "level1-tables"]), (t9b, ["level2"]),
+          (t9b, ["status-after-kill"]), (t9b, ["status-after-resume"])]
+for r, (frame, steps) in zip(table(9), ORDER9):
     cell = r["Wall-clock"]
     got = [float(x) for x in re.findall(r"(\d+\.?\d*)\s*s", cell)]
     for value, step in zip(got, steps):
-        chk(9, f"{step} seconds", value, round(float(t9.loc[step, "seconds"])), 0.51)
+        chk(9, f"{r['Level']} {step} seconds", value, round(float(frame.loc[step, "seconds"])), 0.51)
 
 # ---------------------------------------------------------------- Table 10
 t10 = pd.read_csv(R / "paper02_es3_column_agreement.csv")
@@ -306,6 +326,10 @@ try:
                 BAD.append(f"figure {name}: regenerates to a different file")
 finally:
     shutil.rmtree(tmp, ignore_errors=True)
+
+# A [[placeholder]] left in the draft is an identifier nobody has filled in yet.
+for m in re.finditer(r"\[\[([^\]]+)\]\]", SRC):
+    BAD.append(f"placeholder still in the draft: [[{m.group(1)}]]")
 
 print(f"{len(OK)} cell(s) agree with the result files, {len(BAD)} disagree, "
       f"{len(UNBOUND)} table(s) or cell(s) not bound to one")

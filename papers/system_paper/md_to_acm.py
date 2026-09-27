@@ -81,6 +81,11 @@ def breakable(tex: str) -> str:
             return m.group(0)
         body = body.replace("/", "/\\allowbreak{}").replace("\\_", "\\_\\allowbreak{}")
         body = body.replace(".", ".\\allowbreak{}").replace("-", "-\\allowbreak{}")
+        body = body.replace(":", ":\\allowbreak{}")
+        # An API name in camel case has no separator to break at, and in a
+        # narrow table column it runs into the next one.
+        # A lambda, not a template: re.sub reads "\\a" in a replacement as BEL.
+        body = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", lambda _: "\\allowbreak{}", body)
         return "\\texttt{" + body + "}"
     return re.sub(r"\\texttt\{([^{}]*)\}", fix, tex)
 
@@ -227,7 +232,9 @@ def convert(md: str) -> str:
             continue
         if s.startswith("### "):
             close_list()
-            t = re.sub(r"^\d+\.\d+\s*", "", s[4:])
+            # "3.1" in the body, "A.1" in an appendix: LaTeX numbers the
+            # subsection itself, so the number in the heading would print twice.
+            t = re.sub(r"^(?:\d+\.\d+|[A-Z]\.\d+)\s*", "", s[4:])
             body.append(rf"\subsection{{{prose(t)}}}")
             i += 1
             continue
@@ -331,7 +338,17 @@ def convert(md: str) -> str:
 
 
 def main() -> int:
-    OUT.write_text(convert(SRC.read_text(encoding="utf-8")))
+    tex = convert(SRC.read_text(encoding="utf-8"))
+    # A character the text font does not carry is dropped by pdflatex with an
+    # inputenc error nobody reads, and the sentence loses a word silently: a
+    # subset sign went missing from "optimum within tau feasible" for two
+    # builds. Every glyph must be in the map of papers/md_to_latex.py.
+    stray = sorted({c for c in tex if ord(c) > 127})
+    if stray:
+        print("refusing to write: no LaTeX for " +
+              ", ".join(f"{c!r} (U+{ord(c):04X})" for c in stray), file=sys.stderr)
+        return 1
+    OUT.write_text(tex)
     print(f"wrote {OUT}")
     return 0
 

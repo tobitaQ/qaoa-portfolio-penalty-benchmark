@@ -1,0 +1,17 @@
+group,value,n,detected,rate,moved_headline,moved_and_undetected,detected_declarative,rate_declarative,moved_and_undetected_declarative
+operator,cell_from_other,35,27,0.771,0,0,2,0.057,0
+operator,cell_perturb,83,59,0.711,1,0,18,0.217,1
+operator,column_drop,23,17,0.739,0,0,10,0.435,0
+operator,input_perturb,27,27,1.0,0,0,0,0.0,0
+operator,label_shuffle,19,19,1.0,18,0,18,0.947,0
+operator,npz_perturb,42,29,0.69,0,0,0,0.0,0
+operator,npz_swap,8,8,1.0,0,0,0,0.0,0
+operator,reference_perturb,35,31,0.886,0,0,10,0.286,0
+operator,row_delete,9,9,1.0,2,0,9,1.0,0
+operator,row_metrics_copy,19,19,1.0,5,0,19,1.0,0
+magnitude,0.001,46,34,0.739,0,0,5,0.109,0
+magnitude,0.1,51,44,0.863,0,0,9,0.176,0
+magnitude,1,5,5,1.0,0,0,0,0.0,0
+magnitude,1e-06,53,47,0.887,1,0,8,0.151,1
+magnitude,1e-09,32,16,0.5,0,0,6,0.188,0
+all,,300,245,0.817,26,0,86,0.287,1
