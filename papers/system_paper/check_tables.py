@@ -189,12 +189,15 @@ for r, (mis, n) in zip(table(7), ORDER7):
         # dagger where the cloud observation covers the cell.
         mark, cell = (cell[0], cell[1:].strip()) if cell.strip()[:1] in "†‡§" else ("", cell)
         observed = set(pd.read_csv(R / "paper02_es2_cloud_observation.csv").step)
-        # A count the harness computed from a measured per-step count rather than
-        # running to completion: the optimizer loop, whose per-step tapes are Table 6's.
-        want = ("§" if (mis == "qpu_optimizer" and g.stage == "submitted")
+        # A task count obtained by counting circuits: the transform's tapes for
+        # one sampling call, or one step's tapes multiplied out over fifty.
+        counted_circuits = g.stage == "submitted" and mis in (
+            "qpu_optimizer", "trainable_sampling_sv1", "trainable_sampling_qpu")
+        on_service = (mis == "trainable_sampling_sv1" and n == 8
+                      and {"sv1-sampling-trainable", "sv1-sampling-frozen"} <= observed)
+        want = ("‡" if on_service
+                else "§" if counted_circuits
                 else "†" if g.stage == "service"
-                else "‡" if (mis == "trainable_sampling_sv1" and n == 8
-                                  and {"sv1-sampling-trainable", "sv1-sampling-frozen"} <= observed)
                 else "")
         chks(7, f"{mis} N={n} {cfg} provenance", mark or "(none)", want or "(none)")
         head = cell.split(";")[0].strip()
