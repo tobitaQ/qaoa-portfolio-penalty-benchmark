@@ -138,6 +138,12 @@ def table(rows: list[str], caption: str, number: int) -> list[str]:
         spec = spec.replace("l", "Y", 1) if "l" in spec else spec
     header = " & ".join(rf"\textbf{{{prose(h)}}}" for h in head) + r" \\"
     rows_tex = [" & ".join(prose(c) for c in r) + r" \\" for r in body]
+    # A short table split across a page boundary is harder to read than one that
+    # moves whole (Table 8 lost all but its first row to the previous page). In
+    # longtable, `\\*` forbids a break after a row; a table that is well under
+    # half a page gets it on every row but the last, so it stays together.
+    if sum(len(c) for r in body for c in r) <= 800:
+        rows_tex = [r + "*" for r in rows_tex[:-1]] + rows_tex[-1:]
     # Every table is set in the flow rather than as a float. A float is placed
     # where LaTeX finds room, and in a paper with fourteen of them the queue
     # backs up: Tables 12, 13 and 14 were deferred past the references and

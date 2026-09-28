@@ -12,14 +12,14 @@ and too many records for a mix-up to show in an aggregate; at each, a script wri
 where a fact belongs. We report the platform behind a 2,565-run QAOA portfolio benchmark: records
 bound to their inputs by checkable relations, billing refused by configuration before submission,
 reconstruction at three costed levels, each against a control that keeps the inference.
-A record is not checkable from inside one table: of ten injected faults a schema-only pipeline sees
-one and a data-quality library's vocabulary eight; the two neither sees read another file, the
-pinned statistics and the run's artifact. A dollar cap is no substitute for a configuration that
-cannot express the expensive call: it prices the mistake at a documented six tasks against 9,027
-(fifty steps of a measured 177 circuits plus the sampling call, $74,924 at list price), and cannot
-exist for the simulator where the fallback happened. Reproduction is a cost:
-24 s, 18 s and 222 s for a 24-run block of a 13.9-GPU-hour cross, an interruption costing the run in
-flight. Measuring the three principles caught the platform writing an inference three more times.
+A record is not checkable from one table: of ten injected faults a schema-only pipeline sees one and
+a data-quality library's vocabulary eight; the two neither sees read another file — the pinned
+statistics, the run's artifact. A dollar cap is no substitute for a configuration that
+cannot express the expensive call: the documented cap stops it at six tasks against 9,027 (fifty
+steps of a measured 177 circuits plus the sampling call, $74,924 at list price), and cannot exist for
+the simulator where the fallback happened. Reproduction is a cost: on a clone of the published
+package, 24 s, 18 s and 222 s for a 24-run block of a 13.9-GPU-hour cross, an interruption costing
+the run in flight. Measuring the three principles caught the platform writing an inference three more times.
 
 **Keywords.** reproducibility; experiment management; provenance; quantum cloud services; QAOA;
 cost control; fault injection; software engineering for quantum computing.
@@ -74,14 +74,15 @@ checkable.** A run row carries the instance's input digest, the penalty constant
 initial angles, the final angles, the exact-state quantities, the shot summary and the cost; a
 per-run artifact carries the trajectory, the stored probabilities and the shot counts; a reference
 row per instance carries the enumerated optimum and the penalty scales; the derived statistics are
-the pinned input. Thirteen relations between these hold on a correct record, and a fault appears as a
-violated relation.
+the pinned input. Thirteen checks connect these records: consistency conditions that a correct record
+satisfies, numerical recomputations within stated tolerances, and a few diagnostics that mark a run
+to look at. A fault appears as a check that reports.
 
 **P2 — Refuse billing by configuration, before submission.** A quantum processing unit (QPU) cannot
 be named as the optimizer's backend: the constructor refuses it before any cloud object exists and the
 command-line driver refuses it before constructing a solver. The final sampling call receives frozen
 angles, so that the framework's fallback from adjoint to parameter-shift differentiation — which
-would submit 1 + 2p·[C(N,2) + 2N] tasks for one bitstring — cannot occur. A cloud run must name
+would submit 1 + 2p·[C(N,2) + 2N] tasks for one sampling call — cannot occur. A cloud run must name
 itself and cannot overwrite the committed baseline. A dollar cap is layered on top, not relied on.
 
 **P3 — Guarantee reconstruction at three levels and record the cost of each.** Tables and figures
@@ -120,13 +121,13 @@ particular edge here.
 
 1. Three design principles for a cloud quantum benchmark platform, each with a stated scope, and
    their realisation in an open reproduction package (Section 3).
-2. A fault-injection evaluation of a 2,565-run record: ten faults, thirteen verification relations,
-   ten detected against one for a schema-only pipeline and eight for an expectation stated in a
-   data-quality library's vocabulary over the run table, and no relation firing on any of five
-   committed clean records. Over 600 random mutations, half of them drawn after the relations were
-   frozen, the two are within one of each other on the 52 that move a headline number (51 against 49);
-   where they separate is the 168 that touch a file the run table does not contain, which the
-   relations catch 135 times and the control never (Section 5.1).
+2. A fault-injection evaluation of a 2,565-run record: ten faults, thirteen checks, ten detected
+   against one for a schema-only pipeline and eight for an expectation stated in a data-quality
+   library's vocabulary over the run table, and no check firing on any of five committed clean
+   records. Over 600 random mutations, half of them drawn after the checks were frozen, the two are
+   close on the mutations that move a headline number — 25 against 24 in the first draw and 26
+   against 25 in the second, 51 against 49 over both — and separate on the 168 that touch a file the
+   run table does not contain, which the checks catch 135 times and the control never (Section 5.1).
 3. A guard-stage evaluation on a device that, like a QPU, offers no derivative method: measured
    per-step task counts (177 / 361 / 609 / 921 at N = 8 / 12 / 16 / 20), the stopping stage of five
    misconfigurations under four guard configurations, the division of labour between structural
@@ -415,16 +416,18 @@ each tolerance above is stated with the arithmetic it allows for. A violation of
 is a *suspicion*: a correct record can produce one, and the threshold says how unlikely that is. For
 the binomial tails the bound is a union bound — roughly 5,000 tests at 10⁻⁹ each put the chance that
 any of them fires on a correct record of this size below 5·10⁻⁶ — and it covers those tails and
-nothing else. The other two statistical rules carry no such number. The correlation floor of 0.9 was
-read off the clean record's nineteen blocks, whose correlations run from 0.983 to 0.999, and is a
-property of blocks of this size and spread rather than a constant: two guards are part of the rule —
-a block of fewer than ten runs, or one in which final P_F does not vary at all, is not tested — and a
-third condition is not enforced and should be, since a block whose runs all have nearly the same P_F
-carries little information about the correlation and a correct record of that shape would fail the
-rule. Two seeds carrying the same shot batch is the other, and it is weaker still: it is possible
-without a defect whenever the state is concentrated, and it is reported as something to look at.
-Section 5.1 reports the one false alarm the binomial test produced before its threshold was
-corrected, and the five clean records on which none of the three fires.
+nothing else. The three diagnostics carry no such bound and are not meant to. The correlation floor
+of 0.9 was read off the clean record's nineteen blocks, whose correlations run from 0.983 to 0.999,
+and is a property of blocks of this size and spread rather than a constant: two guards are part of
+the rule — a block of fewer than ten runs, or one in which final P_F does not vary at all, is not
+tested — and a third condition is not enforced and should be, since a block whose runs all have
+nearly the same P_F carries little information about the correlation and a correct record of that
+shape would fail the rule. Two seeds carrying the same shot batch is possible without a defect
+whenever the state is concentrated. And a run whose final angles equal its trajectory's first point
+is what an optimizer handed a non-differentiable array produces, but also what a run stopped at a
+stationary point would look like. Each reports something to inspect. Section 5.1 reports the one
+false alarm the binomial test produced before its threshold was corrected, and the five clean records
+on which no check fires at all.
 
 **Where the batch-against-state rule applies.** *state-batch* compares a batch with the distribution the
 same run recorded, which requires that distribution to be exact — it is, because the state comes
@@ -703,7 +706,7 @@ expensive default, included so that the table shows what the structural guards d
 | Misconfiguration | What is written | Consequence if nothing stops it |
 |---|---|---|
 | QPU as optimizer backend | `--backend braket_ionq` | 1 + 2p·[C(N,2) + 2N] tasks per optimizer step for 50 steps, plus the sampling call's own |
-| Trainable angles at sampling, SV1 | the optimizer's tensors handed to the 1,000-shot QNode | 1 + 2p·[C(N,2) + 2N] tasks for one bitstring (the 2026-08-09 pilot) |
+| Trainable angles at sampling, SV1 | the optimizer's tensors handed to the 1,000-shot QNode | 1 + 2p·[C(N,2) + 2N] tasks for one sampling call that returns one shot batch (the 2026-08-09 pilot) |
 | Trainable angles at sampling, IonQ | the same, on hardware at 100 shots | the same count at $8.30 per task |
 | QPU as sampling backend, default shots | `--sample-backend braket_ionq` without `--shots` | one correct task at $0.30 + 1,000 × $0.08 |
 | Untagged cloud run | `--backend braket_sv1` without `--results-tag` | the committed baseline behind the paper's tables is overwritten |
@@ -1054,8 +1057,9 @@ the tapes a device received; §, a task count obtained by counting *circuits* ra
 parameter-shift transform's tapes for one sampling call, or one step's tapes times the driver's fifty
 steps plus that call), which a metered device turns into one task each — an identity confirmed at
 N = 8 on SV1 and against the 2026-08-09 ledger, and assumed at N = 20 and on hardware; †, the
-provider's documented behaviour, not observed. In the last column "—" is nothing usable and "?" a
-value with no gradient. Every dollar figure is a list price applied to a task count, not a bill.**
+provider's documented behaviour, not observed. Where a cell ends in "—" nothing usable comes back,
+and where it ends in "?" a value does and a gradient does not. Every dollar figure is a list price
+applied to a task count, not a bill.**
 
 | Misconfiguration | N | none | cap only | structural | both |
 |---|---:|---|---|---|---|
@@ -1087,7 +1091,9 @@ the file the paper reads; no cap sees it.
 ledger: on 16 September 2026, under PennyLane 0.45.1 and amazon-braket-pennylane-plugin 1.35.1, the
 N = 8 sampling QNode sent to SV1 with the optimizer's angles still marked trainable created **177
 tasks in 672 s**, and the same QNode with frozen angles created **1 task in 4 s**; both returned a
-full 1,000 × 8 sample. The `none` cells for the fallback therefore rest on an observation, and the
+full 1,000 × 8 sample. The two N = 8 SV1 cells of that row therefore rest on a service observation;
+their N = 20 counterparts and the IonQ row are the transform's circuit counts, which Table 7 marks as
+such. The
 transform's count and the 2026-08-09 ledger agree with it. Of the cap, one half is observed and one
 half still modelled: the request for a spending limit on SV1 was refused by the service ("Spending
 limits can not be created for simulator devices"), which is the row "cap blind" of Table 7; the
@@ -1161,12 +1167,12 @@ environment for each, on one host.**
 | 3 | re-issue with `--resume` | 168 s | "6 rows already done"; 24 rows; 94/94 non-timing columns identical to the uninterrupted block |
 | control | level 2 without `data/derived`, network unreachable | 6 s | fails: `TypeError: '<' not supported between instances of 'int' and 'NoneType'` |
 | control | E2 aggregation without the artifacts | 1.2 s | fails: "no run artifacts under …/e1_runs" |
-| 0 (v1.1) | `git clone --branch v1.1`; `python -m venv`; `pip install -r requirements-repro.txt` | 0.3 s; 8 s; 147 s | commit 6b5364c, 24 MB |
-| 0 (v1.1) | `pytest -q -rs` | 102 s | 400 passed, 32 skipped: 28 need the per-run artifacts, 3 the price snapshots, 1 a host without `lightning.gpu` |
+| 0 (v1.1) | `git clone --branch v1.1`; `python -m venv`; `pip install -r requirements-repro.txt` | 0.3 s; 8 s; 148 s | commit e038347, 24 MB |
+| 0 (v1.1) | `pytest -q -rs` | 101 s | 401 passed, 33 skipped: 29 need the per-run artifacts, 3 the price snapshots, 1 a host without `lightning.gpu` |
 | 1 (v1.1) | `python -m notebooks.generate_tqe_figures`; `python check_tables.py` | 24 s; 2.8 s | 5/5 byte-identical; 2,578 cells agree, 0 disagree, 0 pending |
-| 2 (v1.1) | the level-2 command above | 18 s | energy and Sharpe identical to the committed file, to 0 |
-| 3 (v1.1) | the level-3 block with the job status record: `SIGKILL` after 5 runs | 50 s | status file `RUNNING 5/12, last N12_i00_5xAcrit_s42`, matching the 5 rows on disk, which the manifest parses with no artifact left without a row; `analyze_e1` refuses the manifest |
-| 3 (v1.1) | re-issue with `--resume` | 70 s | driver prints "previous job: RUNNING pid … 5/12"; status `EXIT 0 12/12`; `analyze_e1` runs |
+| 2 (v1.1) | the level-2 command above | 17 s | energy and Sharpe identical to the committed file, to 0 |
+| 3 (v1.1) | the level-3 block with the job status record: `SIGKILL` after 5 runs | 52 s | status file `RUNNING 5/12, last N12_i00_5xAcrit_s42`, matching the 5 rows on disk, which the manifest parses with no artifact left without a row; `analyze_e1` refuses the manifest |
+| 3 (v1.1) | re-issue with `--resume` | 68 s | driver prints "previous job: RUNNING pid … 5/12"; status `EXIT 0 12/12`; `analyze_e1` runs |
 
 The inputs the harness supplied were the repository URL and tag, a name for `--results-tag`, and
 the choice of CPU over the README's GPU for level 3; every other token came from the README.
@@ -1215,20 +1221,20 @@ differ, as they must.
 *The same checks on the release this paper ships.* E-S3's three levels are an evaluation of `v1.0`,
 because that is the package a reader of the numerical study has and the one whose gaps this section
 reports. The fixes those gaps produced are in `v1.1`, so the last block of Table 9 clones `v1.1` and
-repeats what can be repeated: the suite (400 passed, 32 skipped), level 1 (5/5 figures byte-identical,
+repeats what can be repeated: the suite (401 passed, 33 skipped), level 1 (5/5 figures byte-identical,
 2,578 manuscript cells agreeing), level 2 (identical to the committed file, to zero), and the
 interruption and resumption — which `v1.0` cannot be asked for at all, since the job status record
 was written in response to this evaluation. The `v1.0` rows of Table 9 clone over the network from
 the published repository and the `v1.1` rows clone the same release from a local mirror, because the
 tag becomes public on submission; that is why the second clone takes 0.3 s rather than 1.5 s, and it
-is the only difference between the two passes. What the 32 skips are: 28 tests of the E-S1 harness need
+is the only difference between the two passes. What the 33 skips are: 29 tests of the E-S1 harness need
 the per-run artifacts, about 100 MB of `.npz` that the git repository does not carry and the Zenodo
 deposit of [1] does, so a reader who clones without fetching the deposit does not exercise the
 fault-injection relations against real artifacts; three need the price snapshots, which are
 third-party data the package deliberately does not redistribute (it ships the derived statistics
 instead); and one is the test that a GPU backend does not silently fall back, which has nothing to
 fall back from on a host where `lightning.gpu` is installed and runs. Every claim this paper makes about the final
-implementation is therefore a claim about a tagged commit (`6b5364c`) that a reader can clone, and the
+implementation is therefore a claim about a tagged commit (`e038347`) that a reader can clone, and the
 `CHANGELOG` says which paper was evaluated against which release. What is *not* repeated on `v1.1` is
 level 3's full block and its column-by-column agreement (Table 10), which measures a host-and-precision
 difference the release does not change.
@@ -1393,9 +1399,10 @@ exists, and its results can be rebuilt from the published package at a cost that
 against controls on a 2,565-run record: ten of ten injected faults detected with no false positives,
 against one for a schema-only pipeline; the two ruinous misconfigurations stopped before any device
 is built, where a dollar cap alone stops them after six tasks and does not see the simulator fallback
-that actually occurred; and three reconstruction levels rebuilt from a clone in 24 s, 18 s and — for
-the 24-run block that stands for the 13.9-GPU-hour cross — 222 s, with the loss on interruption
-bounded at the run in flight once the file is written by a single rename. The same evaluation found three weak points of the platform — a digest that
+that actually occurred; and the published package's three reconstruction levels rebuilt from a clone in
+24 s (21.7 s of figures and 2.6 s of table checks), 18 s, and — for the 24-run block that stands
+for the 13.9-GPU-hour cross — 222 s, with the loss on interruption bounded at the run in flight once
+the file is written by a single rename. The same evaluation found three weak points of the platform — a digest that
 named inputs without binding their values, a failure that did not name what was missing, and a job
 whose end state was inferred rather than recorded — and each fix is measured or exercised above.
 
@@ -1411,7 +1418,7 @@ behind it are the author's, who is responsible for all content.
 ## Availability
 
 Everything this paper reports is in one package, release `v1.1`
-(https://github.com/tobitaQ/qaoa-portfolio-penalty-benchmark, tag `v1.1`, commit `6b5364c`,
+(https://github.com/tobitaQ/qaoa-portfolio-penalty-benchmark, tag `v1.1`, commit `e038347`,
 doi:[[v1.1 DOI]]): the platform; the three harnesses
 (`experiments/system_paper/es1_fault_injection.py`, `es1_random_faults.py`, `es2_guard_stages.py`,
 `es2_observe_cloud.py`, `es2_observe_cost_control.py`, `es3_reconstruction.py`) and the cost-control
@@ -1442,7 +1449,8 @@ The cloud spend of this paper, and of the project behind it, is Table 13.
 | the numerical study [1]: SV1 and IonQ arms, 2026-08 to 2026-09 | — | $37.90 |
 | **the project on Amazon Braket, to date** | — | **$42.59** |
 
-All other figures in this paper are list prices applied to measured task counts; nobody paid them.
+All other figures in this paper are list prices applied to task counts — some observed on the
+service, some counted as circuits, as Table 7 distinguishes; nobody paid them.
 
 ## References
 
