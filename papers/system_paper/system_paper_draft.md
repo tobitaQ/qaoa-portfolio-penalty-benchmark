@@ -391,9 +391,9 @@ one kind and carry more than one mark; where they do, the clauses are named.
     shot; the shot-level success counts of the stored batch; D and the offset magnitude |E_A(x\*)|; the best expectation of the
     stored convergence; the portfolio metrics of the pinned statistics; and, on the reference row,
     the penalty scales of its own cardinality minima and the uniform baselines of its counts.
-11. *state-batch* **[S]** — the shot batch is a draw from the *final* state: the two-sided exact
-    binomial tail of the feasible and of the optimum count under S × P_F and S × P_opt is at least
-    10⁻⁹, a family-wise threshold over the roughly 5,000 tests one record carries; and within each
+11. *state-batch* **[S]** — the shot batch is a draw from the *final* state: the smaller one-sided
+    exact binomial tail of the feasible and of the optimum count under S × P_F and S × P_opt is at
+    least 10⁻⁹, so a correct row is rejected with probability up to 2 × 10⁻⁹; and within each
     (N, penalty) block of at least ten runs whose final P_F actually varies, the feasible fraction
     correlates with final P_F above 0.9 and at least as well as with initial P_F.
 12. *seed-distinct* **[E/S]** — two runs of one cell that differ only in seed have different initial
@@ -415,9 +415,10 @@ defect in the record: nothing but a wrong write produces it. A violation of a nu
 defect unless the record was produced under conditions the tolerance does not cover, which is why
 each tolerance above is stated with the arithmetic it allows for. A violation of a statistical rule
 is a *suspicion*: a correct record can produce one, and the threshold says how unlikely that is. For
-the binomial tails the bound is a union bound — roughly 5,000 tests at 10⁻⁹ each put the chance that
-any of them fires on a correct record of this size below 5·10⁻⁶ — and it covers those tails and
-nothing else. The three diagnostics carry no such bound and are not meant to. The correlation floor
+the binomial tails the bound is a union bound, and the threshold is compared with the smaller of the
+two one-sided tails, so a correct row fails with probability up to 2 × 10⁻⁹ and roughly 5,000 tests
+put the chance that any of them fires on a correct record of this size below 10⁻⁵. It covers those
+tails and nothing else. The three diagnostics carry no such bound and are not meant to. The correlation floor
 of 0.9 was read off the clean record's nineteen blocks, whose correlations run from 0.983 to 0.999,
 and is a property of blocks of this size and spread rather than a constant: two guards are part of
 the rule — a block of fewer than ten runs, or one in which final P_F does not vary at all, is not
@@ -437,9 +438,14 @@ distribution the device sampled, and a failure would mean noise as readily as a 
 holds for the simulator arms this paper checks and is not claimed for hardware, where it would have
 to be restated against a noise model or dropped.
 
-**What P1 prevents.** A record in which any of these relations fails is flagged before it reaches a
-table. Section 6 lists the seven defects of the numerical study, how each was found at the time, and
-which relation now holds its class.
+**What P1 prevents.** Six of the thirteen need nothing but the two CSVs — schema, penalty,
+reference-row, scorer, the ranges and nested counts, and state-batch — and the aggregation runs them
+before it reads a number: a record that fails one does not reach a table, because `analyze_e1` names
+the check and exits non-zero unless it is told `--allow-inconsistent`. The other seven read the
+artifacts or the pinned statistics, which a clone may not have; they are a separate command, and the
+README gives the order. The two sets share one implementation (`src/record_checks.py`), so the gate
+and the checker cannot drift. Section 6 lists the seven defects of the numerical study, how each was
+found at the time, and which check now holds its class.
 
 **What P1 does not prevent.** A fault that preserves every relation is invisible: a consistent
 substitution of the input statistics *and* the reference *and* every run computed from them is a
@@ -599,8 +605,8 @@ cheapest that can see a fault sees it first:
   the feasible set from those statistics alone, as a clone would.
 - *artifact* — row-npz, npz-internal.
 - *row*, again — identities recomputes every column that is a function of other recorded values.
-- *statistical* — state-batch takes the exact two-sided binomial tail, flagging below 10⁻⁹ over some
-  5,000 tests, and per (N, penalty) block of 45 to 150 runs requires the feasible fraction to
+- *statistical* — state-batch takes the smaller exact one-sided binomial tail, flagging below 10⁻⁹
+  over some 5,000 tests, and per (N, penalty) block of 45 to 150 runs requires the feasible fraction to
   correlate with final P_F above 0.9 and above its correlation with initial P_F. These are
   thresholds chosen on the clean record, not hypothesis tests.
 - *block* — seed-distinct.
@@ -1178,12 +1184,12 @@ environment for each, on one host.**
 | 3 | re-issue with `--resume` | 168 s | "6 rows already done"; 24 rows; 94/94 non-timing columns identical to the uninterrupted block |
 | control | level 2 without `data/derived`, network unreachable | 6 s | fails: `TypeError: '<' not supported between instances of 'int' and 'NoneType'` |
 | control | E2 aggregation without the artifacts | 1.2 s | fails: "no run artifacts under …/e1_runs" |
-| 0 (v1.1) | `git clone --branch v1.1`; `python -m venv`; `pip install -r requirements-repro.txt` | 0.3 s; 8 s; 148 s | commit e038347, 24 MB |
+| 0 (v1.1) | `git clone --branch v1.1`; `python -m venv`; `pip install -r requirements-repro.txt` | 0.3 s; 8 s; 149 s | commit ed260fd, 24 MB |
 | 0 (v1.1) | `pytest -q -rs` | 101 s | 401 passed, 33 skipped: 29 need the per-run artifacts, 3 the price snapshots, 1 a host without `lightning.gpu` |
 | 1 (v1.1) | `python -m notebooks.generate_tqe_figures`; `python check_tables.py` | 24 s; 2.8 s | 5/5 byte-identical; 2,578 cells agree, 0 disagree, 0 pending |
-| 2 (v1.1) | the level-2 command above | 17 s | energy and Sharpe identical to the committed file, to 0 |
+| 2 (v1.1) | the level-2 command above | 18 s | energy and Sharpe identical to the committed file, to 0 |
 | 3 (v1.1) | the level-3 block with the job status record: `SIGKILL` after 5 runs | 52 s | status file `RUNNING 5/12, last N12_i00_5xAcrit_s42`, matching the 5 rows on disk, which the manifest parses with no artifact left without a row; `analyze_e1` refuses the manifest |
-| 3 (v1.1) | re-issue with `--resume` | 68 s | driver prints "previous job: RUNNING pid … 5/12"; status `EXIT 0 12/12`; `analyze_e1` runs |
+| 3 (v1.1) | re-issue with `--resume` | 69 s | driver prints "previous job: RUNNING pid … 5/12"; status `EXIT 0 12/12`; `analyze_e1` runs |
 
 The inputs the harness supplied were the repository URL and tag, a name for `--results-tag`, and
 the choice of CPU over the README's GPU for level 3; every other token came from the README.
@@ -1245,7 +1251,7 @@ fault-injection relations against real artifacts; three need the price snapshots
 third-party data the package deliberately does not redistribute (it ships the derived statistics
 instead); and one is the test that a GPU backend does not silently fall back, which has nothing to
 fall back from on a host where `lightning.gpu` is installed and runs. Every claim this paper makes about the final
-implementation is therefore a claim about a tagged commit (`e038347`) that a reader can clone, and the
+implementation is therefore a claim about a tagged commit (`ed260fd`) that a reader can clone, and the
 `CHANGELOG` says which paper was evaluated against which release. What is *not* repeated on `v1.1` is
 level 3's full block and its column-by-column agreement (Table 10), which measures a host-and-precision
 difference the release does not change.
@@ -1377,7 +1383,16 @@ would need their consent and an ethics review rather than another harness. Three
 atomic, so that the bound it was supposed to give held only by luck — by checking the driver against
 the claim this paper makes about it; they are stated above, the releases they are in and are not in are Section 5.3's last paragraph, and
 the digest was appended to the released record files from the pinned statistics rather than produced
-by a re-run. The third gap was found not by a harness but by operating one: the
+by a re-run. A review of the drivers against the claims this paper makes about them then found three
+more, all of the same kind and all fixed in `v1.1` with a regression test each: the thirteen checks
+did not gate the aggregation at all — `analyze_e1` verified the job's exit status and not the record,
+so an edited cell reached a published median — `--results-tag ""` was falsy where the file name is
+built and not-None where the overwrite guard looks, so an empty shell variable replaced the committed
+baseline without a word, and `--resume` skipped cells by key without asking whether the manifest had
+been written under the same arguments, so a resumed run with different steps left two experiments in
+one file and exited 0. None was found by the three evaluations; all three were found by reading a
+driver beside the sentence that describes it, which is the same instrument as the non-atomic flush
+above and the only one that has found a defect in the platform's *writers*. The third gap was found not by a harness but by operating one: the
 two-hour coverage scan of Section 5.1 crashed in its first minute on a column that is empty on every
 row, the shell script that ran it had no `set -e` and printed its completion marker anyway, and success
 was read off that marker for nine hours. The status record of Section 3.3 is the consequence. The dollar figures are list prices applied to
@@ -1417,6 +1432,10 @@ for the 13.9-GPU-hour cross — 222 s, with the loss on interruption bounded at 
 the file is written by a single rename. The same evaluation found three weak points of the platform — a digest that
 named inputs without binding their values, a failure that did not name what was missing, and a job
 whose end state was inferred rather than recorded — and each fix is measured or exercised above.
+Reading the drivers beside the sentences that describe them found four more, in the writers rather
+than in the records: a flush that was not atomic, an aggregation that checked the job and not the
+record, an empty tag that reached the committed file names, and a resume that did not ask what the
+manifest was made under (Section 7).
 
 ## Acknowledgment
 
@@ -1430,7 +1449,7 @@ behind it are the author's, who is responsible for all content.
 ## Availability
 
 Everything this paper reports is in one package, release `v1.1`
-(https://github.com/tobitaQ/qaoa-portfolio-penalty-benchmark, tag `v1.1`, commit `e038347`,
+(https://github.com/tobitaQ/qaoa-portfolio-penalty-benchmark, tag `v1.1`, commit `ed260fd`,
 doi:[[v1.1 DOI]]): the platform; the three harnesses
 (`experiments/system_paper/es1_fault_injection.py`, `es1_random_faults.py`, `es2_guard_stages.py`,
 `es2_observe_cloud.py`, `es2_observe_cost_control.py`, `es3_reconstruction.py`) and the cost-control
@@ -1443,10 +1462,12 @@ regenerates both figures for a byte comparison. Appendix C lists the commands.
 The package E-S3 evaluated at all three levels is the *earlier* release, `v1.0` (same repository,
 commit `c804a63`, doi:10.5281/zenodo.22743582), which is the version the numerical study [1] was
 submitted with and
-which does not contain this paper's material; `v1.1` adds it, together with two fixes this paper
-reports (the locale encoding of Section 5.3 and the non-atomic flush of Section 3.3) and an
-`input_digest` column appended to the committed record from the pinned statistics, leaving every
-column of `v1.0` unchanged. `CHANGELOG.md` states which version each paper was evaluated against.
+which does not contain this paper's material. `v1.1` adds it, together with the fixes this paper
+reports — the locale encoding of Section 5.3, the non-atomic flush of Section 3.3, and the three
+driver defects of Section 7: the aggregation that checked the job and not the record, the empty
+`--results-tag`, and the resume that did not compare its conditions — and an `input_digest` column
+appended to the committed record from the pinned statistics, leaving every column of `v1.0`
+unchanged. `CHANGELOG.md` states which version each paper was evaluated against.
 
 The cloud spend of this paper, and of the project behind it, is Table 13.
 

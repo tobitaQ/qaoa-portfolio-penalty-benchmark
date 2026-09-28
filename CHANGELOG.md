@@ -5,8 +5,9 @@ own DOI, and each paper names the version it was evaluated against.
 
 ## v1.1 — unreleased
 
-Adds the artefacts of the second paper (the experiment platform and its evaluation) and the two
-fixes the first release's readers ran into.
+Adds the artefacts of the second paper (the experiment platform and its evaluation), the two fixes
+the first release's readers ran into, and three the second paper's evaluation and a review of the
+drivers against its claims produced.
 
 - `experiments/system_paper/`: the three evaluation harnesses (E-S1 fault injection and random
   mutations, E-S2 guard stages and the two service observations, E-S3 reconstruction), the
@@ -20,6 +21,21 @@ fixes the first release's readers ran into.
 - `experiments/a1_reuse/` and `experiments/a3_constraints/`: the two questions answered from the
   committed record alone, with their result files.
 - Tests for all of the above.
+- `src/record_checks.py`: the six verification relations that need nothing but the run manifest
+  and the reference table. The E-S1 harness and the aggregation both import them, so the gate and
+  the checker are one implementation.
+- **Fix:** `analyze_e1` runs those six before it reads a number and refuses a record that fails one,
+  naming the check (`--allow-inconsistent` overrides). It previously checked the job's exit status
+  and not the record, so an edited cell reached a published median without a word.
+- **Fix:** `--results-tag ""` reached the canonical file names. The empty string is falsy where the
+  suffix is built and not-None where the overwrite guard looks, so an empty shell variable replaced
+  the committed baseline. Both drivers now pass the tag through one `checked_tag()` before a path
+  exists.
+- **Fix:** `--resume` compares the conditions the manifest was written under — spec version,
+  backend, precision, depth, steps, optimizer, shots, window — with the ones this invocation would
+  write, and refuses before skipping a cell or touching a file. It previously matched on
+  (N, instance, penalty, seed) alone, so a resumed run with different steps left two experiments in
+  one file and exited 0.
 - **Fix:** every text file is now opened with an explicit encoding. On a system whose locale is not
   UTF-8 — a Japanese Windows, where it is cp932 — fifteen tests failed on the first em dash of the
   manuscript. Nothing a result file holds changes.

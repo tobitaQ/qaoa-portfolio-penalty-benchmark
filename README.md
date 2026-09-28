@@ -109,9 +109,22 @@ The per-run E1 artifacts (`results/e1_runs*/*.npz`: the exact probability of eve
 bitstring under the initial and the final state, per-cardinality mass, angles, trajectory and shot
 counts; ≈100 MB compressed, 2,565 files for the main block) are not in the git repository. They
 are deposited in the Zenodo archive of release v1.0 (`https://doi.org/10.5281/zenodo.22743582`,
-the DOI the paper's availability statement names), and are needed
-only to recompute the E2 columns and D_cond, which the committed CSVs already hold. Any full
-state vector is reconstructed from the recorded angles and seed.
+the DOI the paper's availability statement names). Any full state vector is reconstructed from the
+recorded angles and seed. They are needed for three things: the E2 columns and D_cond of the
+numerical paper, which the committed CSVs already hold; the seven of the thirteen verification
+relations that read an artifact; and the fault injection of the system paper. Without them
+`pytest -q` skips 29 tests and says so, `analyze_e1` still runs the six relations that read only the
+CSVs, and `es1_fault_injection.py` exits rather than checking half a record.
+
+### The order the checks run in
+
+1. A driver writes its manifest, its reference table and its artifacts, and its own status record.
+2. `analyze_e1.py` refuses a manifest whose job did not finish (`run_status.require_complete`) and
+   one that fails any of the six relations of `src/record_checks.py`, which need only the two CSVs.
+   It names the check and exits non-zero; `--allow-inconsistent` aggregates anyway and says so.
+3. `experiments/system_paper/es1_fault_injection.py` runs all thirteen, including the seven that
+   read the artifacts or re-derive from the pinned statistics. Run it on a record you intend to
+   publish; step 2 is the gate that cannot be forgotten, not the whole check.
 
 ## Checking the manuscript against the files
 

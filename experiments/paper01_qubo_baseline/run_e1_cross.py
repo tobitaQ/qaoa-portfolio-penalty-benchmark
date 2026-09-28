@@ -86,6 +86,7 @@ from experiments.paper01_qubo_baseline.run_experiment import (
     RESULTS_DIR,
     RISK_AVERSION,
     canonical_overwrite_refusal,
+    checked_tag,
     write_csv,
 )
 from experiments.paper01_qubo_baseline.run_instances import (
@@ -395,6 +396,35 @@ def score_run(res, problem, ref: InstanceReference, a_value: float,
     return row, artifact
 
 
+#: Columns of a run row that record the conditions the run was made under.
+#: ``--resume`` skips a cell that is already in the manifest, so a resumed run
+#: with different arguments would leave two experiments in one file: a review
+#: of this driver produced a manifest holding seed 42 at two steps and seed 43
+#: at three, with the driver exiting 0 and the aggregation reading both.
+CONDITION_COLUMNS = ("spec_version", "backend", "precision", "p_layers", "steps",
+                     "optimizer", "shots", "data_end")
+
+
+def resume_conflicts(rows: list[dict], conditions: dict[str, object]) -> list[str]:
+    """Conditions in the manifest that this invocation would contradict.
+
+    Args:
+        rows: The manifest's existing rows.
+        conditions: Column name to the value this invocation would write.
+
+    Returns:
+        One message per column whose recorded value differs, empty if the
+        manifest was written under the same conditions (or is empty).
+    """
+    out = []
+    for column, want in conditions.items():
+        found = {r[column] for r in rows if column in r and r[column] != ""}
+        if found and found != {str(want)}:
+            out.append(f"{column}: manifest has {sorted(found)}, this run would write "
+                       f"{str(want)!r}")
+    return out
+
+
 def read_manifest(path: Path) -> list[dict]:
     if not path.exists():
         return []
@@ -435,13 +465,17 @@ def main(argv=None) -> int:
     args = parse_args(argv)
     from src.solvers.braket_solver import BraketSolver
 
-    suffix = f"_{args.results_tag}" if args.results_tag else ""
+    try:
+        tag = checked_tag(args.results_tag)
+    except ValueError as exc:
+        print(f"ABORT: {exc}", file=sys.stderr)
+        return 2
+    suffix = f"_{tag}" if tag else ""
     manifest_path = RESULTS_DIR / f"paper01_e1_cross{suffix}.csv"
     reference_path = RESULTS_DIR / f"paper01_e1_reference{suffix}.csv"
-    artifact_dir = ARTIFACT_DIR if not args.results_tag else ARTIFACT_DIR.with_name(
-        f"e1_runs_{args.results_tag}")
+    artifact_dir = ARTIFACT_DIR if not tag else ARTIFACT_DIR.with_name(f"e1_runs_{tag}")
     refusal = canonical_overwrite_refusal(
-        (manifest_path, reference_path), args.results_tag, args.write_canonical,
+        (manifest_path, reference_path), tag, args.write_canonical,
         resume=args.resume)
     if refusal:
         print(refusal, file=sys.stderr)
@@ -452,11 +486,22 @@ def main(argv=None) -> int:
         # What the previous invocation of this manifest recorded about itself.
         print(f"previous job: {run_status.describe(run_status.read(manifest_path))}", flush=True)
     rows = read_manifest(manifest_path) if args.resume else []
-    for r in rows:
-        if r.get("spec_version") != SPEC_VERSION:
-            print(f"ABORT: {manifest_path} holds spec {r.get('spec_version')!r}, "
-                  f"this code is {SPEC_VERSION!r}; do not mix", file=sys.stderr)
-            return 1
+    optimizer_label = (f"adam_{args.stepsize:g}" if args.optimizer == "adam"
+                       else f"lbfgs_{args.steps}grad")
+    # Before a row is skipped or a file touched: the manifest must have been
+    # written under the conditions this invocation would write.
+    conflicts = resume_conflicts(rows, {
+        "spec_version": SPEC_VERSION, "backend": args.backend,
+        "precision": args.precision, "p_layers": args.p_layers, "steps": args.steps,
+        "optimizer": optimizer_label, "shots": args.shots, "data_end": args.end_date})
+    if conflicts:
+        print(f"ABORT: {manifest_path.name} was written under different conditions; "
+              f"resuming would mix two experiments in one file:", file=sys.stderr)
+        for c in conflicts:
+            print(f"  {c}", file=sys.stderr)
+        print("  use a new --results-tag, or re-run without --resume to replace it",
+              file=sys.stderr)
+        return 1
     done = {tuple(r[k] for k in RUN_KEY) for r in rows}
     reference_rows = read_manifest(reference_path) if args.resume else []
     reference_done = {(r["n_assets"], r["instance"]) for r in reference_rows}
@@ -467,8 +512,6 @@ def main(argv=None) -> int:
                           p_layers=args.p_layers, n_shots=args.shots,
                           n_optimizer_steps=args.steps, record_state=True,
                           optimizer=args.optimizer, stepsize=args.stepsize)
-    optimizer_label = (f"adam_{args.stepsize:g}" if args.optimizer == "adam"
-                       else f"lbfgs_{args.steps}grad")
 
     print(f"E1 {SPEC_VERSION}: N={args.n} x {len(args.instances)} instances x "
           f"{len(args.seeds)} seeds x <=6 penalties on {args.backend}/{args.precision}, "

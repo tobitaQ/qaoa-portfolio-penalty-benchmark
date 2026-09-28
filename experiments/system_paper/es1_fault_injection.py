@@ -47,8 +47,8 @@ Checks (``CHECKS``; each is one verification relation between records)
                    convergence, the reference row's uniform baselines, and the
                    per-instance constancy of the optimum's Sharpe ratio
   state-batch      the batch is a draw from the *final* state: per run the
-                   feasible-shot and optimum-shot counts have a binomial tail
-                   ≥ 1e-9 under S × final P_F / P_opt, and
+                   feasible-shot and optimum-shot counts have a one-sided
+                   binomial tail ≥ 1e-9 under S × final P_F / P_opt, and
                    per (N, penalty) block the feasible fraction tracks final
                    P_F more closely than initial P_F (the E3 catch)
   seed-distinct    within an instance and penalty, different seeds have
@@ -119,6 +119,7 @@ from experiments.paper01_qubo_baseline.run_instances import input_digest, instan
 from src.finance.data_loader import FinanceDataLoader
 from src.qubo import scoring
 from src.qubo.portfolio import PortfolioQUBO
+from src import record_checks
 
 RESULTS_DIR = Path(__file__).parent / "results"
 E1_RESULTS = e1.RESULTS_DIR
@@ -129,21 +130,10 @@ COUNTS_CSV = RESULTS_DIR / "paper02_es1_finding_counts.csv"
 CLEAN_CSV = RESULTS_DIR / "paper02_es1_clean_records.csv"
 
 SIZES = (12, 16, 20)
-#: Two-sided binomial tail below which a batch is not a draw from its state.
-#: ~5,000 tests per pass, so the family-wise false-positive rate is ~5e-6.
-TAIL_P = 1e-9
-#: Columns every ``ok`` row must carry filled. ``g_F``/``g_off`` may be empty
-#: when a batch had no feasible shot, so they are not in this list.
-REQUIRED = [
-    "run_id", "n_assets", "n_select", "instance", "instance_digest", "input_digest", "penalty_label",
-    "penalty", "a_crit", "a_heur", "a_margin", "qaoa_seed", "backend", "precision",
-    "p_layers", "steps", "optimizer", "f_star", "delta_F", "feasible_set_size",
-    "data_start", "data_end", "status", "shots", "feasible_shots", "distinct_shots",
-    "best_all_index", "best_all_E", "best_all_f", "energy_no_offset_solver",
-    "best_shot_scorer_agrees", "feasible_shot_fraction", "final_P_F", "final_P_opt",
-    "initial_P_F", "initial_P_opt", "hamiltonian_scale", "final_expectation",
-    "expectation_at_final_angles", "initial_angles", "final_angles",
-]
+#: The record-only relations, their threshold and their required columns are
+#: shared with the aggregation, which runs them before it reads a number.
+TAIL_P = record_checks.TAIL_P
+REQUIRED = record_checks.REQUIRED
 NPZ_KEYS = ("initial_angles", "final_angles", "angles_trajectory", "convergence",
             "feasible_indices", "feasible_f", "final_probs_feasible",
             "initial_probs_feasible", "shot_indices", "shot_counts", "penalty",
@@ -211,15 +201,8 @@ def _fmt_angles(a: np.ndarray) -> str:
 # ----------------------------------------------------------------------
 
 def check_schema(rec: Record) -> list[str]:
-    out = []
-    missing = [c for c in REQUIRED if c not in rec.rows.columns]
-    if missing:
-        out.append(f"missing columns: {missing}")
-    ok = rec.rows[rec.rows.status == "ok"] if "status" in rec.rows else rec.rows
-    for c in REQUIRED:
-        if c in ok.columns and ok[c].isna().any():
-            out.append(f"{c}: {int(ok[c].isna().sum())} empty cells on ok rows")
-    return out
+    """One expression per fact, and it lives in ``src/record_checks.py``."""
+    return record_checks.check_schema(rec.rows, rec.reference)
 
 
 def check_manifest(rec: Record) -> list[str]:
@@ -267,44 +250,13 @@ def check_manifest(rec: Record) -> list[str]:
 
 
 def check_penalty(rec: Record) -> list[str]:
-    out = []
-    mult = {lab: m for m, lab in e1.MULTIPLES}
-    for _, r in rec.rows.iterrows():
-        lab = r.penalty_label
-        if lab == "Aheur":
-            want = r.a_heur
-        elif lab == "Amargin":
-            want = r.a_margin
-        elif lab == "A0":
-            want = 0.0
-        elif lab in mult:
-            want = mult[lab] * r.a_crit
-        else:
-            out.append(f"{r.run_id}: unknown label {lab}")
-            continue
-        if not np.isclose(r.penalty, want, rtol=1e-12, atol=1e-15):
-            out.append(f"{r.run_id}: penalty {r.penalty!r} is not {lab} = {want!r}")
-        if r.a_crit > 0 and not np.isclose(r.a_over_crit, r.penalty / r.a_crit, rtol=1e-9):
-            out.append(f"{r.run_id}: a_over_crit inconsistent")
-    return out
+    """One expression per fact, and it lives in ``src/record_checks.py``."""
+    return record_checks.check_penalty(rec.rows, rec.reference)
 
 
 def check_reference_row(rec: Record) -> list[str]:
-    out = []
-    ref = rec.reference.set_index(["n_assets", "instance"])
-    for _, r in rec.rows.iterrows():
-        key = (r.n_assets, r.instance)
-        if key not in ref.index:
-            out.append(f"{r.run_id}: no reference row")
-            continue
-        q = ref.loc[key]
-        for col in ("f_star", "delta_F", "feasible_set_size", "a_crit", "a_heur",
-                    "a_margin", "instance_digest", "input_digest", "n_select"):
-            a, b = r[col], q[col]
-            same = (a == b) if isinstance(a, str) else np.isclose(a, b, rtol=0, atol=0)
-            if not same:
-                out.append(f"{r.run_id}: {col} {a!r} != reference {b!r}")
-    return out
+    """One expression per fact, and it lives in ``src/record_checks.py``."""
+    return record_checks.check_reference_row(rec.rows, rec.reference)
 
 
 def _reference_from_inputs(n: int, instance: int, derived_dir: Path,
@@ -370,24 +322,8 @@ def check_input_digest(rec: Record) -> list[str]:
 
 
 def check_scorer(rec: Record) -> list[str]:
-    out = []
-    for _, r in rec.rows.iterrows():
-        if r.best_shot_scorer_agrees is not True and str(r.best_shot_scorer_agrees) != "True":
-            out.append(f"{r.run_id}: solver and scorer disagree on the best shot")
-        card = r.best_all_cardinality
-        E = r.best_all_f + r.penalty * (card - r.n_select) ** 2 - r.penalty * r.n_select ** 2
-        if not np.isclose(E, r.best_all_E, rtol=1e-9, atol=1e-9):
-            out.append(f"{r.run_id}: best_all_E {r.best_all_E!r} != f + A(m-k)^2 - Ak^2 = {E!r}")
-        if not np.isclose(r.energy_no_offset_solver, r.best_all_E, rtol=1e-6, atol=1e-6):
-            out.append(f"{r.run_id}: solver energy {r.energy_no_offset_solver!r} != scorer {r.best_all_E!r}")
-        if pd.notna(r.get("f_best_feasible", np.nan)):
-            gF = (r.f_best_feasible - r.f_star) / r.delta_F
-            if not np.isclose(gF, r.g_F, rtol=1e-9, atol=1e-12) or gF < -1e-12 or gF > 1 + 1e-12:
-                out.append(f"{r.run_id}: g_F {r.g_F!r} != (f_bf - f*)/Delta_F = {gF!r}")
-            goff = scoring.gap_offset(r.f_best_feasible, r.f_star, r.penalty, int(r.n_select))
-            if not np.isclose(goff, r.g_off, rtol=1e-9, atol=1e-12):
-                out.append(f"{r.run_id}: g_off {r.g_off!r} != formula {goff!r}")
-    return out
+    """One expression per fact, and it lives in ``src/record_checks.py``."""
+    return record_checks.check_scorer(rec.rows, rec.reference)
 
 
 def check_row_npz(rec: Record) -> list[str]:
@@ -653,33 +589,8 @@ def _portfolio_metric_identities(rec: Record) -> list[str]:
 
 
 def check_state_batch(rec: Record) -> list[str]:
-    out = []
-    rows = rec.rows
-    S = rows.shots.astype(float)
-    from scipy.stats import binom
-    for prefix, obs in (("P_F", rows.feasible_shots), ("P_opt", rows.shots_optimal)):
-        p = rows[f"final_{prefix}"].clip(0, 1).to_numpy()
-        x = obs.to_numpy(dtype=float)
-        n = S.to_numpy()
-        # Exact two-sided binomial tail. A Gaussian band misfires at the
-        # rates the optimum has (S·P_opt ≈ 0.1: two hits are a 0.5 % event,
-        # not a five-sigma one); the exact tail with a family-wise threshold
-        # over ~5,000 tests flags only what no draw from the state explains.
-        tail = np.minimum(binom.cdf(x, n, p), binom.sf(x - 1, n, p))
-        bad = rows[tail < TAIL_P]
-        for _, r in bad.iterrows():
-            out.append(f"{r.run_id}: {obs.name} {int(r[obs.name])} has binomial tail "
-                       f"{tail[r.name]:.1e} under S x final_{prefix} = {n[r.name] * p[r.name]:.1f}")
-    for (n, lab), block in rows.groupby(["n_assets", "penalty_label"]):
-        if len(block) < 10 or block.final_P_F.std() == 0:
-            continue
-        r_final = np.corrcoef(block.feasible_shot_fraction, block.final_P_F)[0, 1]
-        r_init = (np.corrcoef(block.feasible_shot_fraction, block.initial_P_F)[0, 1]
-                  if block.initial_P_F.std() > 0 else np.nan)
-        if not (r_final > 0.9) or (np.isfinite(r_init) and r_init > r_final):
-            out.append(f"N={n} {lab}: feasible fraction tracks final P_F at r={r_final:.2f}"
-                       f" (initial P_F r={r_init:.2f})")
-    return out
+    """One expression per fact, and it lives in ``src/record_checks.py``."""
+    return record_checks.check_state_batch(rec.rows, rec.reference)
 
 
 def check_seed_distinct(rec: Record) -> list[str]:

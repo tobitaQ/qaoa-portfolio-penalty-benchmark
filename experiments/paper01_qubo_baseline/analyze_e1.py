@@ -55,7 +55,7 @@ from experiments.paper01_qubo_baseline.run_e1_cross import (
     TAU_MAIN,
 )
 from experiments.paper01_qubo_baseline.run_experiment import write_csv
-from src import run_status
+from src import record_checks, run_status
 
 #: Paired contrasts to report: (treatment, control, restrict to A_crit > 0?).
 CONTRASTS = [("Amargin", "Aheur", False), ("5xAcrit", "Aheur", True),
@@ -673,19 +673,51 @@ def manifest_table(rows: list[dict], refs: list[dict]) -> list[dict]:
     return out
 
 
+def relation_findings(manifest_path: Path, reference_path: Path) -> dict[str, list[str]]:
+    """The record relations that fail on these two files, by check name.
+
+    Reads with pandas rather than this module's ``load``: the relations are
+    written against frames and are shared with the E-S1 harness, so that the
+    aggregation and the harness cannot drift apart.
+    """
+    import pandas as pd
+    if not manifest_path.exists() or not reference_path.exists():
+        return {}
+    return record_checks.check_record(pd.read_csv(manifest_path), pd.read_csv(reference_path))
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--results-tag", default=None)
     ap.add_argument("--allow-partial", action="store_true",
                     help="aggregate a manifest whose job status is not EXIT 0 / complete")
+    ap.add_argument("--allow-inconsistent", action="store_true",
+                    help="aggregate a manifest that fails a record relation (say why)")
     args = ap.parse_args(argv)
     suffix = f"_{args.results_tag}" if args.results_tag else ""
     # A partial cross aggregates into plausible numbers; the job's own status
     # record beside the manifest is what says whether it is whole.
     manifest_path = RESULTS_DIR / f"paper01_e1_cross{suffix}.csv"
     print(f"job status: {run_status.require_complete(manifest_path, args.allow_partial)}")
+    reference_path = RESULTS_DIR / f"paper01_e1_reference{suffix}.csv"
+    # A complete job says nothing about whether its record still agrees with
+    # itself: a review of this driver edited one final_P_F in the CSV, and the
+    # aggregation published the edited median without a word. The relations
+    # that need nothing but these two files now run first.
+    findings = relation_findings(manifest_path, reference_path)
+    if findings and not args.allow_inconsistent:
+        print(f"refusing to aggregate {manifest_path.name}: it fails "
+              f"{len(findings)} record relation(s)", file=sys.stderr)
+        for name, messages in findings.items():
+            print(f"  {name}: {len(messages)} finding(s); first: {messages[0]}", file=sys.stderr)
+        print("  run the full checker (experiments/system_paper/es1_fault_injection.py) "
+              "for the relations that also read the artifacts, or pass "
+              "--allow-inconsistent to aggregate anyway", file=sys.stderr)
+        return 1
+    print(f"record relations: {len(record_checks.RECORD_CHECKS)} run"
+          + (f", {len(findings)} FAILING (allowed)" if findings else ", none failing"))
     rows = load(manifest_path)
-    refs = load(RESULTS_DIR / f"paper01_e1_reference{suffix}.csv")
+    refs = load(reference_path)
 
     manifest = manifest_table(rows, refs)
     write_csv(RESULTS_DIR / f"paper01_e1_manifest{suffix}.csv", manifest)

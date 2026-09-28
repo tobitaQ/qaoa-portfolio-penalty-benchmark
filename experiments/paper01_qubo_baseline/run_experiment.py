@@ -96,6 +96,32 @@ DEFAULT_QUANTUM_N = [8, 12, 16, 20]
 _TAG_CHARS = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_")
 
 
+def checked_tag(tag: str | None) -> str | None:
+    """The tag, or None; anything else is refused before a path is built.
+
+    ``--results-tag ""`` used to reach the canonical file names in the cross
+    driver -- an empty string is falsy where the suffix is built and not-None
+    where the overwrite guard looks -- so a shell variable that happened to be
+    empty replaced the committed baseline without a word. Both drivers now pass
+    the tag through here first.
+
+    Args:
+        tag: The ``--results-tag`` value, or None for the canonical names.
+
+    Returns:
+        The tag unchanged, or None.
+
+    Raises:
+        ValueError: If the tag is empty or holds anything but [A-Za-z0-9-_].
+    """
+    if tag is None:
+        return None
+    if not tag or not set(tag) <= _TAG_CHARS:
+        raise ValueError(
+            f"--results-tag must be non-empty [A-Za-z0-9-_], got {tag!r}")
+    return tag
+
+
 def results_paths(tag: str | None) -> tuple[Path, Path]:
     """Return the (results, convergence) CSV paths for a run.
 
@@ -115,11 +141,7 @@ def results_paths(tag: str | None) -> tuple[Path, Path]:
     if tag is None:
         suffix = ""
     else:
-        if not tag or not set(tag) <= _TAG_CHARS:
-            raise ValueError(
-                f"--results-tag must be non-empty [A-Za-z0-9-_], got {tag!r}"
-            )
-        suffix = f"_{tag}"
+        suffix = f"_{checked_tag(tag)}"
     return (
         RESULTS_DIR / f"paper01_results{suffix}.csv",
         RESULTS_DIR / f"paper01_convergence{suffix}.csv",
