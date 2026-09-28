@@ -1,34 +1,155 @@
-fault,check,n_findings
-price_perturbation,input-digest,1009
-price_perturbation,reference-input,150
-price_perturbation,identities,2725
-window_mixin,manifest,2
-window_mixin,reference-row,6
-window_mixin,input-digest,1
-window_mixin,identities,7
-window_mixin,state-recompute,1
-window_mixin,declarative (control),8
-optimizer_mixin,manifest,2
-optimizer_mixin,declarative (control),2
-label_swap,penalty,2
-label_swap,declarative (control),2
-angle_swap,npz-internal,2
-angle_swap,state-recompute,1
-batch_from_initial,row-npz,2562
-batch_from_initial,identities,1406
-batch_from_initial,state-batch,2299
-batch_from_initial,declarative (control),1
-evaluator_from_Q,scorer,4926
-evaluator_from_Q,row-npz,2463
-evaluator_from_Q,identities,5205
-evaluator_from_Q,declarative (control),2
-column_drop,schema,1
-column_drop,row-npz,2565
-column_drop,state-batch,1
-column_drop,declarative (control),1
-shot_seed_noop,state-batch,3
-shot_seed_noop,seed-distinct,3
-shot_seed_noop,declarative (control),2
-reference_stale,reference-row,30
-reference_stale,reference-input,1
-reference_stale,declarative (control),1
+fault,check,n_findings,n_subjects,seconds
+clean,schema,0,0,0.009
+clean,manifest,0,0,0.331
+clean,penalty,0,0,0.88
+clean,reference-row,0,0,2.672
+clean,input-digest,0,0,1.19
+clean,reference-input,0,0,10.535
+clean,scorer,0,0,1.671
+clean,row-npz,0,0,4.048
+clean,npz-internal,0,0,0.708
+clean,identities,0,0,10.325
+clean,state-batch,0,0,0.833
+clean,seed-distinct,0,0,0.311
+clean,state-recompute,0,0,13.093
+clean,declarative (control),0,0,
+price_perturbation,schema,0,0,0.009
+price_perturbation,manifest,0,0,0.189
+price_perturbation,penalty,0,0,0.891
+price_perturbation,reference-row,0,0,2.625
+price_perturbation,input-digest,1009,1009,1.195
+price_perturbation,reference-input,150,34,9.743
+price_perturbation,scorer,0,0,1.672
+price_perturbation,row-npz,0,0,4.009
+price_perturbation,npz-internal,0,0,0.724
+price_perturbation,identities,2725,975,10.285
+price_perturbation,state-batch,0,0,0.043
+price_perturbation,seed-distinct,0,0,0.217
+price_perturbation,state-recompute,0,0,11.115
+price_perturbation,declarative (control),0,0,
+window_mixin,schema,0,0,0.009
+window_mixin,manifest,2,2,0.174
+window_mixin,penalty,0,0,0.906
+window_mixin,reference-row,6,1,2.614
+window_mixin,input-digest,1,1,1.192
+window_mixin,reference-input,0,0,8.157
+window_mixin,scorer,0,0,1.85
+window_mixin,row-npz,0,0,4.327
+window_mixin,npz-internal,0,0,0.756
+window_mixin,identities,7,3,10.038
+window_mixin,state-batch,0,0,0.044
+window_mixin,seed-distinct,0,0,0.23
+window_mixin,state-recompute,1,1,11.121
+window_mixin,declarative (control),8,2,
+optimizer_mixin,schema,0,0,0.009
+optimizer_mixin,manifest,2,2,0.18
+optimizer_mixin,penalty,0,0,0.879
+optimizer_mixin,reference-row,0,0,2.605
+optimizer_mixin,input-digest,0,0,1.181
+optimizer_mixin,reference-input,0,0,8.349
+optimizer_mixin,scorer,0,0,1.69
+optimizer_mixin,row-npz,0,0,4.041
+optimizer_mixin,npz-internal,0,0,0.757
+optimizer_mixin,identities,0,0,9.975
+optimizer_mixin,state-batch,0,0,0.045
+optimizer_mixin,seed-distinct,0,0,0.219
+optimizer_mixin,state-recompute,0,0,11.215
+optimizer_mixin,declarative (control),2,1,
+label_swap,schema,0,0,0.009
+label_swap,manifest,0,0,0.174
+label_swap,penalty,2,2,0.871
+label_swap,reference-row,0,0,2.61
+label_swap,input-digest,0,0,1.224
+label_swap,reference-input,0,0,10.279
+label_swap,scorer,0,0,1.726
+label_swap,row-npz,0,0,4.103
+label_swap,npz-internal,0,0,0.714
+label_swap,identities,0,0,9.843
+label_swap,state-batch,0,0,0.043
+label_swap,seed-distinct,0,0,0.204
+label_swap,state-recompute,0,0,11.151
+label_swap,declarative (control),2,1,
+angle_swap,schema,0,0,0.009
+angle_swap,manifest,0,0,0.181
+angle_swap,penalty,0,0,0.91
+angle_swap,reference-row,0,0,2.627
+angle_swap,input-digest,0,0,1.185
+angle_swap,reference-input,0,0,10.379
+angle_swap,scorer,0,0,1.917
+angle_swap,row-npz,0,0,4.316
+angle_swap,npz-internal,2,1,0.859
+angle_swap,identities,0,0,10.098
+angle_swap,state-batch,0,0,0.044
+angle_swap,seed-distinct,0,0,0.22
+angle_swap,state-recompute,1,1,11.396
+angle_swap,declarative (control),0,0,
+batch_from_initial,schema,0,0,0.011
+batch_from_initial,manifest,0,0,0.196
+batch_from_initial,penalty,0,0,0.908
+batch_from_initial,reference-row,0,0,3.011
+batch_from_initial,input-digest,0,0,1.3
+batch_from_initial,reference-input,0,0,10.974
+batch_from_initial,scorer,0,0,1.689
+batch_from_initial,row-npz,2562,2562,4.276
+batch_from_initial,npz-internal,0,0,0.763
+batch_from_initial,identities,1406,1406,10.087
+batch_from_initial,state-batch,2299,2271,0.348
+batch_from_initial,seed-distinct,0,0,0.222
+batch_from_initial,state-recompute,0,0,11.164
+batch_from_initial,declarative (control),1,1,
+evaluator_from_Q,schema,0,0,0.009
+evaluator_from_Q,manifest,0,0,0.174
+evaluator_from_Q,penalty,0,0,0.878
+evaluator_from_Q,reference-row,0,0,2.623
+evaluator_from_Q,input-digest,0,0,1.181
+evaluator_from_Q,reference-input,0,0,8.351
+evaluator_from_Q,scorer,4926,2463,1.859
+evaluator_from_Q,row-npz,2463,2463,4.132
+evaluator_from_Q,npz-internal,0,0,0.735
+evaluator_from_Q,identities,5205,2463,10.061
+evaluator_from_Q,state-batch,0,0,0.044
+evaluator_from_Q,seed-distinct,0,0,0.218
+evaluator_from_Q,state-recompute,0,0,11.271
+evaluator_from_Q,declarative (control),2,2,
+column_drop,schema,1,1,0.009
+column_drop,manifest,0,0,0.185
+column_drop,penalty,0,0,0.878
+column_drop,reference-row,0,0,2.645
+column_drop,input-digest,0,0,1.192
+column_drop,reference-input,0,0,9.971
+column_drop,scorer,0,0,1.916
+column_drop,row-npz,2565,2565,4.37
+column_drop,npz-internal,0,0,0.837
+column_drop,identities,0,0,10.983
+column_drop,state-batch,1,1,0.001
+column_drop,seed-distinct,0,0,0.246
+column_drop,state-recompute,0,0,11.389
+column_drop,declarative (control),1,1,
+shot_seed_noop,schema,0,0,0.01
+shot_seed_noop,manifest,0,0,0.197
+shot_seed_noop,penalty,0,0,1.004
+shot_seed_noop,reference-row,0,0,2.99
+shot_seed_noop,input-digest,0,0,1.286
+shot_seed_noop,reference-input,0,0,9.151
+shot_seed_noop,scorer,0,0,1.668
+shot_seed_noop,row-npz,0,0,4.059
+shot_seed_noop,npz-internal,0,0,0.754
+shot_seed_noop,identities,0,0,9.984
+shot_seed_noop,state-batch,3,3,0.045
+shot_seed_noop,seed-distinct,3,3,0.224
+shot_seed_noop,state-recompute,0,0,11.154
+shot_seed_noop,declarative (control),2,2,
+reference_stale,schema,0,0,0.009
+reference_stale,manifest,0,0,0.176
+reference_stale,penalty,0,0,0.879
+reference_stale,reference-row,30,30,2.618
+reference_stale,input-digest,0,0,1.198
+reference_stale,reference-input,1,1,9.296
+reference_stale,scorer,0,0,1.839
+reference_stale,row-npz,0,0,4.081
+reference_stale,npz-internal,0,0,0.728
+reference_stale,identities,0,0,9.897
+reference_stale,state-batch,0,0,0.043
+reference_stale,seed-distinct,0,0,0.208
+reference_stale,state-recompute,0,0,11.136
+reference_stale,declarative (control),1,1,

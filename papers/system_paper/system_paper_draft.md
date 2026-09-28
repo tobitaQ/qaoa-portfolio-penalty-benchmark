@@ -9,17 +9,17 @@ numerical study [1], which this paper cites for its data and does not repeat.*
 
 A cloud quantum benchmark has inputs the provider revises, a billable unit the framework chooses,
 and too many records for a mix-up to show in an aggregate; at each, a script writes an inference
-where a fact belongs. We report the platform behind a 2,565-run QAOA portfolio benchmark: records
+where a fact belongs. We report the platform behind a 2,565-run QAOA benchmark: records
 bound to their inputs by checkable relations, billing refused by configuration before submission,
-reconstruction at three costed levels, each against a control that keeps the inference.
-A record is not checkable from one table: of ten injected faults a schema-only pipeline sees one and
+reconstruction at three costed levels, each against a control keeping the inference.
+A record is not checkable from one table: of ten injected faults a schema-only pipeline sees one,
 a data-quality library's vocabulary eight; the two neither sees read another file — the pinned
 statistics, the run's artifact. A dollar cap is no substitute for a configuration that
 cannot express the expensive call: the documented cap stops it at six tasks against 9,027 (fifty
-steps of a measured 177 circuits plus the sampling call, $74,924 at list price), and cannot exist for
-the simulator where the fallback happened. Reproduction is a cost: on a clone of the published
-package, 24 s, 18 s and 222 s for a 24-run block of a 13.9-GPU-hour cross, an interruption costing
-the run in flight. Measuring the three principles caught the platform writing an inference three more times.
+steps of 177 measured circuits plus the sampling call; $74,924 at list), and cannot exist for the
+simulator where the fallback happened. Reproduction is a cost: the package's three levels take
+24 s, 18 s and 222 s for a 24-run block of a 13.9-GPU-hour cross; interruption costs the run in
+flight. Measuring the three principles caught the platform leaving a fact unwritten three more times.
 
 **Keywords.** reproducibility; experiment management; provenance; quantum cloud services; QAOA;
 cost control; fault injection; software engineering for quantum computing.
@@ -128,10 +128,11 @@ particular edge here.
    close on the mutations that move a headline number — 25 against 24 in the first draw and 26
    against 25 in the second, 51 against 49 over both — and separate on the 168 that touch a file the
    run table does not contain, which the checks catch 135 times and the control never (Section 5.1).
-3. A guard-stage evaluation on a device that, like a QPU, offers no derivative method: measured
-   per-step task counts (177 / 361 / 609 / 921 at N = 8 / 12 / 16 / 20), the stopping stage of five
-   misconfigurations under four guard configurations, the division of labour between structural
-   guards and a spending limit, and the fallback re-observed on the service (Section 5.2).
+3. A guard-stage evaluation on a device that, like a QPU, offers no derivative method: the circuits
+   one optimizer step sends, counted (177 / 361 / 609 / 921 at N = 8 / 12 / 16 / 20), which a metered
+   device bills as one task each; the stopping stage of five misconfigurations under four guard
+   configurations; the division of labour between structural guards and a spending limit; and the
+   fallback re-observed on the service (Section 5.2).
 4. A costed clean-room reconstruction of the public package at three levels, including
    interruption and idempotent resumption, with a control that lacks the derived statistics
    (Section 5.3).
@@ -156,11 +157,11 @@ Braket, IBM Quantum and IonQ after analysing fifteen platforms [5]. Qunicorn [6]
 address unified execution and application benchmarking across providers; Metriq [8] unifies
 benchmark definition, execution, data collection and public presentation so that "the same
 benchmark" means the same experiment across platforms.
-Two recent systems are closer in shape. QEF [29] expands a concise experiment specification into
+Two recent systems are closer in shape. QEF [9] expands a concise experiment specification into
 the Cartesian product of its variants, partitions the sweep into asynchronous jobs and replays it,
 which is the shape of E1 in Section 3; it stops at reproducing the sweep — the specification is not
 bound to the values of the application's inputs, and what a run costs is outside it.
-A three-month field report on commercial cloud quantum environments [30] records connection metrics,
+A three-month field report on commercial cloud quantum environments [10] records connection metrics,
 job execution and tool behaviour as operational metadata — the kind of observation Section 5.2 makes
 about a device that stayed offline and a policy that took 7–146 s to propagate — and reports what the
 runs cost, but not what refuses a run that should not be paid for. These works define *what to record* and *where to put it*. None binds the record to the
@@ -169,17 +170,17 @@ execution, none states relations between records that a machine can check, and n
 the record detects a mix-up. P1 is a design on top of such a container, and E-S1 is the measurement
 they do not report.
 
-**Experiment management and provenance in machine learning.** MLflow [9] gives the container;
-MLflow2PROV [10], ProvLake and related work [11] give a W3C PROV representation of ML pipelines;
-Ursprung [12] captures provenance transparently. Lineage-driven fault injection [13] uses lineage to
+**Experiment management and provenance in machine learning.** MLflow [11] gives the container;
+MLflow2PROV [12], ProvLake and related work [13] give a W3C PROV representation of ML pipelines;
+Ursprung [14] captures provenance transparently. Lineage-driven fault injection [15] uses lineage to
 decide which faults to inject into a distributed system; E-S1 borrows the evaluation type — inject a
 fault, observe whether the lineage detects it — and applies it to a scientific record rather than a
 protocol.
 
 **Declarative data validation, testing without an oracle, and packaging.** Closer to P1's mechanism
 than to its subject, declarative data validation states expectations about a dataset and has a
-machine check them: Deequ [31] compiles constraints on completeness, uniqueness, admitted values,
-ranges and simple predicates into a single pass over the data, and pandera [32] and comparable tools
+machine check them: Deequ [16] compiles constraints on completeness, uniqueness, admitted values,
+ranges and simple predicates into a single pass over the data, and pandera [17] and comparable tools
 do the same for data frames. Their declarative part is a vocabulary of constraints over one table: completeness, type,
 admitted set, uniqueness, size, range, a predicate over the columns of a row, and — in pandera — a
 check over the whole frame. Both are extensible, and a user may register an arbitrary Python
@@ -194,38 +195,38 @@ therefore makes the declarative vocabulary the second control of E-S1 — statin
 comparison's definition rather than as a limit of any product — and Section 5.1 reports which faults
 it reaches. The wider
 question behind it is the oracle problem of scientific software, where the expected output is not
-known and testing proceeds by relations that must hold between outputs [33]; the relations here are
+known and testing proceeds by relations that must hold between outputs [18]; the relations here are
 of that kind, but between the *records* of a run rather than between runs of a program. The line is
-current rather than historical: PrismaDV [38] generates data unit tests from the code that consumes
+current rather than historical: PrismaDV [19] generates data unit tests from the code that consumes
 the data, by the group that built Deequ. Packaging, workflow and experiment-management systems
-answer a different half: Snakemake [34] makes an analysis re-runnable from a declarative workflow,
-RO-Crate [35] makes an artefact's metadata portable, ReproZip [37] packs an execution with the
-environment it needs, Sacred [36] records the configuration of every run, and DVC versions data
+answer a different half: Snakemake [20] makes an analysis re-runnable from a declarative workflow,
+RO-Crate [21] makes an artefact's metadata portable, ReproZip [22] packs an execution with the
+environment it needs, Sacred [23] records the configuration of every run, and DVC versions data
 beside code. Each of them keeps a run reproducible or a configuration recoverable; none states what
 must be true of the numbers the run produced, which is what a reader of a benchmark has to check.
 
-**Reproducibility in quantum computing research.** Köster et al. [14] screened 127 papers by hand
+**Reproducibility in quantum computing research.** Köster et al. [24] screened 127 papers by hand
 and about 5,000 automatically: 24.4 % release code, 64.5 % of released code fails to execute in a clean
 environment, 54.8 % of released code has a machine-readable environment specification, 2.4 % of
-papers specify hardware completely. Mauerer and Scherzinger [15] propose a generator for DOI-safe,
-dependency-free reproduction packages. Ye et al. [16] audited 455 comparative claims in 119 quantum
+papers specify hardware completely. Mauerer and Scherzinger [25] propose a generator for DOI-safe,
+dependency-free reproduction packages. Ye et al. [26] audited 455 comparative claims in 119 quantum
 software papers and found that eight could be audited without reconstruction. Köster and Mauerer
-[17] show that error-mitigation conclusions reverse with configuration and with hardware drift. A
-longitudinal study of a quantum defect dataset across 21 versions of the core library [18] finds its
+[27] show that error-mitigation conclusions reverse with configuration and with hardware drift. A
+longitudinal study of a quantum defect dataset across 21 versions of the core library [28] finds its
 reproducibility falling from 62 % to 16 %, 94 % of the failures dependency-related. These studies measure the field; E-S3 measures one package against their criteria (clean
 environment, pinned dependencies, single entry point, executability) and adds what they do not
 measure: the cost of each reconstruction level and the behaviour under interruption.
 
 **Cost control on cloud quantum services.** The provider used here offers a per-device dollar cap
 for hardware tasks, checked at task creation against a list-price estimate, and none for its
-simulators [19] (Appendix A.1). Account-level controls are post-hoc: AWS Budgets [20] notifies after
-a threshold is crossed, and AWS's deployable cost-control solution for Braket [28] (2023) turns
+simulators [29] (Appendix A.1). Account-level controls are post-hoc: AWS Budgets [30] notifies after
+a threshold is crossed, and AWS's deployable cost-control solution for Braket [31] (2023) turns
 task-state events into a near-real-time running cost with an optional IAM denial, for simulators and
-QPUs alike. Adaptive shot allocation [21] reduces the cost of a *correct* run; from the other side,
+QPUs alike. Adaptive shot allocation [32] reduces the cost of a *correct* run; from the other side,
 per-shot pricing has been shown to be exploitable through mid-circuit reset, so that shots are
-obtained without being paid for [22]; and FinOps policy-as-code gates infrastructure provisioning
+obtained without being paid for [33]; and FinOps policy-as-code gates infrastructure provisioning
 before deployment. One attempt to price the first segment of a small quantum neural network arrived
-at $2,000, $60,000 and $1,000,000 on three services for the same work [23]. P2 is orthogonal to cost
+at $2,000, $60,000 and $1,000,000 on three services for the same work [34]. P2 is orthogonal to cost
 optimisation: it concerns runs that should not happen, and E-S2 measures where a dollar cap and a
 structural guard each stop them.
 
@@ -245,9 +246,9 @@ reaches and where it stops; the fault injection is evidence about the relations,
 itself.
 
 **Vocabulary.** We use *reproduction* for obtaining the published results with the author's
-artifacts, following ACM's badging terminology [24] and the lexicon of Goodman et al. [25] as applied
-to computational work by Plesser [26]. The three levels of P3 are levels of *cost* within
-reproduction, not of independence. Against ACM's badges [24], the package's deposit is
+artifacts, following ACM's badging terminology [35] and the lexicon of Goodman et al. [36] as applied
+to computational work by Plesser [37]. The three levels of P3 are levels of *cost* within
+reproduction, not of independence. Against ACM's badges [35], the package's deposit is
 *Artifacts Available*, and the README's per-OS instructions and pinned environment are what
 *Reusable* asks for. The three levels are not badge claims: *Results Reproduced* is defined as
 reproduction by a *different* team, and every run reported here is the authors' own, on a host of
@@ -290,7 +291,7 @@ not the experiment, is this paper's data.
 
 ## 3. The platform
 
-The platform is a Python code base with a solver abstraction over PennyLane [27] devices
+The platform is a Python code base with a solver abstraction over PennyLane [38] devices
 (`lightning.qubit`, `lightning.gpu`, the Braket local simulator, Braket SV1, IonQ Forte-1),
 command-line drivers per experiment, aggregation scripts, a manuscript checker, and an AWS CDK
 footprint (a results bucket, an IAM role scoped to it, two Budgets). This section states the three
@@ -346,7 +347,7 @@ it.
   bitstring under the final and the initial state, the per-cardinality mass, the shot indices and
   counts, the penalty and the Hamiltonian scale.
 
-![Fig. 1. The four files that describe a run and the thirteen relations that bind them. A solid double-headed arrow is a relation between two files, named on the arrow; the relations that hold within one file are listed inside its box. The one dotted arrow is not a relation but the schema-only control of Section 4.1.](figures/fig_record_relations.pdf)
+![Fig. 1. The four files that describe a run and the thirteen checks that bind them. A solid double-headed arrow is a relation between two files, named on the arrow; the relations that hold within one file are listed inside its box. The one dotted arrow is not a relation but the schema-only control of Section 4.1.](figures/fig_record_relations.pdf)
 
 **The relations.** Figure 1 places them. Thirteen, each implemented as a function that returns the
 rows on which it does not hold. Most are consistency conditions that a correct record satisfies
@@ -525,8 +526,8 @@ are named here as observations, not as results.
 
 The public package documents three commands: (1) regenerate the figures and check every manuscript
 cell against the committed CSVs; (2) run one small instance end to end on a CPU; (3) run the E1 cross
-from its manifest on a GPU. Each driver writes its CSV after every run and the artifact directory
-after every run, and `--resume` reads the manifest, skips the (N, instance, penalty, seed) cells
+from its manifest on a GPU. Each driver writes its CSV and its artifact directory after every
+run, and `--resume` reads the manifest, skips the (N, instance, penalty, seed) cells
 already present, refuses a manifest written by a different specification version, and appends the
 rest, so that a restart after any interruption converges to the same file as an uninterrupted run.
 The reference row of an instance is written once and reused. The README states the environment that
@@ -652,8 +653,8 @@ vocabulary of a data-quality library, applied generously and in eight families:
 **What the declarative control is, exactly.** It is our re-implementation of that vocabulary over
 the run table, not a run of Deequ or pandera: the record is a CSV, a reference CSV and 2,565 `.npz`
 files, and putting a JVM or a schema object in front of the CSV would change the dependency list and
-not the comparison. The vocabulary was taken from Deequ's constraint set [31] and from the built-in checks of pandera
-0.33.1 [32], the current release in September 2026 (`equal_to`, `not_equal_to`, the four order
+not the comparison. The vocabulary was taken from Deequ's constraint set [16] and from the built-in checks of pandera
+0.33.1 [17], the current release in September 2026 (`equal_to`, `not_equal_to`, the four order
 comparisons, `in_range`, `isin`/`notin`, `str_*`, `is_monotonic`, `unique_values_eq`, with
 nullability, dtype, uniqueness and strictness declared on the schema). The reading is deliberately
 generous: every
@@ -725,7 +726,7 @@ and requested for SV1, and the N = 8, p = 2 sampling QNode was sent to SV1 twice
 with frozen angles, the tasks the service created in each window counted through
 `SearchQuantumTasks`. The 100-shot probe against the IonQ cap was submitted while the device was
 offline, and a seven-day poll found no window in which to repeat it (Section 5.2). The third kind of control was then
-exercised: AWS's cost-control solution [28] was deployed as documented (one region, a $0.30 monthly
+exercised: AWS's cost-control solution [31] was deployed as documented (one region, a $0.30 monthly
 limit, the denial targeted at the project's IAM user; Lambda images built for x86_64 instead of
 arm64, which changes nothing in behaviour), and the cheapest SV1 task — a Bell circuit at 10 shots,
 billed at the 3 s minimum, $0.00375 — was submitted sequentially, each after the previous had
@@ -792,7 +793,7 @@ operators, which are also ours, and their detection rate depends on tolerances w
 rejection not yet (Section 5.2).
 *External.* One code base, one provider, one application; the principles are stated generally but
 are evidenced here. E-S3's reader is a clean-room script on the author's own host with a warm package
-cache (`pip` took 149 s; a cold cache downloads several gigabytes of CUDA libraries); it measures the
+cache (`pip` took 150 s; a cold cache downloads several gigabytes of CUDA libraries); it measures the
 package, not a stranger's understanding of the README. Level 1 was also run by hand on Windows, macOS
 and Colab (Section 5.3), which extends the evidence across machines but not across people: every run
 in this paper is the author's own.
@@ -829,10 +830,15 @@ Three observations.
 stage, before any artifact is opened; one (price_perturbation) stops at the input stage, where the
 content digest is recomputed from the derived statistics in 1.2 s for all 90 instances and 2,565
 rows; the two that require the artifacts (angle_swap, batch_from_initial) stop at the artifact stage;
-one (shot_seed_noop) reaches the statistical stage, where it fails both the batch's binomial test
-and the relation that different seeds carry different batches. The two expensive checks (reference-input,
-state-recompute) are redundant for every fault: each confirmed a fault a cheaper check had already
-flagged.
+one (shot_seed_noop) reaches the statistical stage, where it fails both the batch's binomial test and
+the diagnostic that two seeds should carry two batches. The harness records what each check costs on
+each record (`paper02_es1_finding_counts.csv`), and the spread is three orders of magnitude: on the
+clean record the schema takes 0.009 s, the whole set 46.6 s, and most of that is the three checks
+that derive rather than compare — reference-input re-enumerates every feasible set from the pinned
+statistics (10.5 s), identities recomputes every derived column (10.3 s), and state-recompute
+re-simulates the sampled states (13.1 s). The two that re-derive from outside the record —
+reference-input and state-recompute — are redundant for every fault: each confirmed a fault a
+cheaper check had already flagged.
 
 *Seven of ten faults move headline numbers silently.* The largest is the replay of the E3 L-BFGS-B
 defect: drawing every batch from the initial state moves twelve of thirty headline numbers (the
@@ -852,15 +858,16 @@ content digest of μ and Σ (`input_digest`) was then added to the reference row
 appended to the committed files from the pinned statistics, without re-running anything, and written
 by the driver for every new run — together with the input-digest check. In every pass after the fix (Table 3
 reports the last), the same fault fails on 1,009 records at the input stage in 1.2 s, and
-reference-input (0.002 s per instance at N = 12, 0.34 s at N = 20) confirms it. This was the first of
+reference-input, which enumerates every feasible set again from the statistics, confirms it in
+9.7 s. This was the first of
 three gaps.
 
 *A false positive, removed.* A first version of the state-batch check used a five-sigma band around
 S × P_opt with a floor of one shot. On the clean N = 20 block it flagged one run whose batch held two
 optimum shots against an expectation of 0.1 — a 0.5 % event, not a five-sigma one, and with 2,565
 runs an expected occurrence. The check was replaced by the exact binomial tail with a threshold of
-10⁻⁹ over roughly 5,000 tests; it still flags 2,299 rows under batch_from_initial and three under
-shot_seed_noop.
+10⁻⁹ over roughly 5,000 tests; it still reports 2,299 findings under batch_from_initial and three
+under shot_seed_noop.
 
 *Where an expectation stated over the table stops.* The declarative control of Section 4.1 — the
 vocabulary of a data-quality library over the run table, applied generously — catches eight of the
@@ -905,7 +912,9 @@ alone. The defect itself wrote a batch its artifact agreed with. The consequence
 Table 3: `row-npz` and `identities` fail on the mismatch the injection creates between the row and
 the artifact, and `row-npz` is therefore the first failing check for a reason the defect never gave
 anyone. The check that sees the defect as it occurred is `state-batch`, which compares the batch with
-the state the same run recorded and fails on 2,299 of the 2,565 rows; it is the check that caught the
+the state the same run recorded and reports 2,299 findings — 2,252 of the 2,565 rows, twenty-eight of
+them on both their feasible and their optimum count, and all nineteen (N, penalty) blocks, whose
+feasible fraction tracks the initial state rather than the final one; it is the check that caught the
 defect in the numerical study (Table 12, defect 7) and the one that stays when the artifact is made
 to agree. For this row of Table 3 the *Also failing* column, not the first one, carries the claim.
 
@@ -924,7 +933,7 @@ are — a suspicion a reader then confirms, which is how the `shot_seed` defect 
 by comparing two sweeps that should have differed and did not.
 
 *Five clean records, not one.* Zero false positives above is a statement about the one record the
-faults were injected into. The same thirteen relations were then run, with nothing injected, on the
+faults were injected into. The same thirteen checks were then run, with nothing injected, on the
 four other records the same driver produced and committed: the prior-window replication (300 runs
 whose market window, pinned statistics, references and digests all differ), the two E3 optimizer
 arms (300 runs each, ADAM 0.03 × 100 and L-BFGS-B), and the pilot block (36 runs, one seed). Over
@@ -1108,10 +1117,12 @@ is not runnable on demand, and the platform writes that fact rather than inferri
 the `service` cells of Table 7 as the provider's documented behaviour, not as an observation of ours.
 
 **The third kind of control, observed twice.** Deployed as documented, the account-level solution
-metered nothing: its task-logger function failed on import in all 392 invocations of the first run
-(the Braket SDK pulls in a simulator whose numba-compiled functions try to write a cache beside the
-source, and `/var/task` is read-only in Lambda), the running-cost alarms stayed `INSUFFICIENT_DATA`,
-no denial was attached, and 400 tasks ($1.50 at list price) were created against a $0.30 limit.
+metered nothing. Its task-logger function failed on import in every invocation CloudWatch recorded
+for the first run — 392 of 392, against the 400 tasks that run created, and the record does not say
+where the other eight events went — because the Braket SDK pulls in a simulator whose numba-compiled
+functions try to write a cache beside the source and `/var/task` is read-only in Lambda. The
+running-cost alarms stayed `INSUFFICIENT_DATA`, no denial was attached, and 400 tasks ($1.50 at list
+price) were created against a $0.30 limit.
 The solution's own "task logger errors" alarm did fire, four minutes in — a detective control for the
 detective control, which nothing in the documented procedure says to watch. With one environment
 variable added (`NUMBA_CACHE_DIR=/tmp/numba`; Appendix A.2) the control behaved as designed, and the
@@ -1263,8 +1274,9 @@ environment: a Python newer than the libraries (3.14 at the time), and pytest's 
 directory, whose `pytest-current` symlink it cannot remove on Windows, which ends the session with a
 `PermissionError` after the tests have passed (`--basetemp` avoids it).
 
-**Table 11. Level 1 from the release tag on four machines (the author's own; `requirements.txt`, the
-minimum versions, except on the GPU host).**
+**Table 11. Level 1 of the `v1.0` tag on four machines (the author's own; `requirements.txt`, the
+minimum versions, except on the GPU host). The suite is `v1.0`'s, which is why the counts are those
+of Table 9's first block and not of its `v1.1` block.**
 
 | Machine | Shell | Python | Test suite | `check_tables.py` |
 |---|---|---|---:|---|
@@ -1338,7 +1350,7 @@ would now flag it; the last column names the E-S1 fault that replays it where on
 | 4 | IonQ's nested result schema misread by the client library into an energy of exactly 0.0 | the shots were found in S3 and did not match | scorer (an energy of 0.0 with one distinct shot fails solver-against-scorer agreement) | — |
 | 5 | a hardware recovery path exercised only against a simulator | on the first real task | — (documented manual step) | — |
 | 6 | `shot_seed` a no-op: the Lightning devices seed once at construction | two sweeps with "different" shots had identical energies, by comparison | seed-distinct (its batch clause; the angles are untouched by this defect) and state-batch | shot_seed_noop, caught by both checks |
-| 7 | the L-BFGS-B wrapper sampled from the initial angles | the batch's feasible fraction tracked initial P_F (r = 0.99), not final (r = −0.30) | state-batch. The defect wrote a batch its artifact agreed with, so row-npz does not see it; row-npz sees the *injection* of Section 5.1, which rewrites the row's summary and leaves the artifact | batch_from_initial (2,299 rows flagged; 12/30 headline numbers moved) |
+| 7 | the L-BFGS-B wrapper sampled from the initial angles | the batch's feasible fraction tracked initial P_F (r = 0.99), not final (r = −0.30) | state-batch. The defect wrote a batch its artifact agreed with, so row-npz does not see it; row-npz sees the *injection* of Section 5.1, which rewrites the row's summary and leaves the artifact | batch_from_initial (2,299 findings on 2,252 rows and all nineteen blocks; 12/30 headline numbers moved) |
 
 Only the seventh was found by a relation that already existed as a check; the others were found by
 inspection, by exception or by an ad hoc comparison, and the relations were written afterwards so that
@@ -1372,7 +1384,7 @@ was read off that marker for nine hours. The status record of Section 3.3 is the
 counts; the project's total spend on the provider was $42.59. P2 is preventive: it does not detect a
 loop of correct calls; the account-level control that does was measured five times, on one provider's
 sample deployment, at one submission rate, and its residue varied twofold between runs. The
-thirteen relations are written by hand, one expression per fact; generating them from a declared
+thirteen checks are written by hand, one expression per fact; generating them from a declared
 record schema is prototyped and reported elsewhere, and is not what E-S1 evaluated.
 
 One binding cannot close, and it is this paper's own. The package holds this manuscript *and* the
@@ -1422,7 +1434,7 @@ Everything this paper reports is in one package, release `v1.1`
 doi:[[v1.1 DOI]]): the platform; the three harnesses
 (`experiments/system_paper/es1_fault_injection.py`, `es1_random_faults.py`, `es2_guard_stages.py`,
 `es2_observe_cloud.py`, `es2_observe_cost_control.py`, `es3_reconstruction.py`) and the cost-control
-aggregation; the cost-control patch (`cdk/cost_control_patch/`); the job status module
+aggregation (`es2_cost_control_aggregate.py`); the cost-control patch (`cdk/cost_control_patch/`); the job status module
 (`src/run_status.py`, `scripts/run_detached.sh`); their tests; the result files behind every table
 (`paper02_es1_*.csv`, `paper02_es2_*.csv`, `paper02_es3_*.csv`, `paper02_level1_machines.csv`); and
 `papers/system_paper/check_tables.py`, which binds each cell of Tables 3–11 and 13 to one of them and
@@ -1482,105 +1494,111 @@ computing application benchmarking," in *Proc. IEEE Int. Conf. Quantum Computing
 W. J. Zeng, "Metriq: A collaborative platform for benchmarking quantum computers," arXiv:2603.08680,
 2026.
 
-[9] M. Zaharia et al., "Accelerating the machine learning lifecycle with MLflow," *IEEE Data Eng.
+[9] V. Gierisch and W. Mauerer, "QEF: Reproducible and exploratory quantum software
+experiments," arXiv:2511.04563, 2025.
+
+[10] D. Teegarden, A. Casey, F. G. Serpa, P. Becker, A. Brahme, S. Kataria, and P. Lopata, "Three
+months in the life of cloud quantum computing," arXiv:2601.09943, 2026.
+
+[11] M. Zaharia et al., "Accelerating the machine learning lifecycle with MLflow," *IEEE Data Eng.
 Bull.*, vol. 41, no. 4, pp. 39–45, 2018. http://sites.computer.org/debull/A18dec/p39.pdf
 
-[10] M. Schlegel and K.-U. Sattler, "MLflow2PROV: Extracting provenance from machine learning
+[12] M. Schlegel and K.-U. Sattler, "MLflow2PROV: Extracting provenance from machine learning
 experiments," in *Proc. 7th Workshop on Data Management for End-to-End Machine Learning
 (DEEM@SIGMOD)*, 2023, doi:10.1145/3595360.3595859.
 
-[11] R. Souza et al., "Workflow provenance in the lifecycle of scientific machine learning,"
+[13] R. Souza et al., "Workflow provenance in the lifecycle of scientific machine learning,"
 *Concurrency and Computation: Practice and Experience*, vol. 34, no. 14, 2022,
 doi:10.1002/cpe.6544.
 
-[12] L. Rupprecht, J. C. Davis, C. Arnold, Y. Gur, and D. Bhagwat, "Improving reproducibility of
+[14] L. Rupprecht, J. C. Davis, C. Arnold, Y. Gur, and D. Bhagwat, "Improving reproducibility of
 data science pipelines through transparent provenance capture," *Proc. VLDB Endow.*, vol. 13,
 no. 12, 2020, doi:10.14778/3415478.3415556.
 
-[13] P. Alvaro, J. Rosen, and J. M. Hellerstein, "Lineage-driven fault injection," in *Proc. ACM
+[15] P. Alvaro, J. Rosen, and J. M. Hellerstein, "Lineage-driven fault injection," in *Proc. ACM
 SIGMOD*, 2015, doi:10.1145/2723372.2723711.
 
-[14] D. Köster, M. Franz, B. Zec, N. Hoess, R. Ramsauer, and W. Mauerer, "Works on my QPU:
+[16] S. Schelter, D. Lange, P. Schmidt, M. Celikel, F. Biessmann, and A. Grafberger, "Automating
+large-scale data quality verification," *Proc. VLDB Endow.*, vol. 11, no. 12, pp. 1781–1794, 2018,
+doi:10.14778/3229863.3229867.
+
+[17] N. Bantilan, "pandera: Statistical data validation of pandas dataframes," in *Proc. 19th Python
+in Science Conf. (SciPy)*, 2020, pp. 116–124, doi:10.25080/Majora-342d178e-010.
+
+[18] U. Kanewala and J. M. Bieman, "Testing scientific software: A systematic literature review,"
+*Information and Software Technology*, vol. 56, no. 10, pp. 1219–1232, 2014,
+doi:10.1016/j.infsof.2014.05.006.
+
+[19] H. Chen, A. Phani, and S. Schelter, "PrismaDV: Automated task-aware data unit test generation,"
+arXiv:2604.21765, 2026.
+
+[20] F. Mölder et al., "Sustainable data analysis with Snakemake," *F1000Research*, vol. 10, art. 33,
+2021, doi:10.12688/f1000research.29032.2.
+
+[21] S. Soiland-Reyes et al., "Packaging research artefacts with RO-Crate," *Data Science*, vol. 5,
+no. 2, pp. 97–138, 2022, doi:10.3233/DS-210053.
+
+[22] F. Chirigati, R. Rampin, D. Shasha, and J. Freire, "ReproZip: Computational reproducibility with
+ease," in *Proc. ACM SIGMOD*, 2016, doi:10.1145/2882903.2899401.
+
+[23] K. Greff, A. Klein, M. Chovanec, F. Hutter, and J. Schmidhuber, "The Sacred infrastructure for
+computational research," in *Proc. 16th Python in Science Conf. (SciPy)*, 2017,
+doi:10.25080/shinma-7f4c6e7-008.
+
+[24] D. Köster, M. Franz, B. Zec, N. Hoess, R. Ramsauer, and W. Mauerer, "Works on my QPU:
 Reproducibility in quantum computing research," arXiv:2607.08348, 2026.
 
-[15] W. Mauerer and S. Scherzinger, "1-2-3 reproducibility for quantum software experiments," in
+[25] W. Mauerer and S. Scherzinger, "1-2-3 reproducibility for quantum software experiments," in
 *Proc. IEEE Int. Conf. Software Analysis, Evolution and Reengineering (SANER)*, 2022,
 doi:10.1109/SANER53432.2022.00148.
 
-[16] B. Ye, P. Liang, M. Tavassoli Sabzevari, and A. A. Khan, "Auditing empirical comparisons in
+[26] B. Ye, P. Liang, M. Tavassoli Sabzevari, and A. A. Khan, "Auditing empirical comparisons in
 quantum software," arXiv:2607.00516, 2026.
 
-[17] D. Köster and W. Mauerer, "Claim against measurement: Statistical artefacts in quantum error
+[27] D. Köster and W. Mauerer, "Claim against measurement: Statistical artefacts in quantum error
 mitigation benchmarks," arXiv:2605.29872, 2026.
 
-[18] H. Ohto, Y. Ishimoto, S. Matsumoto, and S. Kusumoto, "On the reproducibility of quantum
+[28] H. Ohto, Y. Ishimoto, S. Matsumoto, and S. Kusumoto, "On the reproducibility of quantum
 software defect datasets: A case study of Bugs4Q," arXiv:2606.27124, 2026 (ICSME 2026, replication
 track).
 
-[19] Amazon Web Services, "Spending limits," Amazon Braket Developer Guide, and
+[29] Amazon Web Services, "Spending limits," Amazon Braket Developer Guide, and
 `CreateSpendingLimit`, Amazon Braket API Reference, both accessed 27 Sep. 2026 (announced on the AWS
 Quantum Technologies Blog, 21 Nov. 2025). The refusal for a simulator device quoted in Section 5.2 is
 this project's own observation of the API.
 https://docs.aws.amazon.com/braket/latest/developerguide/braket-spending-limits.html
 https://docs.aws.amazon.com/braket/latest/APIReference/API_CreateSpendingLimit.html
 
-[20] Amazon Web Services, "Managing your costs with AWS Budgets," documentation, accessed
+[30] Amazon Web Services, "Managing your costs with AWS Budgets," documentation, accessed
 27 Sep. 2026. https://docs.aws.amazon.com/cost-management/latest/userguide/budgets-managing-costs.html
 
-[21] C. J. Anders, K. A. Nicoli, B. Wu, N. Elosegui, S. Pedrielli, L. Funcke, K. Jansen, S. Kühn, and
-S. Nakajima, "Adaptive observation cost control for variational quantum eigensolvers,"
-arXiv:2502.01704, 2025.
-
-[22] J. Szefer, "Exploiting reset operations in cloud-based quantum computers to run quantum
-circuits for free," arXiv:2512.14582, 2025.
-
-[23] M.-C. Isfan, L.-I. Caramete, and A. Caramete, "Evaluating state-of-the-art cloud quantum
-computers for quantum neural networks in gravitational waves data analysis," arXiv:2601.14036, 2026.
-
-[24] Association for Computing Machinery, "Artifact review and badging — current," v1.1, accessed
-27 Sep. 2026. https://www.acm.org/publications/policies/artifact-review-and-badging-current
-
-[25] S. N. Goodman, D. Fanelli, and J. P. A. Ioannidis, "What does research reproducibility mean?"
-*Sci. Transl. Med.*, vol. 8, no. 341, 341ps12, 2016.
-
-[26] H. E. Plesser, "Reproducibility vs. replicability: A brief history of a confused terminology,"
-*Front. Neuroinform.*, vol. 11, art. 76, 2018.
-
-[27] V. Bergholm et al., "PennyLane: Automatic differentiation of hybrid quantum-classical
-computations," arXiv:1811.04968, 2018.
-
-[28] Amazon Web Services, `aws-samples/cost-control-for-amazon-braket`, commit `19eaad6`, accessed
+[31] Amazon Web Services, `aws-samples/cost-control-for-amazon-braket`, commit `19eaad6`, accessed
 27 Sep. 2026: EventBridge task-state events, Lambda, DynamoDB, CloudWatch and an IAM deny on
 `braket:CreateQuantumTask` (announced on the AWS Quantum Technologies Blog, 31 May 2023). The
 deployment measured in Section 5.2 is of that commit.
 https://github.com/aws-samples/cost-control-for-amazon-braket
 
-[29] V. Gierisch and W. Mauerer, "QEF: Reproducible and exploratory quantum software
-experiments," arXiv:2511.04563, 2025.
+[32] C. J. Anders, K. A. Nicoli, B. Wu, N. Elosegui, S. Pedrielli, L. Funcke, K. Jansen, S. Kühn, and
+S. Nakajima, "Adaptive observation cost control for variational quantum eigensolvers,"
+arXiv:2502.01704, 2025.
 
-[30] D. Teegarden, A. Casey, F. G. Serpa, P. Becker, A. Brahme, S. Kataria, and P. Lopata, "Three
-months in the life of cloud quantum computing," arXiv:2601.09943, 2026.
-[31] S. Schelter, D. Lange, P. Schmidt, M. Celikel, F. Biessmann, and A. Grafberger, "Automating
-large-scale data quality verification," *Proc. VLDB Endow.*, vol. 11, no. 12, pp. 1781–1794, 2018,
-doi:10.14778/3229863.3229867.
-[32] N. Bantilan, "pandera: Statistical data validation of pandas dataframes," in *Proc. 19th Python
-in Science Conf. (SciPy)*, 2020, pp. 116–124, doi:10.25080/Majora-342d178e-010.
-[33] U. Kanewala and J. M. Bieman, "Testing scientific software: A systematic literature review,"
-*Information and Software Technology*, vol. 56, no. 10, pp. 1219–1232, 2014,
-doi:10.1016/j.infsof.2014.05.006.
-[34] F. Mölder et al., "Sustainable data analysis with Snakemake," *F1000Research*, vol. 10, art. 33,
-2021, doi:10.12688/f1000research.29032.2.
-[35] S. Soiland-Reyes et al., "Packaging research artefacts with RO-Crate," *Data Science*, vol. 5,
-no. 2, pp. 97–138, 2022, doi:10.3233/DS-210053.
-[36] K. Greff, A. Klein, M. Chovanec, F. Hutter, and J. Schmidhuber, "The Sacred infrastructure for
-computational research," in *Proc. 16th Python in Science Conf. (SciPy)*, 2017,
-doi:10.25080/shinma-7f4c6e7-008.
-[37] F. Chirigati, R. Rampin, D. Shasha, and J. Freire, "ReproZip: Computational reproducibility with
-ease," in *Proc. ACM SIGMOD*, 2016, doi:10.1145/2882903.2899401.
-[38] H. Chen, A. Phani, and S. Schelter, "PrismaDV: Automated task-aware data unit test generation,"
-arXiv:2604.21765, 2026.
+[33] J. Szefer, "Exploiting reset operations in cloud-based quantum computers to run quantum
+circuits for free," arXiv:2512.14582, 2025.
 
----
+[34] M.-C. Isfan, L.-I. Caramete, and A. Caramete, "Evaluating state-of-the-art cloud quantum
+computers for quantum neural networks in gravitational waves data analysis," arXiv:2601.14036, 2026.
+
+[35] Association for Computing Machinery, "Artifact review and badging — current," v1.1, accessed
+27 Sep. 2026. https://www.acm.org/publications/policies/artifact-review-and-badging-current
+
+[36] S. N. Goodman, D. Fanelli, and J. P. A. Ioannidis, "What does research reproducibility mean?"
+*Sci. Transl. Med.*, vol. 8, no. 341, 341ps12, 2016.
+
+[37] H. E. Plesser, "Reproducibility vs. replicability: A brief history of a confused terminology,"
+*Front. Neuroinform.*, vol. 11, art. 76, 2018.
+
+[38] V. Bergholm et al., "PennyLane: Automatic differentiation of hybrid quantum-classical
+computations," arXiv:1811.04968, 2018.
 
 ## Appendix A. The CDK footprint
 
@@ -1640,7 +1658,7 @@ of Table 6.
 ```
 # ~12 min, CPU
 python -m experiments.system_paper.es1_fault_injection
-# ~25 min: the same thirteen relations on the five committed clean records
+# ~25 min: the same thirteen checks on the five committed clean records
 python -m experiments.system_paper.es1_fault_injection --clean-records
 # ~2.5 h: column coverage (133 columns) + 300 random mutations
 # (both need the per-run artifacts: e1_runs*.npz, about 100 MB, from the Zenodo deposit of [1])
@@ -1656,6 +1674,10 @@ python -m experiments.system_paper.es2_observe_cloud --s3-bucket <bucket> --yes-
 python -m experiments.system_paper.es2_cost_control_aggregate
 # ~15 min with a warm pip cache; clones the public package
 python -m experiments.system_paper.es3_reconstruction
-python -m pytest -q tests/test_es1_fault_injection.py tests/test_es2_guard_stages.py \
-    tests/test_es2_cost_control_aggregate.py tests/test_es3_reconstruction.py
+# ~7 min: the v1.1 block of Table 9 (the tag this paper ships)
+python -m experiments.system_paper.es3_reconstruction --tag v1.1 --out-suffix _v11 \
+    --only clone venv tests level1 level2 status
+python -m pytest -q tests/test_es1_fault_injection.py tests/test_es1_random_faults.py \
+    tests/test_es2_guard_stages.py tests/test_es2_cost_control_aggregate.py \
+    tests/test_es3_reconstruction.py tests/test_run_status.py
 ```

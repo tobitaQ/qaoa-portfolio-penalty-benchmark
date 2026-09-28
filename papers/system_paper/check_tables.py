@@ -348,6 +348,34 @@ try:
 finally:
     shutil.rmtree(tmp, ignore_errors=True)
 
+# Section 5.1 quotes what each check costs and how much it finds. Those are
+# prose, not cells, and prose is where a number goes stale unnoticed -- "2,299
+# rows" stood for three revisions when the file said 2,299 findings on 2,252
+# rows. Each is bound here to paper02_es1_finding_counts.csv.
+fc = pd.read_csv(R / "paper02_es1_finding_counts.csv")
+clean = fc[fc.fault == "clean"].set_index("check")
+bf = fc[(fc.fault == "batch_from_initial") & (fc.check == "state-batch")].iloc[0]
+pp = fc[fc.fault == "price_perturbation"].set_index("check")
+for label, said, got in (
+        ("schema on the clean record", 0.009, clean.loc["schema", "seconds"]),
+        ("every check on the clean record", 46.6, clean.seconds.sum()),
+        ("reference-input on the clean record", 10.5, clean.loc["reference-input", "seconds"]),
+        ("identities on the clean record", 10.3, clean.loc["identities", "seconds"]),
+        ("state-recompute on the clean record", 13.1, clean.loc["state-recompute", "seconds"]),
+        ("input-digest under price_perturbation", 1.2, pp.loc["input-digest", "seconds"]),
+        ("reference-input under price_perturbation", 9.7, pp.loc["reference-input", "seconds"]),
+        ("input-digest records", 1009, pp.loc["input-digest", "n_findings"]),
+        ("state-batch findings", 2299, bf.n_findings)):
+    assert re.search(rf"(?<![\d.]){re.escape(f'{said:,}' if said >= 1000 else str(said))}(?![\d])",
+                     SRC), f"Section 5.1 no longer quotes {said} for {label}"
+    chk("5.1", label, float(said), round(float(got), 1 if said < 100 else 0), 0.06)
+
+# The prose splits state-batch's subjects into rows and blocks; the two must add
+# up to what the harness counted.
+assert "2,252 of the 2,565 rows" in SRC and "all nineteen (N, penalty) blocks" in SRC, \
+    "Section 5.1 no longer splits state-batch's subjects into rows and blocks"
+chk("5.1", "state-batch rows plus blocks", 2252.0 + 19.0, float(bf.n_subjects))
+
 # A [[placeholder]] left in the draft is an identifier nobody has filled in yet.
 for m in re.finditer(r"\[\[([^\]]+)\]\]", SRC):
     BAD.append(f"placeholder still in the draft: [[{m.group(1)}]]")

@@ -1174,13 +1174,20 @@ def run_check(check: Check, rec: Record) -> list[str]:
         return [f"check raised {type(exc).__name__}: {exc}"]
 
 
+#: Seconds each check took, by (record label, check name), filled by ``evaluate``.
+#: The paper argues that detection happens at the cheapest stage that can see a
+#: fault, so what each stage costs belongs in the record and not only in a log.
+SECONDS: dict[tuple[str, str], float] = {}
+
+
 def evaluate(rec: Record, checks: list[Check], log=print) -> dict[str, list[str]]:
     findings = {}
     for c in checks:
         t0 = time.perf_counter()
         findings[c.name] = run_check(c, rec)
-        log(f"    {rec.label:<20} {c.name:<17} {len(findings[c.name]):>4} findings "
-            f"({time.perf_counter() - t0:.1f} s)")
+        secs = time.perf_counter() - t0
+        SECONDS[(rec.label, c.name)] = round(secs, 3)
+        log(f"    {rec.label:<20} {c.name:<17} {len(findings[c.name]):>4} findings ({secs:.1f} s)")
     return findings
 
 
@@ -1228,8 +1235,18 @@ def run(sizes=SIZES, recompute: bool = True, log=print):
             })
             found["declarative (control)"] = declarative
             for name, msgs in found.items():
-                if msgs:
-                    count_rows.append({"fault": rec.label, "check": name, "n_findings": len(msgs)})
+                # A subject can fail one check twice -- state-batch tests a
+                # row's feasible count and its optimum count separately -- so
+                # the number of findings is not the number of things at fault,
+                # and a paper that says "rows" has to be able to say which. Every
+                # message names its subject before the first colon: a run id, a
+                # reference, an (N, penalty) block, or the file. Every pair is
+                # written, including those with no finding, because what a check
+                # that finds nothing costs is what "the cheapest stage" is about.
+                subjects = {m.split(":", 1)[0].strip() for m in msgs}
+                count_rows.append({"fault": rec.label, "check": name,
+                                   "n_findings": len(msgs), "n_subjects": len(subjects),
+                                   "seconds": SECONDS.get((rec.label, name), "")})
                 for m in msgs[:20]:
                     findings_rows.append({"fault": rec.label, "check": name, "finding": m})
             for k, (a, b) in moved.items():

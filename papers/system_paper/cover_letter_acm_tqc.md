@@ -6,7 +6,7 @@ Evaluating an Experiment Platform for Cloud Quantum Optimization Benchmarks*
 **Author.** Hiroaki Tobita, Advanced Institute of Industrial Technology, Tokyo, Japan
 (tobita-hiroaki@aiit.ac.jp). Single author; no co-authors to disclose.
 
-**Category.** Regular paper. 29 pages in `acmsmall`, 13 tables, 2 figures, 35 references.
+**Category.** Regular paper. 38 pages in `acmsmall`, 14 tables, 2 figures, 38 references.
 
 ---
 
@@ -29,15 +29,16 @@ portfolio benchmark; this paper contributes no new optimisation runs, and its ev
 record, the guards and the package do under injected faults, misconfigurations and reconstruction.
 
 **Why TQC.** The subject is software engineering for quantum computing, which the journal's charter
-names, and five of the things the platform must handle are specific to this setting rather than to
-metered computing in general (Section 1): the billable unit is decided by the framework's choice of
-differentiation method, because the gradient of a circuit is more circuits; the provider's spending
-cap exists for hardware and not for the simulator on which this project's real cost fallback
-occurred; a hardware observation is a waiting problem — the device this paper needed answered
-`OFFLINE` to 336 queries over seven days; one of the thirteen verification relations compares a shot
-batch with the state it should have been drawn from, which has no classical analogue and is the
-relation that caught a defect the others missed; and which columns may legitimately differ across a
-reproduction is itself a fact about simulation precision.
+names. None of the problems the platform handles is unique to quantum computing, and Section 1 says
+so; what is particular is the form each takes here. The billable unit is decided by the trainability
+of a tensor, because the gradient of a circuit is more circuits, so a flag in a client library moves
+a bill by two orders of magnitude. The provider's spending cap exists for hardware and not for the
+simulator on which this project's real cost fallback occurred. A hardware observation is a waiting
+problem: the device this paper needed answered `OFFLINE` to 336 queries over seven days. A result is
+a sample, and the distribution it should have come from is an object the simulator computed and the
+run stored, so one of the thirteen checks tests the sample against a reference distribution the
+record itself holds — the check that caught a defect the others missed. And which columns may
+legitimately differ across a reproduction is itself a fact about simulation precision.
 
 **Relationship to other submissions.** The numerical study this platform served is a separate
 manuscript, cited as [1], under review at *IEEE Transactions on Quantum Engineering*
@@ -51,7 +52,9 @@ with either.
 
 **Artifacts.** The platform, the three evaluation harnesses, their tests and all result files are in
 the repository named in the availability statement. The package evaluated in the reconstruction
-experiment is a public release (`v1.0`, commit `c804a63`) archived at doi:10.5281/zenodo.22743582.
+experiment is a public release (`v1.0`, commit `c804a63`) archived at doi:10.5281/zenodo.22743582;
+the release this paper ships, `v1.1`, adds its own material and the fixes the evaluation produced,
+and the suite, level 1, level 2 and the interruption were run against it as well (Table 9).
 Appendix C lists the commands that reproduce every number in this paper, with their run times and
 the two that need the deposited per-run artifacts (~100 MB). The availability statement maps the
 paper's three reconstruction levels onto ACM's badging terminology; the author intends to apply for
@@ -78,14 +81,14 @@ Hiroaki Tobita
 
 | Reviewer | Affiliation | Why |
 |---|---|---|
-| Wolfgang Mauerer | OTH Regensburg / Siemens AG | Reproducibility in quantum computing research and reproduction packaging [14, 15, 17, 29] |
+| Wolfgang Mauerer | OTH Regensburg / Siemens AG | Reproducibility in quantum computing research and reproduction packaging [9, 24, 25, 27] |
 | Vlad Stirbu | University of Jyväskylä | Provenance and experiment tracking for quantum software [3, 4, 5] |
 | Benjamin Weder | University of Stuttgart | QProv and quantum middleware [2, 6] |
 | Andre Luckow | BMW Group / LMU Munich | Application-level quantum benchmarking (QUARK) [7] |
 
 ## Notes for the submission form (not part of the letter)
 
-- Abstract: 199 words (ACM's guideline is 150–200).
+- Abstract: 200 words (ACM's guideline is 150–200).
 - CCS concepts and keywords are in the manuscript; four `\ccsdesc` lines.
 - The manuscript is in `acmsmall` with `review` enabled (line numbers); a non-review PDF can be
   supplied on request.

@@ -361,8 +361,33 @@ def convert(md: str) -> str:
     return "\n".join(out) + "\n"
 
 
+def check_references(md: str, tex: str) -> list[str]:
+    """Every entry of the draft's list reaches the bibliography, and back.
+
+    The reference section is read by a small state machine, and a stray rule
+    inside it once ended that machine early: nineteen of thirty-eight entries
+    reached the LaTeX, pdflatex printed forty-two "Citation undefined" warnings
+    that nothing was watching, and the PDF would have carried question marks.
+    """
+    entries = re.findall(r"(?m)^\[(\d+)\] ", md.split("## References", 1)[1].split("\n## ", 1)[0])
+    items = re.findall(r"\\bibitem\{ref(\d+)\}", tex)
+    cited = {k for m in re.finditer(r"\\cite(?:\[[^\]]*\])?\{([^}]*)\}", tex)
+             for k in re.findall(r"ref(\d+)", m.group(1))}
+    bad = []
+    if entries != items:
+        bad.append(f"{len(entries)} entries in the draft, {len(items)} in the bibliography")
+    if [int(x) for x in items] != list(range(1, len(items) + 1)):
+        bad.append("the bibliography is not numbered 1..N without gaps")
+    if cited - set(items):
+        bad.append(f"cited but not in the bibliography: {sorted(cited - set(items), key=int)}")
+    if set(items) - cited:
+        bad.append(f"in the bibliography but never cited: {sorted(set(items) - cited, key=int)}")
+    return bad
+
+
 def main() -> int:
-    tex = convert(SRC.read_text(encoding="utf-8"))
+    md = SRC.read_text(encoding="utf-8")
+    tex = convert(md)
     # A character the text font does not carry is dropped by pdflatex with an
     # inputenc error nobody reads, and the sentence loses a word silently: a
     # subset sign went missing from "optimum within tau feasible" for two
@@ -371,6 +396,10 @@ def main() -> int:
     if stray:
         print("refusing to write: no LaTeX for " +
               ", ".join(f"{c!r} (U+{ord(c):04X})" for c in stray), file=sys.stderr)
+        return 1
+    problems = check_references(md, tex)
+    if problems:
+        print("refusing to write: " + "; ".join(problems), file=sys.stderr)
         return 1
     OUT.write_text(tex)
     print(f"wrote {OUT}")
