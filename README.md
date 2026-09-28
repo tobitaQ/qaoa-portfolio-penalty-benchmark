@@ -37,29 +37,35 @@ those files.
 Setup. One block per shell; the rest of this file assumes the environment is active.
 
 ```bash
-# macOS, Linux, WSL, and Git Bash on Windows
+# macOS, Linux, WSL
 python3 -m venv .venv
-source .venv/bin/activate                # Git Bash on Windows: source .venv/Scripts/activate
+source .venv/bin/activate
 pip install -r requirements.txt          # minimum versions; add requirements-gpu.txt for lightning.gpu
 python -m pytest -q                      # pins the scoring rules, the sampler and the aggregations
 ```
 
-```powershell
-# Windows PowerShell
+```bash
+# Windows, Git Bash -- the shell the Windows run of the four-machine table used
 py -3.12 -m venv .venv
-.venv\Scripts\Activate.ps1
+source .venv/Scripts/activate            # Scripts/, not bin/, on Windows in every shell
 pip install -r requirements.txt
-$env:PYTHONUTF8 = "1"                    # see below
+export PYTHONUTF8=1                      # see below; no space around the =
 python -m pytest -q --basetemp=.pytest-tmp
 ```
 
-On Windows, two things differ. The virtual environment is `Scripts\`, not `bin/`, in every shell
-including Git Bash. And `pytest` leaves a link in its temporary directory that Windows will not
-remove, which ends the session with `PermissionError: [WinError 5]` after the tests have passed;
-`--basetemp=.pytest-tmp` avoids it, and a stale `.pytest-tmp` from a previous run has to be deleted
-before the next one. Python 3.12 is a good choice there: 3.14 is newer than some of the libraries.
-Text files are read as UTF-8 by the code itself, so `PYTHONUTF8` is only needed for the shell's own
-output on a non-UTF-8 locale.
+PowerShell is not given here because it was not tried: the Windows row of the four-machine table is
+a Git Bash run. To use it anyway, read `source .venv/Scripts/activate` as
+`.venv\Scripts\Activate.ps1` and `export PYTHONUTF8=1` as `$env:PYTHONUTF8 = "1"`.
+
+Two Windows differences are the shell's, not the package's. The virtual environment is in
+`Scripts\`, not `bin/`, so a pasted `bin/activate` line appears to work, activates nothing, and
+leaves the reader testing the system interpreter. And `pytest` leaves a link in its temporary
+directory that Windows will not remove, which ends the session with `PermissionError: [WinError 5]`
+after the tests have passed; `--basetemp=.pytest-tmp` avoids it, and a stale `.pytest-tmp` from a
+previous run has to be deleted before the next one. Python 3.12 is a good choice there: 3.14 is
+newer than some of the libraries. Text files are read as UTF-8 by the code itself since `v1.1`, so
+`PYTHONUTF8` is no longer needed for the tests to pass; it is kept above for the shell's own output
+on a non-UTF-8 locale.
 
 Python ≥ 3.11. `requirements.txt` states the minimum versions the code runs with;
 `requirements-repro.txt` is the `pip freeze` of the environment that produced the paper's

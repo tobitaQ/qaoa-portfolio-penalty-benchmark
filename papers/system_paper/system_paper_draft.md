@@ -1184,12 +1184,12 @@ environment for each, on one host.**
 | 3 | re-issue with `--resume` | 168 s | "6 rows already done"; 24 rows; 94/94 non-timing columns identical to the uninterrupted block |
 | control | level 2 without `data/derived`, network unreachable | 6 s | fails: `TypeError: '<' not supported between instances of 'int' and 'NoneType'` |
 | control | E2 aggregation without the artifacts | 1.2 s | fails: "no run artifacts under …/e1_runs" |
-| 0 (v1.1) | `git clone --branch v1.1`; `python -m venv`; `pip install -r requirements-repro.txt` | 0.3 s; 8 s; 149 s | commit ed260fd, 24 MB |
-| 0 (v1.1) | `pytest -q -rs` | 101 s | 401 passed, 33 skipped: 29 need the per-run artifacts, 3 the price snapshots, 1 a host without `lightning.gpu` |
+| 0 (v1.1) | `git clone --branch v1.1`; `python -m venv`; `pip install -r requirements-repro.txt` | 0.3 s; 8 s; 150 s | commit f5a6a0b, 24 MB |
+| 0 (v1.1) | `pytest -q -rs` | 103 s | 417 passed, 33 skipped: 29 need the per-run artifacts, 3 the price snapshots, 1 a host without `lightning.gpu` |
 | 1 (v1.1) | `python -m notebooks.generate_tqe_figures`; `python check_tables.py` | 24 s; 2.8 s | 5/5 byte-identical; 2,578 cells agree, 0 disagree, 0 pending |
-| 2 (v1.1) | the level-2 command above | 18 s | energy and Sharpe identical to the committed file, to 0 |
-| 3 (v1.1) | the level-3 block with the job status record: `SIGKILL` after 5 runs | 52 s | status file `RUNNING 5/12, last N12_i00_5xAcrit_s42`, matching the 5 rows on disk, which the manifest parses with no artifact left without a row; `analyze_e1` refuses the manifest |
-| 3 (v1.1) | re-issue with `--resume` | 69 s | driver prints "previous job: RUNNING pid … 5/12"; status `EXIT 0 12/12`; `analyze_e1` runs |
+| 2 (v1.1) | the level-2 command above | 17 s | energy and Sharpe identical to the committed file, to 0 |
+| 3 (v1.1) | the level-3 block with the job status record: `SIGKILL` after 5 runs | 51 s | status file `RUNNING 5/12, last N12_i00_5xAcrit_s42`, matching the 5 rows on disk, which the manifest parses with no artifact left without a row; `analyze_e1` refuses the manifest |
+| 3 (v1.1) | re-issue with `--resume` | 71 s | driver prints "previous job: RUNNING pid … 5/12"; status `EXIT 0 12/12`; `analyze_e1` runs |
 
 The inputs the harness supplied were the repository URL and tag, a name for `--results-tag`, and
 the choice of CPU over the README's GPU for level 3; every other token came from the README.
@@ -1238,10 +1238,13 @@ differ, as they must.
 *The same checks on the release this paper ships.* E-S3's three levels are an evaluation of `v1.0`,
 because that is the package a reader of the numerical study has and the one whose gaps this section
 reports. The fixes those gaps produced are in `v1.1`, so the last block of Table 9 clones `v1.1` and
-repeats what can be repeated: the suite (401 passed, 33 skipped), level 1 (5/5 figures byte-identical,
+repeats what can be repeated: the suite (417 passed, 33 skipped), level 1 (5/5 figures byte-identical,
 2,578 manuscript cells agreeing), level 2 (identical to the committed file, to zero), and the
 interruption and resumption — which `v1.0` cannot be asked for at all, since the job status record
-was written in response to this evaluation. The `v1.0` rows of Table 9 clone over the network from
+was written in response to this evaluation. That last step is also where the record gate of
+Section 3.1 is exercised end to end: it calls the aggregation twice, and the aggregation refuses the
+partial manifest and then, on the resumed twelve rows, runs the six record relations and finds
+nothing. The `v1.0` rows of Table 9 clone over the network from
 the published repository and the `v1.1` rows clone the same release from a local mirror, because the
 tag becomes public on submission; that is why the second clone takes 0.3 s rather than 1.5 s, and it
 is the only difference between the two passes. What the 33 skips are: 29 tests of the E-S1 harness need
@@ -1251,7 +1254,7 @@ fault-injection relations against real artifacts; three need the price snapshots
 third-party data the package deliberately does not redistribute (it ships the derived statistics
 instead); and one is the test that a GPU backend does not silently fall back, which has nothing to
 fall back from on a host where `lightning.gpu` is installed and runs. Every claim this paper makes about the final
-implementation is therefore a claim about a tagged commit (`ed260fd`) that a reader can clone, and the
+implementation is therefore a claim about a tagged commit (`f5a6a0b`) that a reader can clone, and the
 `CHANGELOG` says which paper was evaluated against which release. What is *not* repeated on `v1.1` is
 level 3's full block and its column-by-column agreement (Table 10), which measures a host-and-precision
 difference the release does not change.
@@ -1273,9 +1276,11 @@ machine. (i) The package reads its own text files with the locale encoding; wher
 — a Japanese Windows, where it is cp932 — fifteen tests fail on the first em dash of the manuscript,
 and `PYTHONUTF8=1` is the reader's workaround. Every text open in the package now names its encoding;
 under a forced ASCII locale the suite goes from 15 failures to none. (ii) The README's setup line,
-`python -m venv .venv && . .venv/bin/activate`, is a Bourne-shell line: on Windows neither `&&` in
-PowerShell nor `bin/activate` exists, and a reader who pastes it installs into, and then tests, the
-system interpreter. The next release states one path per shell. The other two are the reader's
+`python -m venv .venv && . .venv/bin/activate`, assumed one shell and one layout. The Windows run was
+in Git Bash, where `&&` is fine and `bin/activate` is not — Windows puts the environment in
+`Scripts/` — so the line appears to work, activates nothing, and the reader installs into and then
+tests the system interpreter. The next release states one path per shell, with the Git Bash block the
+one these runs used. The other two are the reader's
 environment: a Python newer than the libraries (3.14 at the time), and pytest's own temporary
 directory, whose `pytest-current` symlink it cannot remove on Windows, which ends the session with a
 `PermissionError` after the tests have passed (`--basetemp` avoids it).
@@ -1442,14 +1447,15 @@ manifest was made under (Section 7).
 **AI assistance disclosure.** The author used Claude (Anthropic), through the Claude Code command-
 line interface, for first drafts of code and prose and for mechanical work: producing the tables and
 figures from the committed result files, and running checks of the manuscript against them. The
-drafts are a starting point rather than a result; the research questions, the design, the scrutiny
-that took each part to its reported form, and the verification of every number against the file
-behind it are the author's, who is responsible for all content.
+drafts are a starting point rather than a result; the research questions, the design and the scrutiny
+that took each part to its reported form are the author's, who reviewed every part of the manuscript
+and is responsible for all content. Exhaustiveness over the numbers is the checker's: every cell it
+can bind to a result file it binds, and the few it cannot it names.
 
 ## Availability
 
 Everything this paper reports is in one package, release `v1.1`
-(https://github.com/tobitaQ/qaoa-portfolio-penalty-benchmark, tag `v1.1`, commit `ed260fd`,
+(https://github.com/tobitaQ/qaoa-portfolio-penalty-benchmark, tag `v1.1`, commit `f5a6a0b`,
 doi:[[v1.1 DOI]]): the platform; the three harnesses
 (`experiments/system_paper/es1_fault_injection.py`, `es1_random_faults.py`, `es2_guard_stages.py`,
 `es2_observe_cloud.py`, `es2_observe_cost_control.py`, `es3_reconstruction.py`) and the cost-control
