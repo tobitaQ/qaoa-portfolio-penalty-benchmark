@@ -1,7 +1,7 @@
 # Cover letter — ACM Transactions on Quantum Computing
 
-**Manuscript.** *Bound Records, Structural Guards and Costed Reconstruction: Designing and
-Evaluating an Experiment Platform for Cloud Quantum Optimization Benchmarks*
+**Manuscript.** *A Verifiable and Cost-Controlled Experiment Platform for Cloud Quantum
+Optimization Benchmarks*
 
 **Author.** Hiroaki Tobita, Advanced Institute of Industrial Technology, Tokyo, Japan
 (tobita-hiroaki@aiit.ac.jp). Single author; no co-authors to disclose.

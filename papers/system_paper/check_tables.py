@@ -258,7 +258,7 @@ for row in table(9):
         chks(9, "v1.1 clone commit", re.search(r"commit ([0-9a-f]{7,40})", row["Outcome"]).group(1),
              cloned)
 for label, pat in (("Section 5.3", r"a tagged commit \(`([0-9a-f]{7,40})`\)"),
-                   ("availability", r"tag `v1\.1`, commit `([0-9a-f]{7,40})`")):
+                   ("availability", r"tag `v1\.1`,\s+commit `([0-9a-f]{7,40})`")):
     m = re.search(pat, SRC)
     chks(9, f"{label} names the cloned commit", m.group(1) if m else "(absent)", cloned)
 
@@ -294,27 +294,46 @@ for r, (_, g) in zip(table(11), t11.iterrows()):
     chk(11, f"{g.machine} skipped", float(s_), float(g.skipped))
     chk(11, f"{g.machine} cells", num(r["`check_tables.py`"]), float(g.cells_agree))
     chks(11, f"{g.machine} python", r["Python"], str(g.python))
+# Only one of the four rows compared the regenerated figures with the committed
+# ones; the other three record that the command ran. The table carries no figure
+# column, and this keeps it that way rather than letting it pick up a "yes" that
+# means less than it looks.
+assert "byte-identical" in str(t11[t11.machine.str.startswith("GPU host")].figures.iloc[0])
+assert (t11[~t11.machine.str.startswith("GPU host")].figures
+        == "command ran; bytes not compared").all()
+assert not any("figure" in h.lower() for h in table(11)[0]), \
+    "Table 11 has a figure column; three of its four rows cannot fill one"
 
 # ---------------------------------------------------------------- Table 13
 SV1_TASK_USD = 3.0 / 60 * 0.075
 obs = pd.read_csv(R / "paper02_es2_cloud_observation.csv")
 sv1_tasks = sum(int(m.group(1)) for m in
                 (re.match(r"(\d+) task\(s\) created", str(o)) for o in obs.outcome) if m)
-cc = sum(int((pd.read_csv(R / f"paper02_es2_cost_control_tasks_{t}.csv").outcome == "created").sum())
-         for t in ("as_deployed", "run1", "run2", "run3", "run4", "run5"))
+def _cc(*tags):
+    return sum(int((pd.read_csv(R / f"paper02_es2_cost_control_tasks_{t}.csv").outcome == "created").sum())
+               for t in tags)
+
+
+cc_deployed = _cc("as_deployed")
+cc_fixed = _cc("run1", "run2", "run3", "run4", "run5")
+cc = cc_deployed + cc_fixed
 rows13 = table(13)
 for r in rows13:
     what = r["What"].replace("**", "")
     if what.startswith("the sampling-fallback"):
         chk(13, "fallback tasks", num(r["Tasks"]), float(sv1_tasks))
         chk(13, "fallback usd", num(r["Cost"]), round(sv1_tasks * SV1_TASK_USD, 2), 0.005)
-    elif what.startswith("the six account-level"):
-        chk(13, "account-level tasks", num(r["Tasks"]), float(cc))
-        chk(13, "account-level usd", num(r["Cost"]), round(cc * SV1_TASK_USD, 2), 0.005)
+    elif what.startswith("the account-level cost control as documented"):
+        chk(13, "as-deployed tasks", num(r["Tasks"]), float(cc_deployed))
+        chk(13, "as-deployed usd", num(r["Cost"]), round(cc_deployed * SV1_TASK_USD, 2), 0.005)
+    elif what.startswith("the same control with its import fixed"):
+        chk(13, "five-repetition tasks", num(r["Tasks"]), float(cc_fixed))
+        chk(13, "five-repetition usd", num(r["Cost"]), round(cc_fixed * SV1_TASK_USD, 2), 0.005)
     elif what.startswith("this paper"):
         chk(13, "total tasks", num(r["Tasks"]), float(sv1_tasks + cc))
         chk(13, "total usd", num(r["Cost"]),
-            round(sv1_tasks * SV1_TASK_USD, 2) + round(cc * SV1_TASK_USD, 2), 0.005)
+            round(sv1_tasks * SV1_TASK_USD, 2)
+            + round(cc_deployed * SV1_TASK_USD, 2) + round(cc_fixed * SV1_TASK_USD, 2), 0.005)
 unbound(13, "the project's $42.59 and the numerical study's $37.90 are the provider's billing console")
 
 for n, why in ((1, "the injected faults, described in prose"),

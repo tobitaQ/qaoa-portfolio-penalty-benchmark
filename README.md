@@ -119,14 +119,16 @@ the DOI the paper's availability statement names). Any full state vector is reco
 recorded angles and seed. They are needed for three things: the E2 columns and D_cond of the
 numerical paper, which the committed CSVs already hold; the seven of the thirteen verification
 relations that read an artifact; and the fault injection of the system paper. Without them
-`pytest -q` skips 29 tests and says so, `analyze_e1` still runs the six relations that read only the
-CSVs, and `es1_fault_injection.py` exits rather than checking half a record.
+`pytest -q` skips 29 tests and says so, `analyze_e1` still runs the six validation routines that read
+only the CSVs, and `es1_fault_injection.py` exits rather than checking half a record.
 
 ### The order the checks run in
 
 1. A driver writes its manifest, its reference table and its artifacts, and its own status record.
 2. `analyze_e1.py` refuses a manifest whose job did not finish (`run_status.require_complete`) and
-   one that fails any of the six relations of `src/record_checks.py`, which need only the two CSVs.
+   one that fails any of the six validation routines of `src/record_checks.py`, which need only the
+   two CSVs: five are checks of the thirteen entire (schema, penalty, reference-row, scorer,
+   state-batch) and the sixth collects the range and ordering clauses.
    It names the check and exits non-zero; `--allow-inconsistent` aggregates anyway and says so.
 3. `experiments/system_paper/es1_fault_injection.py` runs all thirteen, including the seven that
    read the artifacts or re-derive from the pinned statistics. Run it on a record you intend to

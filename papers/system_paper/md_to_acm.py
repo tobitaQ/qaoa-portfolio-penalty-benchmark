@@ -392,6 +392,15 @@ def main() -> int:
     # inputenc error nobody reads, and the sentence loses a word silently: a
     # subset sign went missing from "optimum within tau feasible" for two
     # builds. Every glyph must be in the map of papers/md_to_latex.py.
+    # A source line that ends in a hyphen is a hyphenated word split by the
+    # author's own wrapping; the paragraph join puts a space after the hyphen
+    # and the PDF prints "machine- checkable".
+    split = [n for n, line in enumerate(md.split("\n"), 1)
+             if line.rstrip().endswith("-") and not line.lstrip().startswith(("#", "|", "-"))]
+    if split:
+        print("refusing to write: a hyphenated word is split across source lines at "
+              + ", ".join(str(n) for n in split), file=sys.stderr)
+        return 1
     stray = sorted({c for c in tex if ord(c) > 127})
     if stray:
         print("refusing to write: no LaTeX for " +

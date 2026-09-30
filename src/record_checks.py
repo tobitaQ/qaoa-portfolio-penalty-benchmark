@@ -35,8 +35,9 @@ from src.qubo import scoring
 
 #: Binomial tail below which a batch is not a draw from its state.
 #: The threshold is applied to the smaller *one-sided* tail, so a correct row
-#: fails with probability up to 2 x TAIL_P and a record of ~5,000 tests has a
-#: union bound of ~1e-5 rather than ~5e-6.
+#: count fails with probability up to 2 x TAIL_P -- a row carries two counts,
+#: so 4 x TAIL_P -- and the 5,130 counts of the committed record have a union
+#: bound of 1.03e-5.
 TAIL_P = 1e-9
 
 #: Columns every ``ok`` row must carry filled. ``g_F``/``g_off`` may be empty
