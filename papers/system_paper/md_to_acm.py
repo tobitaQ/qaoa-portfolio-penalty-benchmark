@@ -136,6 +136,50 @@ def table(rows: list[str], caption: str, number: int) -> list[str]:
             spec += "Y"
     if "Y" not in spec:
         spec = spec.replace("l", "Y", 1) if "l" in spec else spec
+    # Equal shares give a column of dashes the same width as a column of
+    # sentences: Table 12's four wrapping columns each took a quarter, and the
+    # one holding "—" five times out of seven was as wide as the one holding the
+    # defects. Weight each share by the longest thing it has to hold, clamped so
+    # that no column is starved and the widest cannot take the table over, and
+    # normalised so the shares still sum to the number of X columns (which is
+    # what tabularx divides).
+    ys = [j for j, c in enumerate(spec) if c == "Y"]
+    if len(ys) > 1:
+        # Capacity wanted: the longest cell. Capacity *needed*: the longest
+        # single word, because a column of identifiers cannot be narrowed below
+        # one of them -- weighting on cell length alone pushed price_perturbation
+        # and batch_from_initial out of Table 3's first column and over the
+        # second. Take the larger of the two, in shares of the total.
+        word = lambda j: max([len(w) for r in body + [head] for w in r[j].split()] or [0])
+        want = [max(longest[j], 8) for j in ys]
+        # Proportions alone are not enough: a share is a share of whatever the
+        # wrapping columns are left, and if that is narrower than a column's
+        # longest word the word runs into its neighbour (price_perturbation over
+        # input-digest, Table 3). Estimate the line's capacity in characters --
+        # a body line of this class holds about ninety-five -- take off the
+        # columns set at their natural width and the gaps, and give every
+        # wrapping column at least the share its longest word needs before the
+        # rest is divided by what each wants.
+        cap = 95 - sum(longest[j] for j in range(ncol) if j not in ys) - 2 * ncol
+        floor = [word(j) / max(cap, 12) * len(ys) for j in ys]
+        w = [v * len(ys) / sum(want) for v in want]
+        for _ in range(3):
+            w = [max(a, b) for a, b in zip(w, floor)]
+            spare = len(ys) - sum(min(a, b) for a, b in zip(w, floor))
+            free = sum(max(0.0, a - b) for a, b in zip(w, floor))
+            if free <= 0 or spare <= 0:
+                break
+            w = [b + max(0.0, a - b) * spare / free for a, b in zip(w, floor)]
+        w = [v * len(ys) / sum(w) for v in w]
+        out = []
+        k = 0
+        for c in spec:
+            if c == "Y":
+                out.append(rf">{{\hsize={w[k]:.3f}\hsize}}Y")
+                k += 1
+            else:
+                out.append(c)
+        spec = "".join(out)
     header = " & ".join(rf"\textbf{{{prose(h)}}}" for h in head) + r" \\"
     rows_tex = [" & ".join(prose(c) for c in r) + r" \\" for r in body]
     # A short table split across a page boundary is harder to read than one that

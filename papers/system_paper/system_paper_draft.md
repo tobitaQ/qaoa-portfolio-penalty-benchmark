@@ -14,7 +14,8 @@ runs of the quantum approximate optimization algorithm: bind records to inputs t
 machine-checkable relations, reject unsafe configurations before submission, and provide
 reconstruction levels with measured costs. The platform detects all ten injected faults, against one under schema
 checks and eight under our reimplementation of declarative data-quality checks over tabular
-records; the two it misses require verification against pinned input statistics and run artifacts.
+records; the two the declarative checks miss require verification against pinned input statistics
+and run artifacts.
 Structural guards prevent an optimizer misconfiguration whose measured per-step circuit count
 extrapolates to 9,027 tasks and $74,924 at list prices. A model of the provider's documented $50
 cap permits six tasks before rejection; the cap is unavailable for simulators, where the
@@ -89,8 +90,10 @@ itself and cannot overwrite the committed baseline. A dollar cap is layered on t
 
 **P3 — Guarantee reconstruction at three levels and record the cost of each.** Tables and figures
 from committed aggregates (seconds); one instance end to end (minutes on a CPU); the cross experiment
-from its manifest (GPU hours). The cross driver flushes after every run and the single-instance
-driver after every size; both restart idempotently, and each writes how it ended beside its output.
+from its manifest (GPU hours). The cross driver flushes after every run, restarts idempotently with
+`--resume`, and writes how it ended beside its output; the single-instance driver flushes after
+every size and has neither — it merges into an existing file rather than resuming, and a long run of
+it is covered by the detached wrapper's status file (Section 3.3) rather than by one of its own.
 
 Each principle is stated with what it prevents and what it does not (Section 3), and each is
 evaluated against a control (Section 4): the record with its verification relations against a
@@ -119,35 +122,39 @@ not portable across hosts, so the README must say in advance which columns a rea
 move. A provider's policy, a queue and a floating-point fact — recognisable anywhere, and each with a
 particular edge here.
 
-**Contributions.** Six, in the order the rest of the paper takes them; each names the section
-that evidences it.
+**Contributions.** Three, one per principle; each names the sections that state it and evidence it.
 
-1. Three design principles for a cloud quantum benchmark platform, each with a stated scope, and
-   their realisation in an open reproduction package (Section 3).
-2. A fault-injection evaluation of a 2,565-run record: ten faults, thirteen checks, ten detected
-   against one for a schema-only pipeline and eight for an expectation stated in a data-quality
-   library's vocabulary over the run table, and no check firing on any of five committed clean
-   records. Over 600 random mutations, half of them drawn after the checks were frozen, the two are
-   close on the mutations that move a headline number — 25 against 24 in the first draw and 26
-   against 25 in the second, 51 against 49 over both — and separate on the 168 that touch a file the
-   run table does not contain, which the checks catch 135 times and the control never (Section 5.1).
-3. A guard-stage evaluation on a device that, like a QPU, offers no derivative method: the circuits
-   one optimizer step sends, counted (177 / 361 / 609 / 921 at N = 8 / 12 / 16 / 20), which a metered
-   device bills as one task each; the stopping stage of five misconfigurations under four guard
-   configurations; the division of labour between structural guards and a spending limit; and the
-   fallback re-observed on the service (Section 5.2).
-4. A costed clean-room reconstruction of the public package at three levels, including
-   interruption and idempotent resumption, with a control that lacks the derived statistics
-   (Section 5.3).
-5. A case study in secondary analysis from a bound record: two hypotheses about the platform's next
-   use, each settled in minutes of CPU with no quantum run, and each re-scoring verified against the
-   values the record already held (Section 5.4).
-6. Three places where the evaluation found the platform still recording an inference: a digest of
-   asset *names* standing in for the statistics' *values*, a failure that did not say which input
-   was missing, and a job whose end state was read off a log line for nine hours; the fixes, and the
-   re-measurement after each (Sections 5.1, 5.3, 7). A fourth, the non-atomic flush of Section 3.3, no fault injected
-   into a record can produce, because the failure is in the writer; E-S3's kill could have found it
-   with a kill time drawn at random rather than tied to a completion line.
+1. **P1, and how far a record has to reach.** Thirteen verification relations across the records of
+   one metered run, with their scope and their implementation (Section 3.1), and a fault-injection
+   evaluation of a 2,565-run record (Section 5.1): ten faults detected of ten, against one for a
+   schema-only pipeline and eight for the same expectations stated in a data-quality library's
+   vocabulary over the run table, with no check firing on any of five committed clean records. Over
+   600 random mutations, half drawn after the checks were frozen, the two are close wherever a
+   headline number moves — 51 against 49 — and separate on the 168 that touch a file the run table
+   does not contain, which the relations catch 135 times and the control never.
+2. **P2, and where a guard has to sit.** A configuration in which the expensive call cannot be
+   expressed, acting where the framework fixes the billable unit rather than after a threshold is
+   crossed (Section 3.2), and a guard-stage evaluation on a device that, like a QPU, offers no
+   derivative method (Section 5.2): the circuits one optimizer step sends, counted
+   (177 / 361 / 609 / 921 at N = 8 / 12 / 16 / 20), which a metered device bills as one task each;
+   the stopping stage of five misconfigurations under four guard configurations; the division of
+   labour between a structural guard and a spending limit; and the fallback re-observed on the
+   service.
+3. **P3, and what a reconstruction costs.** Levels of stated cost, an interruption that loses only
+   the run in flight, and an end state written rather than inferred — and compared with the file it
+   describes (Section 3.3) — with a costed clean-room reconstruction of the public package at three
+   levels, including interruption and idempotent resumption, against a control that lacks the
+   derived statistics (Section 5.3).
+
+Two results came out of the work rather than out of its design. A record bound to its inputs
+answers questions that were not asked when it was written: two hypotheses about the platform's next
+use were settled from the committed record alone, in minutes of CPU and with no quantum run, each
+re-scoring checked against values the record already held (Section 5.4). And measuring the three
+principles kept finding the platform recording an inference of its own — a digest of asset *names*
+standing in for the statistics' *values*, a failure that did not say which input was missing, a job
+whose end state was read off a log line for nine hours — with four more found by reading the
+drivers against the sentences that describe them, and a fifth by a reader who had only the package
+(Section 7).
 
 ## 2. Background and related work
 
@@ -284,7 +291,7 @@ was built in response and what that mechanism was measured to do.
   misconfigurations whose stopping stage and bill are measured under four guard configurations at two
   sizes (Table 7), re-observed on the service for this paper (Section 5.2).
 - *The seven implementation defects.* There, defects that changed reported numbers. Here, each is
-  placed beside the check that now holds its class — or beside a dash, for the three that no check
+  placed beside the check that now holds its class — or beside a dash, for the four that no check
   holds (Section 6, Table 12) — and two of them are replayed as
   injected faults whose detection is measured. Two further defects of the study, which concerned the
   record's writer and its inputs rather than a run, are replayed as well, so four of the ten injected
@@ -378,10 +385,12 @@ one kind and carry more than one mark; where they do, the clauses are named.
    bit for bit: both are the same float64 written twice.
 5. *input-digest* **[E]** — the digest on the reference row and on every run row is the digest of the
    pinned statistics.
-6. *reference-input* **[N]** — the reference row is what those statistics give when the feasible set
-   is enumerated again. Compared bit for bit, which holds because the enumeration is deterministic on
-   one host; across hosts the numerical study reports differences of a few ulp [1], so on a different
-   machine this relation is the same comparison at a relative 10⁻⁹.
+6. *reference-input* **[E]** — the reference row is what those statistics give when the feasible set
+   is enumerated again. The harness compares bit for bit, with no tolerance, which holds because the
+   enumeration is deterministic on one host. Across hosts the numerical study reports differences of
+   a few ulp [1], so on another machine this comparison has to be relaxed to a relative 10⁻⁹; the
+   harness does not relax it, and a reader running it elsewhere should expect the difference rather
+   than a pass.
 7. *scorer* **[N]** — the solver's best shot, its energy and the scorer's decomposition agree
    (relative 10⁻⁶ between the solver's energy and the scorer's, 10⁻⁹ within the scorer), and g_F and
    g_off follow from f, f\*, Δ_F and A (10⁻⁹).
@@ -583,8 +592,25 @@ aggregates is whole. The cross driver therefore keeps a status record beside its
 planned and the last run id; `EXIT 0` or `FAILED code` at the end; a kill leaves `RUNNING` with a
 stale heartbeat, which is the stall; the heartbeat is written after the manifest, so the count it
 carries is a count of rows on disk), prints the previous invocation's state on `--resume`, and the
-aggregation refuses a manifest whose job is not `EXIT 0` and complete unless told to proceed. Any
-other long job runs under a wrapper that keeps the same four states in a one-line file. Both were
+aggregation refuses a manifest whose job is not `EXIT 0` and complete unless told to proceed.
+
+A status record is itself a claim about a file, and a claim nothing compares to its subject is the
+inference the record was written to remove. So the aggregation reads the manifest before it trusts
+the record: the row count against the rows the record says were written, a run id that occurs twice,
+a last run the file does not hold. A review of this driver deleted one row from a committed
+thirty-row block, left `EXIT 0, 30/30` beside it, and the aggregation printed `30/30` and `29 done`
+on adjacent lines and published the medians of twenty-nine; the same review duplicated a row and got
+thirty-one. The comparison is exact where the job ended normally and allows one row where it did not,
+because the driver writes the row before it beats and a kill between the two leaves the file one
+ahead. It is not waived by the flag that aggregates an unfinished run: that flag is for a job known
+to be incomplete, not for a file the record does not describe.
+
+`EXIT 0` says the driver reached the end of its loop with every planned run attempted and recorded,
+not that every run succeeded. A run that raises is recorded as a row with an `error:` status and
+counted in the record's `failed`, which the state line prints; `--resume` fills the gaps the
+manifest does not hold and does not retry those rows, because a recorded failure is an observation
+about a configuration and re-running it would replace that observation with a second attempt's.
+Any other long job runs under a wrapper that keeps the same four states in a one-line file. Both were
 added after the evaluation's own harness had failed unnoticed for nine hours (Section 7), and the
 driver's record is exercised in Section 5.3.
 
@@ -1052,10 +1078,10 @@ whole record. The last column counts the columns no other relation binds.**
 | 3 | + shot-level successes, fractions, distinct shots, probability sums, portfolio metrics from the pinned statistics, reference row against its own cardinality minima and stored f | 114 / 132 | 63 |
 
 **Table 5. 300 random mutations by operator, final pass. "Declarative" is the control of Section 4.1
-on the same mutations; "moved and missed" counts those that changed a headline number and that the
-relations did not catch. The last row is the held-out draw.**
+on the same mutations; "Moved" counts the mutations that changed a headline number and "Missed"
+those of them the relations did not catch. The last row is the held-out draw.**
 
-| Operator | n | Detected | Declarative | Moved a headline | Moved and missed |
+| Operator | n | Detected | Declarative | Moved | Missed |
 |---|---:|---:|---:|---:|---:|
 | cell perturbed (δ ∈ {10⁻⁹, 10⁻⁶, 10⁻³, 10⁻¹}) | 80 | 52 | 16 | 1 | 1 |
 | cell replaced by another row's | 30 | 20 | 2 | 0 | 0 |
@@ -1105,18 +1131,19 @@ steps plus that call), which a metered device turns into one task each — an id
 N = 8 on SV1 and against the 2026-08-09 ledger, and assumed at N = 20 and on hardware; †, the
 provider's documented behaviour, not observed. Where a cell ends in "—" nothing usable comes back,
 and where it ends in "?" a value does and a gradient does not. Every dollar figure is a list price
-applied to a task count, not a bill.**
+applied to a task count, not a bill. The optimizer loop is fifty steps; the sampling call is
+1,000 shots on SV1 and 100 on IonQ.**
 
 | Misconfiguration | N | none | cap only | structural | both |
 |---|---:|---|---|---|---|
-| QPU as optimizer backend, 50 steps, 100 shots | 8 | § submitted; 9,027 tasks; **$74,924** | † service; 6 tasks; $49.80; — | **cli**; 0 tasks; $0 | cli; 0; $0 |
+| QPU as optimizer backend | 8 | § submitted; 9,027 tasks; **$74,924** | † service; 6 tasks; $49.80; — | **cli**; 0 tasks; $0 | cli; 0; $0 |
 | | 20 | § submitted; 46,971 tasks; **$389,859** | † service; 6; $49.80; — | cli; 0; $0 | cli; 0; $0 |
-| Trainable angles at sampling, SV1, 1,000 shots | 8 | ‡ submitted; 177 tasks; $0.66 | ‡ submitted; 177; $0.66 (**cap blind**) | ‡ **pre-submit**; 1 task | ‡ pre-submit; 1 |
+| Trainable angles at sampling, SV1 | 8 | ‡ submitted; 177 tasks; $0.66 | ‡ submitted; 177; $0.66 (**cap blind**) | ‡ **pre-submit**; 1 task | ‡ pre-submit; 1 |
 | | 20 | § submitted; 921; $3.45 | § submitted; 921; $3.45 | pre-submit; 1 | pre-submit; 1 |
-| Trainable angles at sampling, IonQ, 100 shots | 8 | § submitted; 177; $1,469 | † service; 6; $49.80; ? | pre-submit; 1; $8.30 | pre-submit; 1; $8.30 |
+| Trainable angles at sampling, IonQ | 8 | § submitted; 177; $1,469 | † service; 6; $49.80; ? | pre-submit; 1; $8.30 | pre-submit; 1; $8.30 |
 | | 20 | § submitted; 921; $7,644 | † service; 6; $49.80; ? | pre-submit; 1; $8.30 | pre-submit; 1; $8.30 |
-| QPU as sampling backend, default 1,000 shots | 8 | submitted; 1 task; $80.30 | † **service; 0; $0** | submitted; 1; **$80.30** | † service; 0; $0 |
-| Untagged SV1 run over the baseline | 8 | submitted; **baseline overwritten** | overwritten | **cli**; baseline intact | cli; intact |
+| QPU as sampling backend, default shots | 8 | submitted; 1 task; $80.30 | † **service; 0; $0** | submitted; 1; **$80.30** | † service; 0; $0 |
+| Untagged run over the baseline | 8 | submitted; **baseline overwritten** | overwritten | **cli**; baseline intact | cli; intact |
 
 The division of labour is the result. The structural guards stop the two runs that would have been
 ruinous at the command line and before the call reaches a device, and they do so at every N, because
@@ -1388,24 +1415,45 @@ Supplementary S-IX]. Table 12 lists how each was found at the time and which che
 would flag it now, or a dash where none would; the last column names the E-S1 fault that replays it
 where one does.
 
-**Table 12. The seven defects.**
+**Table 12. The seven defects: how each was found, and what of it a relation holds now. A dash is a
+defect no relation detects; the paragraphs below say what the record holds instead where that needs
+saying.**
 
-| # | Defect | How it was found | Relation that now holds it | E-S1 replay |
+| # | Defect | How it was found | Relation that holds it now | E-S1 replay |
 |---|---|---|---|---|
-| 1 | angles passed as a plain array; the optimizer returned them unchanged | a flat convergence curve, by inspection | npz-internal, by its diagnostic clause: the final angles equal the trajectory's first point. Not an identity — a run stopped at a stationary point would look the same — so it reports a run to look at, which is what this defect needs | — |
+| 1 | angles passed as a plain array; the optimizer returned them unchanged | a flat convergence curve, by inspection | npz-internal, diagnostic clause | — |
 | 2 | computational-basis sampling unsupported on the Braket device | an exception on first use | — (a failure, not a wrong number) | — |
-| 3 | the γ-landscape's period at N = 12 smaller than one ADAM step | divergence of the expectation, by inspection | npz-internal binds the Hamiltonian scale on the row to the one in the artifact, so a run whose scale differs from the one it was optimised under is visible; the step size against the period is not checked | — |
-| 4 | IonQ's nested result schema misread by the client library into an energy of exactly 0.0 | the shots were found in S3 and did not match | — . The record does not catch this one: solver and scorer read the same misparsed bitstring, so they agree with each other, and a batch with no feasible shot is a legitimate outcome elsewhere in the study. What changed is upstream — the hardware records are parsed from the device's own nested schema (`src/solvers/braket_results.py`), and a test pins the shot, distinct-bitstring and feasible counts of all four committed tasks | — |
+| 3 | the γ-landscape's period at N = 12 smaller than one ADAM step | divergence of the expectation, by inspection | — | — |
+| 4 | IonQ's nested result schema misread by the client library into an energy of exactly 0.0 | the shots were found in S3 and did not match | — | — |
 | 5 | a hardware recovery path exercised only against a simulator | on the first real task | — (documented manual step) | — |
-| 6 | `shot_seed` a no-op: the Lightning devices seed once at construction | two sweeps with "different" shots had identical energies, by comparison | seed-distinct (its batch clause; the angles are untouched by this defect) and state-batch | shot_seed_noop, caught by both checks |
-| 7 | the L-BFGS-B wrapper sampled from the initial angles | the batch's feasible fraction tracked initial P_F (r = 0.99), not final (r = −0.30) | state-batch. The defect wrote a batch its artifact agreed with, so row-npz does not see it; row-npz sees the *injection* of Section 5.1, which rewrites the row's summary and leaves the artifact | batch_from_initial (2,299 findings on 2,252 rows and all nineteen blocks; 12/30 headline numbers moved) |
+| 6 | `shot_seed` a no-op: the Lightning devices seed once at construction | two sweeps with "different" shots had identical energies, by comparison | seed-distinct (batch clause) and state-batch | shot_seed_noop |
+| 7 | the L-BFGS-B wrapper sampled from the initial angles | the batch's feasible fraction tracked initial P_F (r = 0.99), not final (r = −0.30) | state-batch | batch_from_initial |
+
+Four of those cells need a sentence. *Defect 1*: npz-internal's clause is that the final angles equal
+the trajectory's first point. It is not an identity — a run stopped at a stationary point looks the
+same — so it reports a run to look at rather than a fault, which is what this defect needs.
+*Defect 3*: no relation detects it. A step larger than the period leaves a record that agrees with
+itself in every way the thirteen test; what npz-internal holds is the neighbouring inconsistency,
+the Hamiltonian scale on the row against the one in the artifact, so a run scored under a scale it
+was not optimised under is visible. *Defect 4*: the record does not catch this one either. Solver and
+scorer read the same misparsed bitstring, so they agree with each other, and a batch with no feasible
+shot is a legitimate outcome elsewhere in the study. What changed is upstream: the hardware records
+are parsed from the device's own nested schema (`src/solvers/braket_results.py`), and a test pins
+the shot, distinct-bitstring and feasible counts of all four committed tasks. *Defect 7*: the defect
+wrote a batch its artifact agreed with, so row-npz does not see it; row-npz sees the *injection* of
+Section 5.1, which rewrites the row's summary and leaves the artifact. Its replay is the largest of
+the ten — 2,299 findings on 2,252 rows and all nineteen (N, penalty) blocks, moving 12 of 30 headline
+numbers.
 
 Only the seventh was found by a relation that already existed as a check; the others were found by
 inspection, by exception or by an ad hoc comparison, and the relations were written afterwards so that
-the same class of defect would not need luck again. Three of the seven are still not held by any of
+the same class of defect would not need luck again. Four of the seven are still not held by any of
 the thirteen, and the table says so rather than claiming coverage it does not have: an exception on
-first use is a failure and not a wrong number, a documented manual step is a step, and the misread
-hardware schema produces a record that agrees with itself. Two further defects concerned the record's writer
+first use is a failure and not a wrong number, a documented manual step is a step, the misread
+hardware schema produces a record that agrees with itself, and a step larger than the landscape's
+period does too. For the last two the record holds a *neighbouring* relation — solver against
+scorer, row against artifact — and the table distinguishes the two rather than letting a relation
+that would catch something nearby stand for one that catches this. Two further defects concerned the record's writer
 and its inputs rather than a run: a CSV writer that took its header from the first row dropped twelve
 of nineteen columns of one file without a message (replayed as column_drop; the writer now takes the
 union of keys), and a per-size price cache that held one file revised by the provider seven minutes
@@ -1437,7 +1485,20 @@ baseline without a word, and `--resume` skipped cells by key without asking whet
 been written under the same arguments, so a resumed run with different steps left two experiments in
 one file and exited 0. None was found by the three evaluations; all three were found by reading a
 driver beside the sentence that describes it, which is the same instrument as the non-atomic flush
-above and the only one that has found a defect in the platform's *writers*. The third gap was found not by a harness but by operating one: the
+above.
+
+A reader of the package then found a fourth of that kind, and it is the sharpest of them, because
+it is this paper's own thesis turned on the platform: the status record of Section 3.3 was a claim
+about a manifest that nothing compared to the manifest. Deleting one row from a committed
+thirty-row block and leaving `EXIT 0, 30/30` in place, the aggregation printed the two numbers on
+adjacent lines and published the medians of twenty-nine; duplicating a row gave thirty-one the same
+way. The comparison described in Section 3.3 is the fix. The same reading found the release missing
+a file this paper cites — the device-availability log, tracked in the working repository and matched
+by the package's own ignore rule, so the export left it out while printing one count for the files
+it selected and a smaller one for the files it committed. Both are fixed in `v1.1`: a check that
+refuses, rather than two numbers nobody compared. That reading is a second instrument, and it is not
+ours: of the defects in the platform's *writers*, three came from us reading our own drivers and
+this one from a reader who had only the package. The third gap was found not by a harness but by operating one: the
 two-hour coverage scan of Section 5.1 crashed in its first minute on a column that is empty on every
 row, the shell script that ran it had no `set -e` and printed its completion marker anyway, and success
 was read off that marker for nine hours. The status record of Section 3.3 is the consequence. The dollar figures are list prices applied to
@@ -1468,19 +1529,21 @@ reconstruction levels checkable end to end. We have not built that.
 A cloud quantum benchmark's record can be designed so that a mix-up between its parts is a violated
 relation rather than a plausible number, its billing can be refused by configuration before a task
 exists, and its results can be rebuilt from the published package at a cost that package states. Measured
-against controls on a 2,565-run record: ten of ten injected faults detected with no false positives,
-against one for a schema-only pipeline; the two ruinous misconfigurations stopped before any device
-is built, whereas a model of the provider's documented dollar cap stops them after six tasks, and
+against controls on a 2,565-run record, what a check can settle is set by how far the record it
+reads extends. Expectations declared over the run table catch eight of the ten injected faults, and
+over six hundred random mutations they come within two of the relations wherever a headline number
+moves — 51 against 49. The two faults they cannot reach, and the 168 mutations of a file the run
+table does not contain, need the relations that cross from the table to the pinned statistics and
+the stored state: those catch 135 of the 168 and the declarative control none. A schema-only
+pipeline catches one of the ten, and five committed clean records raise nothing. The two ruinous
+misconfigurations stopped before any device is built, whereas a model of the provider's documented dollar cap stops them after six tasks, and
 that cap is unavailable for the simulator where the fallback occurred; and the published package's three reconstruction levels rebuilt from a clone in
 24 s (21.7 s of figures and 2.6 s of table checks), 18 s, and — for the 24-run block that stands
 for the 13.9-GPU-hour cross — 222 s, with the loss on interruption bounded at the run in flight once
-the file is written by a single rename. The same evaluation found three weak points of the platform — a digest that
-named inputs without binding their values, a failure that did not name what was missing, and a job
-whose end state was inferred rather than recorded — and each fix is measured or exercised above.
-Reading the drivers beside the sentences that describe them found four more, in the writers rather
-than in the records: a flush that was not atomic, an aggregation that checked the job and not the
-record, an empty tag that reached the committed file names, and a resume that did not ask what the
-manifest was made under (Section 7). Future work will extend fault injection to the execution and
+the file is written by a single rename. Measuring the three principles found the platform recording an inference in
+three places, reading its drivers found four more, and a reader who had only the package found a
+fifth — a status record that nothing compared to the file it described; every fix is measured or
+exercised above, and Section 7 says which instrument found which. Future work will extend fault injection to the execution and
 persistence paths, including interrupted writes, aggregation gates, and resume conditions, to test
 failures that mutations of stored records alone cannot expose.
 
@@ -1523,7 +1586,7 @@ unchanged. `CHANGELOG.md` states which version each paper was evaluated against.
 
 The cloud spend of this paper, and of the project behind it, is Table 13.
 
-**Table 13. Cloud tasks paid for, by what they were paid for.**
+**Table 13. Cloud tasks paid for, by what they were paid for. Each cost is the row's task count at SV1's $0.00375 per task — the three-second minimum — rounded to the cent, and *this paper*'s total is the sum of those rounded figures; the rounded sum of 1,249 tasks is $4.68. The last two rows are the provider's billing console and are not derived from a count.**
 
 | What | Tasks | Cost |
 |---|---:|---:|

@@ -36,6 +36,22 @@ drivers against its claims produced.
   write, and refuses before skipping a cell or touching a file. It previously matched on
   (N, instance, penalty, seed) alone, so a resumed run with different steps left two experiments in
   one file and exited 0.
+- **Fix:** the aggregation compares the status record with the manifest beside it before it trusts
+  either: the row count against the rows the record says were written, a run id that occurs twice,
+  a last run the file does not hold. It previously read `done == total` out of the record alone, so
+  `EXIT 0, 30/30` beside a manifest with one row deleted printed both numbers and published the
+  medians of twenty-nine. The comparison is exact for a job that ended normally and allows the one
+  row a kill can leave between the write and the heartbeat, and `--allow-partial` does not waive it.
+- **Fix:** the job status record counts the runs that failed, and `describe()` prints the count, so
+  that `EXIT 0` is read as "every planned run was attempted and recorded" rather than "every run
+  succeeded". `--resume` fills the gaps the manifest does not hold and does not retry a recorded
+  failure; its help says so.
+- **Fix:** the public export force-adds every selected file and then refuses to commit unless what
+  it tracks is what it selected. The device-availability log this project's system paper cites is
+  tracked here and matched by the package's own `*.log` rule, so three exports dropped it while
+  printing one count for the files selected and a smaller one for the files committed. The
+  identifier scan moves onto the same list, since a file the ignore rules swallow was also a file
+  nothing scanned.
 - **Fix:** every text file is now opened with an explicit encoding. On a system whose locale is not
   UTF-8 — a Japanese Windows, where it is cp932 — fifteen tests failed on the first em dash of the
   manuscript. Nothing a result file holds changes.

@@ -293,6 +293,19 @@ class TestJobStatusRecord:
         p = run_status.status_path(manifest)
         rec["state"], rec["exit_code"], rec["done"] = "RUNNING", None, 0
         p.write_text(json.dumps(rec), encoding="utf-8")
-        with pytest.raises(RuntimeError, match="not complete"):
-            analyze_e1.main(["--results-tag", "st"])
+        # A refusal is an outcome the aggregation reports and exits 1 on, not a
+        # traceback: the message names the state the record holds.
+        assert analyze_e1.main(["--results-tag", "st"]) == 1
+        assert "not complete" in capsys.readouterr().err
         assert analyze_e1.main(["--results-tag", "st", "--allow-partial"]) in (0, None)
+
+        # And a record that does not describe the file beside it is refused
+        # whatever --allow-partial says: here the file loses its only row while
+        # the record still claims one was written.
+        rec["state"], rec["exit_code"], rec["done"] = "EXIT", 0, 1
+        p.write_text(json.dumps(rec), encoding="utf-8")
+        text = manifest.read_text(encoding="utf-8").splitlines()
+        manifest.write_text(text[0] + "\n", encoding="utf-8")
+        for extra in ([], ["--allow-partial"]):
+            assert analyze_e1.main(["--results-tag", "st", *extra]) == 1
+            assert "do not describe the same run" in capsys.readouterr().err

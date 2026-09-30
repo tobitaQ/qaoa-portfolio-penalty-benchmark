@@ -257,7 +257,14 @@ def fig_guard_stages() -> None:
                 if r["tasks_would_submit"] not in ("1",):
                     note += f", {int(r['tasks_would_submit']):,} t"
             elif r["stage"] == "service":
-                note = f"{int(r['tasks_billed'])} t, ${billed:.2f}, no result" if int(r["tasks_billed"]) else "0 t, $0"
+                # What comes back is the record's, not a constant: the cap rejects
+                # the optimizer's first gradient and nothing usable returns, while
+                # the frozen-angle call it rejects would have returned a value and
+                # no gradient. Table 7 marks the two apart and so must this.
+                got = {"no": "no result", "unknown": "a value, no gradient",
+                       "yes": "the intended result"}[r["usable_result"]]
+                note = (f"{int(r['tasks_billed'])} t, ${billed:.2f}, {got}"
+                        if int(r["tasks_billed"]) else "0 t, $0")
             elif r["stage"] == "pre-submit" and billed > 0:
                 note = f"${billed:.2f}, the intended task"
             if note:

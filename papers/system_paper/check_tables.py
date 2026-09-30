@@ -193,8 +193,8 @@ for r in table(5):
     chk(5, f"{label} n", num(r["n"]), float(g.n))
     chk(5, f"{label} detected", num(r["Detected"]), float(g.detected))
     chk(5, f"{label} declarative", num(r["Declarative"]), float(g.detected_declarative))
-    chk(5, f"{label} moved", num(r["Moved a headline"]), float(g.moved_headline))
-    chk(5, f"{label} moved and missed", num(r["Moved and missed"]), float(g.moved_and_undetected))
+    chk(5, f"{label} moved", num(r["Moved"]), float(g.moved_headline))
+    chk(5, f"{label} moved and missed", num(r["Missed"]), float(g.moved_and_undetected))
 
 # ---------------------------------------------------------------- Table 6
 t6 = pd.read_csv(R / "paper02_es2_task_counts.csv")

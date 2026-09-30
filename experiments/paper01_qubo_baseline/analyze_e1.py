@@ -698,7 +698,13 @@ def main(argv=None) -> int:
     # A partial cross aggregates into plausible numbers; the job's own status
     # record beside the manifest is what says whether it is whole.
     manifest_path = RESULTS_DIR / f"paper01_e1_cross{suffix}.csv"
-    print(f"job status: {run_status.require_complete(manifest_path, args.allow_partial)}")
+    # A refusal here is an expected outcome, not a crash: say it the way the
+    # relation gate below says its own, and exit non-zero.
+    try:
+        print(f"job status: {run_status.require_complete(manifest_path, args.allow_partial)}")
+    except RuntimeError as exc:
+        print(f"refusing to aggregate: {exc}", file=sys.stderr)
+        return 1
     reference_path = RESULTS_DIR / f"paper01_e1_reference{suffix}.csv"
     # A complete job says nothing about whether its record still agrees with
     # itself: a review of this driver edited one final_P_F in the CSV, and the

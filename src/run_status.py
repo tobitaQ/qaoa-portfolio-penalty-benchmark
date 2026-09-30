@@ -26,10 +26,18 @@ state written in the record) unless the job ended with ``EXIT 0`` and
 ``done == total``, or the caller passes ``allow_partial``. A manifest without
 a status file predates this module; ``require_complete`` says that too and
 lets it through, because the committed E1 record is one.
+
+A status record is itself a claim about a file, and a claim nothing compares
+to its subject is the inference this module exists to remove. So
+``require_complete`` also reads the manifest and refuses when the two
+disagree -- the row count against ``done``, a run id that appears twice, a
+``last`` the file does not hold. Without that, ``EXIT 0, 30/30`` beside a
+twenty-nine-row file aggregated without a word.
 """
 
 from __future__ import annotations
 
+import csv
 import json
 import os
 import socket
@@ -57,7 +65,7 @@ class JobStatus:
         self.record = {
             "state": "RUNNING", "exit_code": None, "pid": os.getpid(),
             "host": socket.gethostname(), "started_utc": _now(), "updated_utc": _now(),
-            "done": 0, "total": total, "last": None, "spec_version": spec_version,
+            "done": 0, "failed": 0, "total": total, "last": None, "spec_version": spec_version,
             "command": command if command is not None else sys.argv,
         }
         self._write()
@@ -68,15 +76,27 @@ class JobStatus:
         tmp.write_text(json.dumps(self.record, indent=1), encoding="utf-8")
         os.replace(tmp, self.path)
 
-    def heartbeat(self, done: int, last: str | None = None, total: int | None = None) -> None:
+    def heartbeat(self, done: int, last: str | None = None, total: int | None = None,
+                  failed: int | None = None) -> None:
+        """``done`` rows are on disk, ``failed`` of them recording a failure."""
         self.record["done"] = done
         if last is not None:
             self.record["last"] = last
         if total is not None:
             self.record["total"] = total
+        if failed is not None:
+            self.record["failed"] = failed
         self._write()
 
     def finish(self, exit_code: int = 0) -> None:
+        """How the *driver* ended, not how its runs went.
+
+        ``EXIT 0`` says the loop reached its end and every planned run was
+        attempted and recorded. Runs that raised are recorded as failures and
+        counted in ``failed``; they do not make the job ``FAILED``, which is
+        reserved for the driver itself stopping. ``describe()`` prints the
+        failure count so that the two are never read as one.
+        """
         self.record["state"] = "EXIT" if exit_code == 0 else "FAILED"
         self.record["exit_code"] = exit_code
         self._write()
@@ -96,6 +116,11 @@ def describe(record: dict | None, now: datetime | None = None) -> str:
     state = record.get("state")
     done, total = record.get("done"), record.get("total")
     progress = f"{done}/{total}" if total else f"{done} rows"
+    # A job that attempted everything and recorded failures is EXIT 0 with a
+    # non-zero count here. Printing the count beside the progress is what keeps
+    # "ran to the end" from being read as "every run succeeded".
+    if record.get("failed"):
+        progress += f" ({record['failed']} failed)"
     if state == "RUNNING":
         updated = datetime.fromisoformat(record["updated_utc"])
         age = ((now or datetime.now(timezone.utc)) - updated).total_seconds()
@@ -106,16 +131,80 @@ def describe(record: dict | None, now: datetime | None = None) -> str:
     return f"FAILED (exit {record.get('exit_code')}), {progress}, at {record.get('last')}"
 
 
+def manifest_rows(output: Path) -> tuple[int, list[str]] | None:
+    """The data rows of a CSV manifest and the run ids in them, or ``None``.
+
+    ``None`` when there is no file or it carries no ``run_id`` column; the
+    caller then has nothing to compare the status record against.
+    """
+    if not output.exists():
+        return None
+    with output.open(newline="", encoding="utf-8") as fh:
+        reader = csv.DictReader(fh)
+        if not reader.fieldnames or "run_id" not in reader.fieldnames:
+            return None
+        rows = list(reader)
+    # A manifest emptied to its header is zero rows, not "nothing to compare":
+    # the header is what says this is a manifest.
+    return len(rows), [r["run_id"] for r in rows]
+
+
+def disagreements(output: Path, record: dict | None) -> list[str]:
+    """Where the status record and the file beside it do not describe the same run.
+
+    A status record is a claim about a file, and until something compares the
+    two the claim is the same inference the record was written to replace: a
+    review of this module deleted one row from a thirty-row manifest, left
+    ``EXIT 0, 30/30`` in place, and the aggregation printed ``30/30`` and
+    ``done 29`` on adjacent lines and published the medians of twenty-nine.
+    """
+    if record is None:
+        return []
+    seen = manifest_rows(output)
+    if seen is None:
+        return []
+    n_rows, ids = seen
+    out = []
+    done = record.get("done")
+    ended = record.get("state") == "EXIT" and record.get("exit_code") == 0
+    if done is not None:
+        # The driver writes the row and then beats: a job killed between the
+        # two leaves the file one row ahead of the record, and that lag is the
+        # design working, not a disagreement. A job that ended normally beat
+        # once more on its way out, so there the two must match exactly.
+        lag = n_rows - done
+        if lag < 0 or (lag > 0 and ended) or lag > 1:
+            out.append(f"the record says {done} row(s) were written and the file holds {n_rows}")
+    duplicates = sorted({i for i in ids if ids.count(i) > 1})
+    if duplicates:
+        out.append(f"{len(duplicates)} run id(s) appear more than once, first {duplicates[0]}")
+    last = record.get("last")
+    if last is not None and last not in ids:
+        out.append(f"the last run the record names, {last}, is not in the file")
+    return out
+
+
 def require_complete(output: Path, allow_partial: bool = False) -> str:
     """Refuse to aggregate a manifest whose job did not end complete.
 
     Returns the description; raises ``RuntimeError`` when the job is RUNNING,
-    FAILED, or EXIT with ``done != total``, unless ``allow_partial``.
+    FAILED, or EXIT with ``done != total``, unless ``allow_partial`` -- and,
+    whatever ``allow_partial`` says, when the record and the file disagree
+    about what was written. ``allow_partial`` is for aggregating a run that is
+    knowingly unfinished; it is not a licence to aggregate a file that is not
+    the one the record describes.
     """
     record = read(output)
     text = describe(record)
     if record is None:
         return text
+    off = disagreements(output, record)
+    if off:
+        raise RuntimeError(
+            f"{output.name}: its status record and the file do not describe the same run -- "
+            + "; ".join(off) + ". The record says the job ended; the file says otherwise, "
+            f"and which of the two is right is not something this check can decide. "
+            f"Re-run, or resume, rather than aggregating either.")
     complete = (record.get("state") == "EXIT" and record.get("exit_code") == 0
                 and (record.get("total") is None or record.get("done") == record.get("total")))
     if not complete and not allow_partial:

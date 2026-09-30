@@ -457,7 +457,9 @@ def parse_args(argv=None) -> argparse.Namespace:
                         "committed paper01_e1_cross.csv / paper01_e1_reference.csv "
                         "and the e1_runs/ artifacts; refused otherwise")
     p.add_argument("--resume", action="store_true",
-                   help="Skip (N, instance, label, seed) rows already in the manifest")
+                   help="Skip (N, instance, label, seed) rows already in the manifest, "
+                        "a recorded failure included: a run that raised is an "
+                        "observation, and this option fills gaps rather than retrying")
     return p.parse_args(argv)
 
 
@@ -502,7 +504,15 @@ def main(argv=None) -> int:
         print("  use a new --results-tag, or re-run without --resume to replace it",
               file=sys.stderr)
         return 1
+    # What --resume skips: every key the manifest already holds, a recorded
+    # failure included. A run that raised is an observation about this
+    # configuration, not a gap, and re-running it would replace that
+    # observation with whatever the second attempt did. To attempt one again,
+    # run it under a new --results-tag; the failure stays where it was
+    # recorded. `failed` starts from the failures already in the file so that
+    # a resumed job's status record counts the whole manifest, not its tail.
     done = {tuple(r[k] for k in RUN_KEY) for r in rows}
+    failed = sum(1 for r in rows if str(r.get("status", "")).startswith("error:"))
     reference_rows = read_manifest(reference_path) if args.resume else []
     reference_done = {(r["n_assets"], r["instance"]) for r in reference_rows}
 
@@ -516,7 +526,8 @@ def main(argv=None) -> int:
     print(f"E1 {SPEC_VERSION}: N={args.n} x {len(args.instances)} instances x "
           f"{len(args.seeds)} seeds x <=6 penalties on {args.backend}/{args.precision}, "
           f"optimizer {optimizer_label}; "
-          f"{len(done)} rows already done", flush=True)
+          f"{len(done)} rows already done"
+          + (f" ({failed} of them failed and are not retried)" if failed else ""), flush=True)
     t_start = time.perf_counter()
     # The job's own record: RUNNING with a heartbeat after every run, EXIT or
     # FAILED at the end, beside the manifest (src/run_status.py). ``total``
@@ -526,26 +537,38 @@ def main(argv=None) -> int:
     per_cell = {c: (len(args.penalties) if args.penalties else 6) * len(args.seeds) for c in cells}
     status = run_status.JobStatus(manifest_path, total=sum(per_cell.values()),
                                   spec_version=SPEC_VERSION)
-    status.heartbeat(len(rows))
+    status.heartbeat(len(rows), failed=failed)
+    # ``tally`` is mutable so that _run_all can count failures into it; the
+    # final status record then says how many of the rows it attempted are
+    # failures, which EXIT 0 on its own does not.
+    tally = {"failed": failed}
     try:
         _run_all(args, cells, per_cell, status, rows, done, reference_rows, reference_done,
                  reference_path, manifest_path, artifact_dir, loader, formulator, metrics,
-                 solver, optimizer_label)
+                 solver, optimizer_label, tally)
     except BaseException as exc:  # KeyboardInterrupt included: the record must say so
         status.finish(130 if isinstance(exc, KeyboardInterrupt) else 1)
         raise
-    status.heartbeat(len(rows), total=len(rows))
+    status.heartbeat(len(rows), total=len(rows), failed=tally["failed"])
+    # EXIT 0 says the loop reached its end with every planned run attempted and
+    # recorded, not that every run succeeded; the failure count says that.
     status.finish(0)
     elapsed = time.perf_counter() - t_start
-    print(f"\n{len(rows)} rows → {manifest_path} in {elapsed/60:.1f} min; "
+    print(f"\n{len(rows)} rows ({tally['failed']} failed) → {manifest_path} "
+          f"in {elapsed/60:.1f} min; "
           f"status {run_status.describe(run_status.read(manifest_path))}")
     return 0
 
 
 def _run_all(args, cells, per_cell, status, rows, done, reference_rows, reference_done,
              reference_path, manifest_path, artifact_dir, loader, formulator, metrics,
-             solver, optimizer_label) -> None:
-    """The cross itself; split out so the caller can record how it ended."""
+             solver, optimizer_label, tally) -> None:
+    """The cross itself; split out so the caller can record how it ended.
+
+    ``tally["failed"]`` counts the rows that record a failure, so that the
+    status record can distinguish a job that attempted everything from one
+    whose every run succeeded.
+    """
     for n in sorted(args.n):
         for instance in args.instances:
             ref = InstanceReference(n, instance, loader, formulator, args.end_date)
@@ -607,6 +630,7 @@ def _run_all(args, cells, per_cell, status, rows, done, reference_rows, referenc
                         row = {**base, "status": f"error:{type(exc).__name__}",
                                "error": str(exc)[:200]}
                         line = f"  {label:>9s} s{seed}  FAILED {type(exc).__name__}"
+                        tally["failed"] += 1
                     rows.append(row)
                     done.add(key)
                     # One writer for every result file: it takes the union of the
@@ -617,7 +641,7 @@ def _run_all(args, cells, per_cell, status, rows, done, reference_rows, referenc
                     write_csv(manifest_path, rows)
                     # After the file, so that a heartbeat of k always corresponds
                     # to k complete rows on disk.
-                    status.heartbeat(len(rows), last=base["run_id"])
+                    status.heartbeat(len(rows), last=base["run_id"], failed=tally["failed"])
                     # The line comes after the record, not before it: a reader of
                     # the log should never see a run the file does not hold.
                     print(line, flush=True)
