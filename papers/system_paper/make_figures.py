@@ -272,7 +272,9 @@ def fig_guard_stages() -> None:
     for x in range(len(STAGES)):
         ax.axvline(x, color="#dddddd", lw=0.6, zorder=0)
     from matplotlib.lines import Line2D
-    shapes = [Line2D([], [], marker=mk, color="w", mec="black", mew=0.7, mfc="#dcdcdc", ms=5, label=lab)
+    # Outline only: a filled swatch here would read as one of the fills below,
+    # which are the other channel.
+    shapes = [Line2D([], [], marker=mk, color="w", mec="black", mew=0.7, mfc="none", ms=5, label=lab)
               for mk, lab in (("s", "no guard"), ("D", "$50 cap only"),
                               ("o", "structural guards"), ("^", "both"))]
     fills = [Line2D([], [], marker="o", color="w", mec="black", mew=0.7, mfc=FILL[k], ms=5, label=lab)

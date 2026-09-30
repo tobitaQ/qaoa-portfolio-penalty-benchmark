@@ -20,18 +20,48 @@ Usage:
 
 from __future__ import annotations
 
+import csv
 import pathlib
 import re
+import sys
 
 import pandas as pd
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 R = ROOT / "experiments" / "system_paper" / "results"
 SRC = (ROOT / "papers" / "system_paper" / "system_paper_draft.md").read_text(encoding="utf-8")
+#: Where ``--csv`` writes when no path follows it; ``--csv <path>`` writes elsewhere.
+DATASHEET = ROOT / "papers" / "system_paper" / "table_data.csv"
 
 OK: list[str] = []
 BAD: list[str] = []
 UNBOUND: list[str] = []
+#: One row per comparison, for ``--csv``: the datasheet of every number in the
+#: paper that is bound to a file, and of every table and cell that is not.
+ROWS: list[dict] = []
+
+#: The result files each table is read from. ``chk``/``chks`` name them in the
+#: datasheet so that a reader can go from a cell to the file without reading
+#: this script. Kept beside the checks rather than derived from them, because a
+#: check may read a file only to index another.
+SOURCES = {
+    3: ("paper02_es1_detection_matrix.csv",),
+    4: ("paper02_es1_column_coverage_before.csv", "paper02_es1_column_coverage_pass2.csv",
+        "paper02_es1_column_coverage.csv"),
+    5: ("paper02_es1_random_summary.csv", "paper02_es1_random_summary_heldout.csv"),
+    6: ("paper02_es2_task_counts.csv",),
+    7: ("paper02_es2_guard_stages.csv", "paper02_es2_cloud_observation.csv"),
+    8: ("paper02_es2_cost_control_repetitions.csv",
+        "paper02_es2_cost_control_repetitions_summary.csv"),
+    9: ("paper02_es3_steps.csv", "paper02_es3_steps_v11.csv"),
+    10: ("paper02_es3_column_agreement.csv",),
+    11: ("paper02_level1_machines.csv",),
+    13: ("paper02_es2_cloud_observation.csv", "paper02_es2_cost_control_tasks_as_deployed.csv",
+         "paper02_es2_cost_control_tasks_run1.csv", "paper02_es2_cost_control_tasks_run2.csv",
+         "paper02_es2_cost_control_tasks_run3.csv", "paper02_es2_cost_control_tasks_run4.csv",
+         "paper02_es2_cost_control_tasks_run5.csv"),
+    "5.1": ("paper02_es1_finding_counts.csv",),
+}
 
 
 def table(n) -> list[dict]:
@@ -80,18 +110,27 @@ def sci(cell):
     return out
 
 
+def _row(t, label, paper, csv, kind, tol, good):
+    ROWS.append({"table": t, "item": label, "paper": paper, "file": csv,
+                 "kind": kind, "tolerance": tol, "agrees": "yes" if good else "no",
+                 "source": "; ".join(SOURCES.get(t, ()))})
+
+
 def chk(t, label, paper, csv, tol=0.0):
     good = paper is not None and csv is not None and abs(paper - csv) <= tol
     (OK if good else BAD).append(f"Table {t} {label}: paper={paper} file={csv}")
+    _row(t, label, paper, csv, "numeric", tol, good)
 
 
 def chks(t, label, paper, csv):
     good = str(paper).strip() == str(csv).strip()
     (OK if good else BAD).append(f"Table {t} {label}: paper={paper!r} file={csv!r}")
+    _row(t, label, paper, csv, "text", "", good)
 
 
 def unbound(t, why):
     UNBOUND.append(f"Table {t}: {why}")
+    _row(t, why, "", "", "unbound", "", True)
 
 
 # ---------------------------------------------------------------- Table 3
@@ -362,8 +401,10 @@ try:
                 BAD.append(f"figure {name}: not regenerated")
             elif digest(here) == digest(there):
                 OK.append(f"figure {name}: byte-identical")
+                _row("figure", name, digest(here)[:16], digest(there)[:16], "sha256", "", True)
             else:
                 BAD.append(f"figure {name}: regenerates to a different file")
+                _row("figure", name, digest(here)[:16], digest(there)[:16], "sha256", "", False)
 finally:
     shutil.rmtree(tmp, ignore_errors=True)
 
@@ -398,6 +439,24 @@ chk("5.1", "state-batch rows plus blocks", 2252.0 + 19.0, float(bf.n_subjects))
 # A [[placeholder]] left in the draft is an identifier nobody has filled in yet.
 for m in re.finditer(r"\[\[([^\]]+)\]\]", SRC):
     BAD.append(f"placeholder still in the draft: [[{m.group(1)}]]")
+    _row("draft", f"placeholder [[{m.group(1)}]]", "", "", "placeholder", "", False)
+
+# ``--csv [path]`` writes the datasheet: one row per comparison, with the value
+# the paper states, the value the file holds, the tolerance the comparison
+# allowed, and the files the table is read from. It is the same information the
+# lines above report, in a form a reader can sort and a reviewer can work
+# through, and it lists the tables that are prose rather than omitting them.
+if "--csv" in sys.argv:
+    i = sys.argv.index("--csv")
+    out = pathlib.Path(sys.argv[i + 1]) if len(sys.argv) > i + 1 \
+        and not sys.argv[i + 1].startswith("-") else DATASHEET
+    out.parent.mkdir(parents=True, exist_ok=True)
+    with out.open("w", encoding="utf-8", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=["table", "item", "paper", "file", "kind",
+                                           "tolerance", "agrees", "source"])
+        w.writeheader()
+        w.writerows(ROWS)
+    print(f"wrote {out.relative_to(ROOT) if out.is_relative_to(ROOT) else out} ({len(ROWS)} rows)")
 
 print(f"{len(OK)} cell(s) agree with the result files, {len(BAD)} disagree, "
       f"{len(UNBOUND)} table(s) or cell(s) not bound to one")

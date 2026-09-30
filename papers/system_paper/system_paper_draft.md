@@ -119,7 +119,8 @@ not portable across hosts, so the README must say in advance which columns a rea
 move. A provider's policy, a queue and a floating-point fact — recognisable anywhere, and each with a
 particular edge here.
 
-**Contributions.**
+**Contributions.** Six, in the order the rest of the paper takes them; each names the section
+that evidences it.
 
 1. Three design principles for a cloud quantum benchmark platform, each with a stated scope, and
    their realisation in an open reproduction package (Section 3).
@@ -1093,7 +1094,7 @@ service in any case — what is measured is the framework's decision, not a bill
 **Stopping stages.** Figure 2 shows the N = 8 cells; Table 7 gives N = 8 and N = 20, and the CSV
 holds N = 12 and 16, which lie between.
 
-![Fig. 2. Where each misconfiguration stops under the four guard configurations (N = 8, list prices). Nothing is carried by colour: the marker's shape is the guard configuration and its fill the outcome — open for nothing wasted, grey for a correct call with a costly default, solid for wasted spend or the baseline file lost. The marks are Table 7's: ‡ observed on the service, § a task count obtained by counting circuits, † the provider's documented behaviour, unmarked what the harness ran and counted.](figures/fig_guard_stages.pdf)
+![Fig. 2. Where each misconfiguration stops under the four guard configurations (N = 8, list prices). Nothing is carried by colour: the marker's shape is the guard configuration and its fill the outcome — open for nothing wasted, grey for a correct call with a costly default, solid for wasted spend or the baseline file lost. Nothing stops at the constructor: the command line refuses first, and the constructor's own refusal (Section 3.1) is a second line that nothing here reaches. The marks are Table 7's: ‡ observed on the service, § a task count obtained by counting circuits, † the provider's documented behaviour, unmarked what the harness ran and counted.](figures/fig_guard_stages.pdf)
 
 **Table 7. Stage at which each misconfiguration stops, tasks billed and list-price bill, under four
 guard configurations (cap = $50 per QPU). Where a cell comes from: ‡, observed on Amazon Braket;
@@ -1199,7 +1200,9 @@ nothing here is modelled. Two cells of run 1 are recomputed from its task record
 
 **Table 9. The clean-room harness's steps: levels 0–3 and the two controls on the public package
 `v1.0`, then the same checks and the interruption on `v1.1`, the release this paper ships. A fresh
-environment for each, on one host.**
+environment for each, on one host: Ubuntu, one RTX A6000, the GPU host of Table 11. The byte
+comparison of the figures and the wall-clock of level 3 are that machine's; Table 11 is what
+three machines without a GPU do with the same level 1.**
 
 | Level | Command (from the README) | Wall-clock | Outcome |
 |---|---|---:|---|
@@ -1214,12 +1217,12 @@ environment for each, on one host.**
 | 3 | re-issue with `--resume` | 168 s | "6 rows already done"; 24 rows; 94/94 non-timing columns identical to the uninterrupted block |
 | control | level 2 without `data/derived`, network unreachable | 6 s | fails: `TypeError: '<' not supported between instances of 'int' and 'NoneType'` |
 | control | E2 aggregation without the artifacts | 1.2 s | fails: "no run artifacts under …/e1_runs" |
-| 0 (v1.1) | `git clone --branch v1.1`; `python -m venv`; `pip install -r requirements-repro.txt` | 0.3 s; 8 s; 150 s | commit f5a6a0b, 24 MB |
-| 0 (v1.1) | `pytest -q -rs` | 103 s | 417 passed, 33 skipped: 29 need the per-run artifacts, 3 the price snapshots, 1 a host without `lightning.gpu` |
-| 1 (v1.1) | `python -m notebooks.generate_tqe_figures`; `python check_tables.py` | 24 s; 2.8 s | 5/5 byte-identical; 2,578 cells agree, 0 disagree, 0 pending |
+| 0 (v1.1) | `git clone --branch v1.1`; `python -m venv`; `pip install -r requirements-repro.txt` | 0.3 s; 8 s; 146 s | commit a32d427, 24 MB |
+| 0 (v1.1) | `pytest -q -rs` | 102 s | 417 passed, 33 skipped: 29 need the per-run artifacts, 3 the price snapshots, 1 a host without `lightning.gpu` |
+| 1 (v1.1) | `python -m notebooks.generate_tqe_figures`; `python check_tables.py` | 26 s; 2.6 s | 5/5 byte-identical; 2,578 cells agree, 0 disagree, 0 pending |
 | 2 (v1.1) | the level-2 command above | 17 s | energy and Sharpe identical to the committed file, to 0 |
 | 3 (v1.1) | the level-3 block with the job status record: `SIGKILL` after 5 runs | 51 s | status file `RUNNING 5/12, last N12_i00_5xAcrit_s42`, matching the 5 rows on disk, which the manifest parses with no artifact left without a row; `analyze_e1` refuses the manifest |
-| 3 (v1.1) | re-issue with `--resume` | 71 s | driver prints "previous job: RUNNING pid … 5/12"; status `EXIT 0 12/12`; `analyze_e1` runs |
+| 3 (v1.1) | re-issue with `--resume` | 70 s | driver prints "previous job: RUNNING pid … 5/12"; status `EXIT 0 12/12`; `analyze_e1` runs |
 
 The inputs the harness supplied were the repository URL and tag, a name for `--results-tag`, and
 the choice of CPU over the README's GPU for level 3; every other token came from the README.
@@ -1284,7 +1287,7 @@ fault-injection relations against real artifacts; three need the price snapshots
 third-party data the package deliberately does not redistribute (it ships the derived statistics
 instead); and one is the test that a GPU backend does not silently fall back, which has nothing to
 fall back from on a host where `lightning.gpu` is installed and runs. Every claim this paper makes about the final
-implementation is therefore a claim about a tagged commit (`f5a6a0b`) that a reader can clone, and the
+implementation is therefore a claim about a tagged commit (`a32d427`) that a reader can clone, and the
 `CHANGELOG` says which paper was evaluated against which release. What is *not* repeated on `v1.1` is
 level 3's full block and its column-by-column agreement (Table 10), which measures a host-and-precision
 difference the release does not change.
@@ -1494,7 +1497,7 @@ and accompanying artifacts.
 
 The code, the evaluation results and the commands that rebuild them are in one
 package, release `v1.1` (https://github.com/tobitaQ/qaoa-portfolio-penalty-benchmark,
-tag `v1.1`, commit `f5a6a0b`, doi:[[v1.1 DOI]]): the platform; the three harnesses
+tag `v1.1`, commit `a32d427`, doi:[[v1.1 DOI]]): the platform; the three harnesses
 (`experiments/system_paper/es1_fault_injection.py`, `es1_random_faults.py`, `es2_guard_stages.py`,
 `es2_observe_cloud.py`, `es2_observe_cost_control.py`, `es3_reconstruction.py`) and the cost-control
 aggregation (`es2_cost_control_aggregate.py`); the cost-control patch (`cdk/cost_control_patch/`); the job status module

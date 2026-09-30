@@ -141,15 +141,24 @@ only the CSVs, and `es1_fault_injection.py` exits rather than checking half a re
 ## Checking the system paper
 
 Five minutes, no GPU, no AWS account, and nothing billed. This is the path the system paper's
-availability statement describes; its Appendix C lists the command behind each of its tables.
+availability statement describes; its Appendix C lists the command behind each of its tables. Use
+the Setup block above -- `requirements.txt`, the minimum versions, on any host; `requirements-repro.txt`
+pins a CUDA 12 Linux environment and will not resolve anywhere else.
 
 ```bash
-python -m pytest -q -rs          # 417 passed, 33 skipped -- the skips print their reasons:
-                                 # 29 need the per-run artifacts (below), 3 the price snapshots,
-                                 # 1 is a GPU fallback test with nothing to fall back from
+python -m pytest -q -rs          # every skip prints its reason: the per-run artifacts (below),
+                                 # the price snapshots, and one that depends on whether
+                                 # lightning.gpu is installed
 python papers/system_paper/check_tables.py    # 391 cells of Tables 3-11 and 13 against results/,
                                  # and both of its figures regenerated for a byte comparison
 ```
+
+The counts depend on the machine, so read the reasons rather than the total: Table 9 of the system
+paper records 417 passed and 33 skipped on the host its runs came from, which has `lightning.gpu`
+installed; on a machine without one, the test that a GPU backend does not silently fall back has
+nothing to fall back from, so it runs instead of skipping. Table 11 gives the counts of the earlier
+release's suite on three machines without a GPU. `check_tables.py` reads committed files and
+compares them with the manuscript, so its 391 is the same everywhere.
 
 That settles that the paper's numbers are the ones in the committed record. To re-derive the record
 itself, the harnesses under `experiments/system_paper/` each rebuild one table: `es1_fault_injection.py`
