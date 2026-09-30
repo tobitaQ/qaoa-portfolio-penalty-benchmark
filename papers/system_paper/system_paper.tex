@@ -827,7 +827,7 @@ A cloud quantum benchmark's record can be designed so that a mix-up between its 
 
 \section{Availability}
 
-The code, the evaluation results and the commands that rebuild them are in one package, release \texttt{v1.1} (https://github.com/tobitaQ/qaoa-portfolio-penalty-benchmark, tag \texttt{v1.1}, commit \texttt{f5a6a0b}, doi:[[v1.1 DOI]]): the platform; the three harnesses (\texttt{experiments/\allowbreak{}system\_\allowbreak{}paper/\allowbreak{}es1\_\allowbreak{}fault\_\allowbreak{}injection.\allowbreak{}py}, \texttt{es1\_\allowbreak{}random\_\allowbreak{}faults.\allowbreak{}py}, \texttt{es2\_\allowbreak{}guard\_\allowbreak{}stages.\allowbreak{}py}, \texttt{es2\_\allowbreak{}observe\_\allowbreak{}cloud.\allowbreak{}py}, \texttt{es2\_\allowbreak{}observe\_\allowbreak{}cost\_\allowbreak{}control.\allowbreak{}py}, \texttt{es3\_\allowbreak{}reconstruction.\allowbreak{}py}) and the cost-control aggregation (\texttt{es2\_\allowbreak{}cost\_\allowbreak{}control\_\allowbreak{}aggregate.\allowbreak{}py}); the cost-control patch (\texttt{cdk/\allowbreak{}cost\_\allowbreak{}control\_\allowbreak{}patch/\allowbreak{}}); the job status module (\texttt{src/\allowbreak{}run\_\allowbreak{}status.\allowbreak{}py}, \texttt{scripts/\allowbreak{}run\_\allowbreak{}detached.\allowbreak{}sh}); their tests; the result files behind every table (\texttt{paper02\_\allowbreak{}es1\_\allowbreak{}*.\allowbreak{}csv}, \texttt{paper02\_\allowbreak{}es2\_\allowbreak{}*.\allowbreak{}csv}, \texttt{paper02\_\allowbreak{}es3\_\allowbreak{}*.\allowbreak{}csv}, \texttt{paper02\_\allowbreak{}level1\_\allowbreak{}machines.\allowbreak{}csv}); and \texttt{papers/\allowbreak{}system\_\allowbreak{}paper/\allowbreak{}check\_\allowbreak{}tables.\allowbreak{}py}, which binds each cell of Tables 3--11 and 13 to one of them and regenerates both figures for a byte comparison. Appendix C lists the commands. Two inputs are not in it: the 2,565 per-run artifacts (\texttt{.npz}, about 100 MB), which the Zenodo deposit of \cite{ref1} carries and which the checks that read an artifact and E-S1's injection need (Section 5.3), and the price snapshots behind the derived statistics, which are third-party data the package may not redistribute (Section 3.1). Every reproduction level starts from the statistics it does ship.
+The code, the evaluation results and the commands that rebuild them are in one package, release \texttt{v1.1} (https://github.com/tobitaQ/qaoa-portfolio-penalty-benchmark, tag \texttt{v1.1}, commit \texttt{f5a6a0b}, doi:[[v1.1 DOI]]): the platform; the three harnesses (\texttt{experiments/\allowbreak{}system\_\allowbreak{}paper/\allowbreak{}es1\_\allowbreak{}fault\_\allowbreak{}injection.\allowbreak{}py}, \texttt{es1\_\allowbreak{}random\_\allowbreak{}faults.\allowbreak{}py}, \texttt{es2\_\allowbreak{}guard\_\allowbreak{}stages.\allowbreak{}py}, \texttt{es2\_\allowbreak{}observe\_\allowbreak{}cloud.\allowbreak{}py}, \texttt{es2\_\allowbreak{}observe\_\allowbreak{}cost\_\allowbreak{}control.\allowbreak{}py}, \texttt{es3\_\allowbreak{}reconstruction.\allowbreak{}py}) and the cost-control aggregation (\texttt{es2\_\allowbreak{}cost\_\allowbreak{}control\_\allowbreak{}aggregate.\allowbreak{}py}); the cost-control patch (\texttt{cdk/\allowbreak{}cost\_\allowbreak{}control\_\allowbreak{}patch/\allowbreak{}}); the job status module (\texttt{src/\allowbreak{}run\_\allowbreak{}status.\allowbreak{}py}, \texttt{scripts/\allowbreak{}run\_\allowbreak{}detached.\allowbreak{}sh}); their tests; the result files behind every table (\texttt{paper02\_\allowbreak{}es1\_\allowbreak{}*.\allowbreak{}csv}, \texttt{paper02\_\allowbreak{}es2\_\allowbreak{}*.\allowbreak{}csv}, \texttt{paper02\_\allowbreak{}es3\_\allowbreak{}*.\allowbreak{}csv}, \texttt{paper02\_\allowbreak{}level1\_\allowbreak{}machines.\allowbreak{}csv}); and \texttt{papers/\allowbreak{}system\_\allowbreak{}paper/\allowbreak{}check\_\allowbreak{}tables.\allowbreak{}py}, which binds each cell of Tables 3--11 and 13 to one of them and regenerates both figures for a byte comparison. Appendix C lists the commands each table came from. Two inputs are not in it: the 2,565 per-run artifacts (\texttt{.npz}, about 100 MB), which the Zenodo deposit of \cite{ref1} carries and which the checks that read an artifact and E-S1's injection need (Section 5.3), and the price snapshots behind the derived statistics, which are third-party data the package may not redistribute (Section 3.1). Every reproduction level starts from the statistics it does ship.
 
 
 The package E-S3 evaluated at all three levels is the \textit{earlier} release, \texttt{v1.0} (same repository, commit \texttt{c804a63}, doi:10.5281/zenodo.22743582), which is the version the numerical study \cite{ref1} was submitted with and which does not contain this paper's material. \texttt{v1.1} adds it, together with the fixes this paper reports --- the locale encoding of Section 5.3, the non-atomic flush of Section 3.3, and the three driver defects of Section 7: the aggregation that checked the job and not the record, the empty \texttt{--results-tag}, and the resume that did not compare its conditions --- and an \texttt{input\_digest} column appended to the committed record from the pinned statistics, leaving every column of \texttt{v1.0} unchanged. \texttt{CHANGELOG.md} states which version each paper was evaluated against.
@@ -914,6 +914,9 @@ Upstream commit \texttt{19eaad6} of \texttt{aws-\allowbreak{}samples/\allowbreak
 
 \section{Reproduction commands for this paper}
 
+These are the commands the tables came from, with what each took in wall-clock. The first group runs on a CPU and bills nothing: a reader who wants to re-derive one table runs one of these, and \texttt{es3\_\allowbreak{}reconstruction.\allowbreak{}py} is the one that plays the reader (Section 5.3 reports what it costs). The two at the end bill the account they are run in and create a spending limit in it; they are recorded so that a reader knows what produced the cells Table 7 marks as observed on the service, not so that the reader repeats them.
+
+
 \begin{small}\begin{verbatim}
 # ~12 min, CPU
 python -m experiments.system_paper.es1_fault_injection
@@ -927,9 +930,7 @@ python -m experiments.system_paper.es1_random_faults --faults 300 \
     --seed 7 --tag heldout --no-coverage
 # ~1.8 h (N = 20 is 94 min of tape construction); --sizes 8 runs in 1 min
 python -m experiments.system_paper.es2_guard_stages
-# the two observations on the service (creates a $1 spending limit on IonQ; ~$0.67 on SV1)
-python -m experiments.system_paper.es2_observe_cloud --s3-bucket <bucket> --yes-bill-me
-# Table 8 from the committed task records of the five repetitions (seconds, no AWS)
+# Table 8 from the committed task records of the six runs (seconds, no AWS)
 python -m experiments.system_paper.es2_cost_control_aggregate
 # ~15 min with a warm pip cache; clones the public package
 python -m experiments.system_paper.es3_reconstruction
@@ -939,6 +940,14 @@ python -m experiments.system_paper.es3_reconstruction --tag v1.1 --out-suffix _v
 python -m pytest -q tests/test_es1_fault_injection.py tests/test_es1_random_faults.py \
     tests/test_es2_guard_stages.py tests/test_es2_cost_control_aggregate.py \
     tests/test_es3_reconstruction.py tests/test_run_status.py
+
+# The two that bill. Each creates tasks in the account whose credentials it finds, and the
+# first also creates a $1.00 spending limit on IonQ Forte-1. Nothing above needs either.
+# the sampling fallback re-observed on SV1 (~$0.67) and the spending-limit request
+python -m experiments.system_paper.es2_observe_cloud --s3-bucket <bucket> --yes-bill-me
+# one repetition of the account-level control, after deploying cdk/cost_control_patch/
+# (up to --max-tasks tasks, 400 by default, ~$1.50 on SV1)
+python -m experiments.system_paper.es2_observe_cost_control --s3-bucket <bucket> --yes-bill-me
 \end{verbatim}\end{small}
 
 \begin{thebibliography}{99}

@@ -1501,7 +1501,8 @@ aggregation (`es2_cost_control_aggregate.py`); the cost-control patch (`cdk/cost
 (`src/run_status.py`, `scripts/run_detached.sh`); their tests; the result files behind every table
 (`paper02_es1_*.csv`, `paper02_es2_*.csv`, `paper02_es3_*.csv`, `paper02_level1_machines.csv`); and
 `papers/system_paper/check_tables.py`, which binds each cell of Tables 3–11 and 13 to one of them and
-regenerates both figures for a byte comparison. Appendix C lists the commands. Two inputs are not
+regenerates both figures for a byte comparison. Appendix C lists the commands each
+table came from. Two inputs are not
 in it: the 2,565 per-run artifacts (`.npz`, about 100 MB), which the Zenodo deposit of [1] carries
 and which the checks that read an artifact and E-S1's injection need (Section 5.3), and the price
 snapshots behind the derived statistics, which are third-party data the package may not
@@ -1725,6 +1726,13 @@ of Table 6.
 
 ## Appendix C. Reproduction commands for this paper
 
+These are the commands the tables came from, with what each took in wall-clock. The first group runs
+on a CPU and bills nothing: a reader who wants to re-derive one table runs one of these, and
+`es3_reconstruction.py` is the one that plays the reader (Section 5.3 reports what it costs). The two
+at the end bill the account they are run in and create a spending limit in it; they are recorded so
+that a reader knows what produced the cells Table 7 marks as observed on the service, not so that the
+reader repeats them.
+
 ```
 # ~12 min, CPU
 python -m experiments.system_paper.es1_fault_injection
@@ -1738,9 +1746,7 @@ python -m experiments.system_paper.es1_random_faults --faults 300 \
     --seed 7 --tag heldout --no-coverage
 # ~1.8 h (N = 20 is 94 min of tape construction); --sizes 8 runs in 1 min
 python -m experiments.system_paper.es2_guard_stages
-# the two observations on the service (creates a $1 spending limit on IonQ; ~$0.67 on SV1)
-python -m experiments.system_paper.es2_observe_cloud --s3-bucket <bucket> --yes-bill-me
-# Table 8 from the committed task records of the five repetitions (seconds, no AWS)
+# Table 8 from the committed task records of the six runs (seconds, no AWS)
 python -m experiments.system_paper.es2_cost_control_aggregate
 # ~15 min with a warm pip cache; clones the public package
 python -m experiments.system_paper.es3_reconstruction
@@ -1750,4 +1756,12 @@ python -m experiments.system_paper.es3_reconstruction --tag v1.1 --out-suffix _v
 python -m pytest -q tests/test_es1_fault_injection.py tests/test_es1_random_faults.py \
     tests/test_es2_guard_stages.py tests/test_es2_cost_control_aggregate.py \
     tests/test_es3_reconstruction.py tests/test_run_status.py
+
+# The two that bill. Each creates tasks in the account whose credentials it finds, and the
+# first also creates a $1.00 spending limit on IonQ Forte-1. Nothing above needs either.
+# the sampling fallback re-observed on SV1 (~$0.67) and the spending-limit request
+python -m experiments.system_paper.es2_observe_cloud --s3-bucket <bucket> --yes-bill-me
+# one repetition of the account-level control, after deploying cdk/cost_control_patch/
+# (up to --max-tasks tasks, 400 by default, ~$1.50 on SV1)
+python -m experiments.system_paper.es2_observe_cost_control --s3-bucket <bucket> --yes-bill-me
 ```

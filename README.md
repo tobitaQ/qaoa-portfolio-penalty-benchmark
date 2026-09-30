@@ -1,11 +1,15 @@
 # Measuring Metric and Sampling Distortions in Penalty-Encoded QAOA Portfolio Benchmarks
 
-Reproduction package for the paper of the same title (IEEE Transactions on Quantum
-Engineering submission; the manuscript PDFs of this version are in `papers/` and in the Zenodo
-deposit). Every number in the paper comes from a result file in this repository, and
-`papers/check_tables.py`
-checks every table cell of the main text and the Supplementary Material against
-those files.
+Reproduction package for **two** papers, each of which names the release it was evaluated
+against (`CHANGELOG.md` says which):
+
+| Paper | Release | Manuscript here | Its checker | Where to start |
+|---|---|---|---|---|
+| The title above — the numerical study (IEEE Trans. Quantum Eng. submission) | `v1.0` | `papers/paper01_draft.md`, `paper01_supplement.md` | `papers/check_tables.py` (2,578 cells) | "Three levels of reproduction", below |
+| *A Verifiable and Cost-Controlled Experiment Platform for Cloud Quantum Optimization Benchmarks* — the platform and its evaluation (ACM Trans. Quantum Comput. submission) | `v1.1` | `papers/system_paper/system_paper_draft.md` | `papers/system_paper/check_tables.py` (391 cells) | "Checking the system paper", below |
+
+Every number in either paper comes from a result file in this repository, and each paper's checker
+binds its table cells to those files. The manuscript PDFs are in `papers/` and in the Zenodo deposit.
 
 - Author: Hiroaki Tobita, Advanced Institute of Industrial Technology, Tokyo.
 - Manuscript: `papers/paper01_draft.md` (main text) and `papers/paper01_supplement.md`
@@ -134,7 +138,28 @@ only the CSVs, and `es1_fault_injection.py` exits rather than checking half a re
    read the artifacts or re-derive from the pinned statistics. Run it on a record you intend to
    publish; step 2 is the gate that cannot be forgotten, not the whole check.
 
-## Checking the manuscript against the files
+## Checking the system paper
+
+Five minutes, no GPU, no AWS account, and nothing billed. This is the path the system paper's
+availability statement describes; its Appendix C lists the command behind each of its tables.
+
+```bash
+python -m pytest -q -rs          # 417 passed, 33 skipped -- the skips print their reasons:
+                                 # 29 need the per-run artifacts (below), 3 the price snapshots,
+                                 # 1 is a GPU fallback test with nothing to fall back from
+python papers/system_paper/check_tables.py    # 391 cells of Tables 3-11 and 13 against results/,
+                                 # and both of its figures regenerated for a byte comparison
+```
+
+That settles that the paper's numbers are the ones in the committed record. To re-derive the record
+itself, the harnesses under `experiments/system_paper/` each rebuild one table: `es1_fault_injection.py`
+(Table 3, ~12 min), `es2_guard_stages.py` (Tables 6 and 7, ~1.8 h, or 1 min with `--sizes 8`),
+`es3_reconstruction.py` (Table 9, ~15 min -- it clones this repository and runs the levels above in
+the clone). `es1_random_faults.py` (Tables 4 and 5) needs the per-run artifacts described below.
+Two commands in that directory bill an AWS account; they are the last block of the paper's
+Appendix C and nothing above needs them.
+
+## Checking the numerical study's manuscript against the files
 
 ```bash
 cd papers
