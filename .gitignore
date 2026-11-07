@@ -245,8 +245,11 @@ cdk/node_modules/
 # コミット済みの .tex から pdflatex 2 パスで決定的に再生成できる。
 papers/*.pdf
 !papers/paper01.pdf
+!papers/paper01_access.pdf
 !papers/paper01_supplement.pdf
+!papers/paper01_access_anon.pdf
 papers/*.docx
+!papers/paper01_abstract_intro_conclusion.docx
 
 # AWS認証情報（プロジェクト内に置かない運用だが念のため）
 .aws/

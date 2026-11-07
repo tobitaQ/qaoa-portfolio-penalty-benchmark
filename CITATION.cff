@@ -1,16 +1,18 @@
 # Citation metadata for this repository (https://citation-file-format.github.io/).
-# `version`, `date-released` and `doi` name the v1.0 release and its Zenodo
+# `version`, `date-released` and `doi` name the v1.2 release and its Zenodo
 # deposit (the DOI was reserved before the release was tagged, so that the
 # paper's Data/artifact availability statement and this file carry the same
-# identifiers); the deposit is published on the day of the TQE submission.
+# identifiers); the deposit is published on the day of the IEEE Access
+# submission. v1.0, the version TQE declined, stays at 10.5281/zenodo.22743582.
 cff-version: 1.2.0
 message: >-
   If you use this code or these result files, please cite the paper (preferred
   citation below) and the archived release of this repository.
 type: software
 title: >-
-  Reproduction package for "Measuring Metric and Sampling Distortions in
-  Penalty-Encoded QAOA Portfolio Benchmarks"
+  Reproduction package for "Feasibility Without Preference: What the Quantum
+  Approximate Optimization Algorithm Contributes at a Dominant Penalty
+  Weight"
 authors:
   - family-names: Tobita
     given-names: Hiroaki
@@ -34,19 +36,18 @@ abstract: >-
   files and the derived statistics are released under CC BY 4.0; the market-data
   snapshots they were computed from are third-party data and are not
   redistributed (see data/README.md).
-version: "1.0"
-date-released: 2026-09-14
-doi: 10.5281/zenodo.22743582
+version: "1.2"
+date-released: 2026-11-07
+doi: 10.5281/zenodo.24032941
 preferred-citation:
   type: article
   title: >-
-    Measuring Metric and Sampling Distortions in Penalty-Encoded QAOA Portfolio
-    Benchmarks
+    Feasibility Without Preference: What the Quantum Approximate
+    Optimization Algorithm Contributes at a Dominant Penalty Weight
   authors:
     - family-names: Tobita
       given-names: Hiroaki
       affiliation: Advanced Institute of Industrial Technology, Tokyo
   year: 2026
   notes: >-
-    Submitted to IEEE Transactions on Quantum Engineering; the manuscript of
-    the same version is in the Zenodo deposit named above.
+    The manuscript of the same version is in the Zenodo deposit named above.

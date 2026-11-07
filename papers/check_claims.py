@@ -27,6 +27,7 @@ import re
 import sys
 
 DRAFT = pathlib.Path(__file__).parent / "paper01_draft.md"
+SUPPLEMENT = pathlib.Path(__file__).parent / "paper01_supplement.md"
 
 #: Each pattern is a way a claim can outrun its evidence, with the reason it
 #: matters and the phrasings already judged acceptable.
@@ -153,6 +154,117 @@ def body(text: str) -> str:
     return after_front.split("## References")[0]
 
 
+def back_matter_markers(text: str) -> list[str]:
+    """Unfilled [[...]] markers after the bibliography, with their line numbers.
+
+    The identifiers that are filled in last — the release tag and the archive
+    DOI — live in the availability statement, which sits after "## References"
+    and so outside what `body()` scans. A marker there once rode through a
+    whole verification pass unreported, which is the one place it must not.
+    """
+    tail = text.split("## References", 1)[-1]
+    offset = text.count("\n", 0, text.index("## References")) if "## References" in text else 0
+    out = []
+    for i, line in enumerate(tail.split("\n"), start=offset + 1):
+        for m in re.finditer(r"\[\[[^\]]*\]\]", line):
+            out.append(f"{DRAFT.name}:{i}: {m.group(0)} — {line.strip()[:90]}")
+    return out
+
+
+#: British forms, and the American ones IEEE sets. The manuscript held both --
+#: 93 of one against 100 of the other -- in sentences that also carry the fixed
+#: names "quadratic unconstrained binary optimization" and "Quantum Approximate
+#: Optimization Algorithm", so the two spellings met inside single paragraphs.
+#: The stem forms cover every ending (optimise/optimised/optimisation/...).
+BRITISH = [r"optimis[aei]", r"normalis[aei]", r"minimis[aei]", r"maximis[aei]",
+           r"summaris[aei]", r"generalis[aei]", r"parameteris[aei]",
+           r"artefact", r"behaviour", r"judgement", r"favour[^i]",
+           r"analys(?:ed|ing)", r"\bgrey\b", r"\bper cent\b", r"modelling",
+           r"labelled", r"colour", r"\bcentre\b", r"licence", r"defence",
+           r"whilst", r"amongst"]
+
+#: The -ise family is open-ended: "initialisation", "penalised", "factorises",
+#: "characterisation" and "annualised" all slipped through a list of stems and
+#: were found by a later sweep. So the rule is generic, with the words that are
+#: spelled -ise in both dialects listed out.
+ISE = re.compile(r"\b\w+is(?:e|ed|es|ing|ation|ations)\b", re.I)
+NOT_BRITISH = {
+    "rise", "rises", "rising", "raise", "raises", "raised", "noise", "noises",
+    "otherwise", "bitwise", "likewise", "wise", "precise", "concise", "promise",
+    "promises", "premise", "premises", "comprise", "comprises", "arise", "arises",
+    "surprise", "surprises", "surprising", "expertise", "exercise", "exercises",
+    "exercised", "revise", "revises", "revised", "revising", "advise", "advises",
+    "advised", "devise", "devised", "supervised", "compromise", "compromises",
+    "improvise", "paradise", "franchise", "enterprise", "merchandise", "demise",
+    "disguise", "guise", "cruise", "bruise", "poise", "praise", "treatise",
+    "excise", "incise", "anise", "reprise", "chastise", "televise", "mortise",
+}
+
+
+def citation_order() -> list[str]:
+    """Are the references numbered in the order they are first cited?
+
+    IEEE numbers them that way, and the revisions had appended new entries to
+    the end of the list instead: [9] appeared before [8], and the Dicke and XY
+    references stood at 45 and 46 while first appearing in Sec. I. 42 of the 49
+    moved when it was put right, which is the kind of edit that wants a guard
+    behind it. A range cites every number in it.
+    """
+    text = DRAFT.read_text(encoding="utf-8")
+    body = text.split("## Abstract", 1)[1].split("## References")[0]
+    order, seen = [], set()
+    for m in re.finditer(r"\[(\d+)\]\s*[-\u2013]\s*\[(\d+)\]|\[(\d+)\]", body):
+        nums = ([int(m.group(3))] if m.group(3)
+                else list(range(int(m.group(1)), int(m.group(2)) + 1)))
+        for n in nums:
+            if n not in seen:
+                seen.add(n)
+                order.append(n)
+    return [f"[{n}] is cited {i + 1}{'st' if i == 0 else 'th'} but numbered {n}"
+            for i, n in enumerate(order) if n != i + 1][:8]
+
+
+def float_order() -> list[str]:
+    """Figures and tables numbered in the order they are first cited.
+
+    IEEE numbers them that way. Table V and Table II were first cited in the
+    contributions of Sec. I, which made the first-citation order V, II, I, III,
+    IV; the two forward references now point at the sections that hold them.
+    """
+    text = DRAFT.read_text(encoding="utf-8")
+    body = text.split("## Abstract", 1)[1].split("## References")[0]
+    out = []
+    figs = list(dict.fromkeys(int(n) for n in re.findall(r"Fig\. (\d+)", body)))
+    if figs != sorted(figs):
+        out.append(f"figures are first cited in the order {figs}")
+    roman = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"]
+    tabs = list(dict.fromkeys(re.findall(r"Table ([IVX]+)\b", body)))
+    if tabs != roman[:len(tabs)]:
+        out.append(f"tables are first cited in the order {tabs}")
+    return out
+
+
+def british_spellings() -> list[str]:
+    """Where the manuscript slips into British spelling. IEEE sets American.
+
+    A file name or a CSV column keeps whatever spelling it was written with, so
+    only prose is scanned: code spans come out first.
+    """
+    out = []
+    for src in (DRAFT, SUPPLEMENT):
+        if not src.exists():
+            continue
+        for i, line in enumerate(src.read_text(encoding="utf-8").split("\n"), 1):
+            prose = re.sub(r"`[^`]*`", "", line)
+            for pat in BRITISH:
+                for m in re.finditer(pat, prose, flags=re.I):
+                    out.append(f"{src.name}:{i}: {m.group(0).strip()} — {line.strip()[:80]}")
+            for m in ISE.finditer(prose):
+                if m.group(0).lower() not in NOT_BRITISH:
+                    out.append(f"{src.name}:{i}: {m.group(0)} — {line.strip()[:80]}")
+    return out
+
+
 def scan(text: str) -> list[tuple[str, str, str]]:
     """Return (pattern name, matched text, surrounding sentence) for each hit."""
     found = []
@@ -208,12 +320,41 @@ def main() -> int:
             print("   " + line)
         print()
         problems += 1
+    floats = float_order()
+    if floats:
+        print("floats are not numbered in order of first citation\n")
+        for line in floats:
+            print("   " + line)
+        print()
+        problems += 1
+    misordered = citation_order()
+    if misordered:
+        print(f"{len(misordered)} reference(s) are not numbered in order of first citation\n")
+        for line in misordered:
+            print("   " + line)
+        print()
+        problems += 1
+    spellings = british_spellings()
+    if spellings:
+        print(f"{len(spellings)} British spelling(s); IEEE sets American\n")
+        for line in spellings[:12]:
+            print("   " + line)
+        print()
+        problems += 1
     sums = arithmetic(text)
     if sums:
         print(f"{DRAFT.name}: {len(sums)} stated identity/identities that do not hold\n")
         for line in sums:
             print("   " + line)
         print()
+    full = DRAFT.read_text(encoding="utf-8")
+    markers = back_matter_markers(full)
+    if markers:
+        print(f"{DRAFT.name}: {len(markers)} unfilled marker(s) in the back matter\n")
+        for line in markers:
+            print("   " + line)
+        print()
+        problems += 1
     hits = scan(text)
     why = {name: reason for name, _p, reason, _a in PATTERNS}
 

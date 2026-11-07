@@ -3,6 +3,49 @@
 This package is the reproduction artefact of two papers. Each release is a frozen version with its
 own DOI, and each paper names the version it was evaluated against.
 
+## v1.2 — 2026-11-07 — 10.5281/zenodo.24032941
+
+The reproduction package of the first paper as submitted to IEEE Access, after IEEE Transactions on
+Quantum Engineering declined the v1.0 version without review. The paper is rebuilt around the
+decomposition it already measured — acquisition probability is feasible mass times the preference
+inside the feasible set — and one new experiment establishes the second factor by changing the
+encoding rather than the weight. No number of the earlier blocks changed: the penalty ladder is a
+re-analysis of the committed E1 record, and `papers/check_tables.py` now checks 2,641 cells.
+
+- `experiments/paper01_qubo_baseline/run_xy_mixer.py`: the E6 driver. `--mixer xy_ring` prepares the
+  Dicke state |D^N_K⟩ and mixes with a ring of XX + YY terms at A = 0, so the feasible set is
+  invariant under the whole ansatz; `--mixer transverse` is the control that takes the penalty out
+  of the cost and keeps the published ansatz. 450 runs each, on the same 30 instances × 5 seeds ×
+  3 sizes as E1, through the same status file, manifest, reference table and evaluator.
+  Results: `paper01_xy_cross.csv` (900 rows), `paper01_xy_reference.csv`, and
+  `results/xy_runs/*.npz` (900 files, ≈34 MB, in the Zenodo deposit and not in git).
+- `experiments/paper01_qubo_baseline/analyze_ladder.py`: the two factors of P_τ / P_τ^{uniform-F}
+  per (N, penalty setting), ordered by the objective's share of the cost Hamiltonian ε_F = Δ_F / s_H
+  — `paper01_e1_penalty_ladder.csv` (25 rows: the six weights of the cross at three sizes, the
+  A = 0 cell the nine N = 12 instances with A_crit = 0 contribute, then the two E6 blocks). Each run is scored against its own instance's uniform-feasible floor; a test makes
+  the two instances' floors differ and checks that swapping them changes the answer.
+- `src/solvers/braket_solver.py`: `mixer` and `n_select` parameters, `_dicke_state()`,
+  `_prepare_initial_state()` and `_apply_mixer()`. The published path is unchanged, and
+  `tests/test_xy_mixer.py` pins both that and the property the block rests on — no amplitude leaves
+  the feasible set at any angles, for p = 1, 2, 3 — rather than the numbers.
+- `notebooks/generate_tqe_figures.py`: `fig_ladder_preference`, the preference against ε_F with the
+  share of runs above the floor, the E6 block as a filled star and its control as a hollow one.
+- `papers/md_to_latex.py --access` and `papers/paper01_access.tex`: the IEEE Access build (20 pages).
+  The IEEEtran and TQE builds stay.
+- `papers/check_style.py` and `tests/test_manuscript_layout.py`: the manuscript invariants a
+  re-wrap can break without a visible diff — every table row carries its header's cell count (a
+  re-flow had flattened two tables into one line each, which the cell count caught as 2,592 instead
+  of 2,614), no line ends with a hyphen (`textwrap` breaks there by default, and re-joining prints
+  "double- precision"), and a separator row holds nothing but separators.
+
+- The title drops the acronym, because IEEE asks for titles without abbreviations:
+  *Feasibility Without Preference: What the Quantum Approximate Optimization Algorithm
+  Contributes at a Dominant Penalty Weight*. `README.md`, `CITATION.cff` and the
+  supplement's own heading had kept the title the v1.0 submission carried and now follow.
+- The manuscript went through a professional language edit of the abstract, introduction and
+  conclusion, and the same treatment by hand for the other sections: one dialect (American),
+  shorter sentences, and no elliptical possessives.
+
 ## v1.1 — unreleased
 
 Adds the artefacts of the second paper (the experiment platform and its evaluation), the two fixes
@@ -66,7 +109,7 @@ drivers against its claims produced.
 
 ## v1.0 — 2026-09-14 (doi:10.5281/zenodo.22743582)
 
-The reproduction package of "Measuring Metric and Sampling Distortions in Penalty-Encoded QAOA
-Portfolio Benchmarks", as submitted to IEEE Transactions on Quantum Engineering: the platform, the
+The reproduction package of "Feasibility Without Preference: What the Quantum Approximate Optimization Algorithm Contributes at a Dominant Penalty Weight", as submitted on that date to IEEE Transactions on Quantum Engineering, which
+declined it without review on 2026-10-18: the platform, the
 drivers, the committed result files, the manuscript and its supplement, and `papers/check_tables.py`,
 which checks 2,578 manuscript cells against those files.

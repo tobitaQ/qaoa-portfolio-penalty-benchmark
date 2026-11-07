@@ -11,10 +11,10 @@ renders four figures (PNG at 300 dpi + vector PDF) into ``notebooks/figures/``
                        as only A changes (E0, plan §4.3). No QAOA is re-run.
     fig_e1_penalty.*   Penalty setting vs conventional gap, feasible-range gap,
                        P_F and Q_τ(1000) over instances × seeds (E1, plan §5.7).
-    fig_e2_shots.*     Shot budget S vs Q_τ(S) for the optimised state, the
-                       unoptimised state and the two uniform controls (E2, §6.4).
+    fig_e2_shots.*     Shot budget S vs Q_τ(S) for the optimized state, the
+                       unoptimized state and the two uniform controls (E2, §6.4).
     fig_e3_optimizer.* Optimizer settings on the pre-fixed E3 block: Q_τ(1000)
-                       per setting, and the paired change in the optimised
+                       per setting, and the paired change in the optimized
                        expectation next to the within-instance seed spread
                        (E3, plan §7.2).
     fig_e4_backends.*  The same angles on four backends: distance of each
@@ -285,7 +285,7 @@ def fig_e1_penalty(rows: list[dict]) -> None:
 
     2 × 2 panels: the conventional gap g_off, the feasible-range gap g_F (both
     of the best feasible shot, in %), the feasible probability P_F of the
-    optimised state, and Q_τ(1000) with τ = 1 % of the feasible range. Each
+    optimized state, and Q_τ(1000) with τ = 1 % of the feasible range. Each
     point is the median over instances of the within-instance median over
     seeds; the bar is the inter-quartile range over instances. Penalty
     settings are categorical on x because A_crit, A_margin and hence every A
@@ -315,8 +315,8 @@ def fig_e1_penalty(rows: list[dict]) -> None:
          "Offset-normalized gap $g_{off}$ of best feasible shot (%)", 100.0, "symlog"),
         ("g_F", "$g_F$ of best feasible shot (%)" if PAPER else
          "Feasible-range gap $g_F$ of best feasible shot (%)", 100.0, "symlog"),
-        ("final_P_F", "$P_F$ of the optimised state" if PAPER else
-         "$P_F$: feasible probability of the optimised state", 1.0, "linear"),
+        ("final_P_F", "$P_F$ of the optimized state" if PAPER else
+         "$P_F$: feasible probability of the optimized state", 1.0, "linear"),
         ("final_Q_tau_main_1000", f"$Q_\\tau(1000)$, $\\tau$ = {TAU_MAIN:.0%}" if PAPER else
          f"$Q_\\tau(1000)$, $\\tau$ = {TAU_MAIN:.0%} of feasible range", 1.0, "linear"),
     ]
@@ -395,8 +395,8 @@ def fig_e2_shots(rows: list[dict], refs: list[dict], penalty: str = "Aheur") -> 
     """Q_τ(S) against the shot budget S for four samplers (plan §6.4).
 
     One panel per size, at the penalty setting the published tables used
-    (A_heur, overridable). The optimised QAOA state and the same-seed
-    unoptimised state come from the run's exact final / initial
+    (A_heur, overridable). The optimized QAOA state and the same-seed
+    unoptimized state come from the run's exact final / initial
     probabilities; the two uniform controls are instance properties from the
     feasible-set census (P_τ under uniform-over-all-bitstrings and under
     uniform-over-F), with Q_τ(S) = 1 − (1 − P_τ)^S for i.i.d. shots. Lines
@@ -414,8 +414,8 @@ def fig_e2_shots(rows: list[dict], refs: list[dict], penalty: str = "Aheur") -> 
                              squeeze=False)
     s_grid = np.asarray(SHOT_BUDGETS, dtype=float)
     samplers = [
-        ("Optimised QAOA state", SERIES[0], "-", lambda r, s: _f(r[f"final_Q_tau_main_{s}"])),
-        ("Unoptimised state (same initial angles)", SERIES[1], "--",
+        ("Optimized QAOA state", SERIES[0], "-", lambda r, s: _f(r[f"final_Q_tau_main_{s}"])),
+        ("Unoptimized state (same initial angles)", SERIES[1], "--",
          lambda r, s: _f(r[f"initial_Q_tau_main_{s}"])),
         ("Uniform over feasible set F", SERIES[2], "-.",
          lambda r, s: 1 - (1 - _f(ref_by[(r["n_assets"], r["instance"])]["P_tau_main_uniform_F"])) ** s),
@@ -474,7 +474,7 @@ def fig_e3_optimizer(groups: dict[str, list[dict]]) -> None:
     within-instance median over seeds, the bar the IQR over instances, and
     every run is a faint jittered point.
 
-    Bottom row: the change in the optimised expectation ⟨H_norm⟩ relative to
+    Bottom row: the change in the optimized expectation ⟨H_norm⟩ relative to
     the baseline run with the same instance, seed and A (so the two are
     comparable), one point per run, on a symlog axis; the grey band is the
     baseline's own within-instance spread over the five seeds (median over
@@ -694,6 +694,99 @@ def fig_e4_backends(compare: list[dict], summary: list[dict]) -> None:
     _save(fig, "fig_e4_backends")
 
 
+LADDER_CSV = RESULTS_DIR / "paper01_e1_penalty_ladder.csv"
+
+
+def fig_ladder_preference(rows: list[dict]) -> None:
+    """The penalty ladder (Sec. V-C): preference against eps_F.
+
+    One point per (N, penalty setting), placed at eps_F = Delta_F / s_H, the
+    objective's spread over the feasible set divided by the largest coefficient
+    of the normalised cost Hamiltonian -- a ratio, which the A = 0 points show
+    passing 1. Left: the preference ratio R_tau inside
+    the feasible set, median over the runs of the cell with the interquartile
+    range, against the line R_tau = 1 an indifferent draw from F would give.
+    Right: the share of those runs whose one-shot success probability exceeds a
+    uniform draw from F -- the comparison Sec. V-B makes at one weight, taken
+    at all six.
+
+    The A_crit = 0 cells (label A0, nine N = 12 instances) are left out: the
+    multiples of the threshold are undefined there, so they have no eps_F.
+    """
+    xy = [r for r in rows if r["penalty_label"] in ("XY", "A0-transverse")]
+    rows = [r for r in rows if r["penalty_label"] not in ("A0", "XY", "A0-transverse")
+            and r["epsilon_F_median"] not in ("", "nan")]
+    if not rows:
+        print("  skipped fig_ladder_preference: no ladder rows with eps_F")
+        return
+    fig, (ax_l, ax_r) = plt.subplots(
+        1, 2, figsize=(TEXT_IN, TEXT_IN * 0.42) if PAPER else (12.0, 4.8))
+    sizes = sorted({int(r["n_assets"]) for r in rows})
+    for k, n in enumerate(sizes):
+        g = sorted((r for r in rows if int(r["n_assets"]) == n), key=lambda r: _f(r["epsilon_F_median"]))
+        x = np.array([_f(r["epsilon_F_median"]) for r in g])
+        med = np.array([_f(r["R_tau_median"]) for r in g])
+        lo = np.array([_f(r["R_tau_p25"]) for r in g])
+        hi = np.array([_f(r["R_tau_p75"]) for r in g])
+        color, marker = SERIES[k], MARKERS[k]
+        ax_l.errorbar(x, med, yerr=[med - lo, hi - med], color=color, marker=marker,
+                      ms=5 if PAPER else 7, mec="white", mew=0.6, lw=1.2, capsize=2,
+                      label=f"N = {n}")
+        share = np.array([100.0 * int(r["runs_above_floor"]) / int(r["runs"]) for r in g])
+        ax_r.plot(x, share, color=color, marker=marker, ms=5 if PAPER else 7,
+                  mec="white", mew=0.6, lw=1.2, label=f"N = {n}")
+        # The two reference weights are the ones the rest of the paper uses, so
+        # they are named on the curve rather than left to the reader to find.
+        for r, xv, yv in zip(g, x, share):
+            # A_heur sits at the same eps_F for every size, so one label there
+            # is three labels printed on top of each other: name it once.
+            if r["penalty_label"] == "1.1xAcrit" or (r["penalty_label"] == "Aheur" and k == 0):
+                ax_r.annotate(PENALTY_TICK.get(r["penalty_label"], r["penalty_label"]),
+                              (xv, yv), textcoords="offset points", xytext=(4, 4),
+                              fontsize=7 if PAPER else 8, color=color)
+
+    # The E6 arms are reached by taking the constraint out of the cost rather
+    # than by lowering the weight, so they are drawn as separate markers rather
+    # than as further points on the penalty curve. Both sit at the measured
+    # A = 0 value of eps_F for their size -- the same x, since the cost is the
+    # same -- and what separates them is the feasible mass, so one marker is
+    # filled and the other hollow.
+    for label, fill, name in (("XY", True, "constraint in the ansatz (E6)"),
+                              ("A0-transverse", False, "A = 0, published ansatz")):
+        for k, n in enumerate(sizes):
+            g = [r for r in xy if int(r["n_assets"]) == n and r["penalty_label"] == label]
+            if not g:
+                continue
+            r = g[0]
+            face = SERIES[k] if fill else "white"
+            ax_l.errorbar([_f(r["epsilon_F_median"])], [_f(r["R_tau_median"])],
+                          yerr=[[_f(r["R_tau_median"]) - _f(r["R_tau_p25"])],
+                                [_f(r["R_tau_p75"]) - _f(r["R_tau_median"])]],
+                          color=SERIES[k], mfc=face, marker="*", ms=12 if PAPER else 15,
+                          mec=INK if fill else SERIES[k], mew=0.6, ls="none", capsize=2,
+                          label=name if k == 0 else None)
+            ax_r.plot([_f(r["epsilon_F_median"])],
+                      [100.0 * int(r["runs_above_floor"]) / int(r["runs"])],
+                      color=SERIES[k], mfc=face, marker="*", ms=12 if PAPER else 15,
+                      mec=INK if fill else SERIES[k], mew=0.6, ls="none",
+                      label=name if k == 0 else None)
+
+    ax_l.axhline(1.0, color=NEUTRAL, lw=0.8, ls="--", label="indifferent draw (R$_τ$ = 1)")
+    ax_l.set_xlabel("ε$_F$ = Δ$_F$ / s$_H$ (objective's feasible range ÷ largest coefficient)")
+    ax_l.set_ylabel("R$_τ$ inside the feasible set (median, IQR)")
+    _panel(ax_l, "a")
+    _title(ax_l, "Preference inside the feasible set", fontsize=10)
+    ax_l.legend(loc="upper left", fontsize=8, frameon=False)
+
+    ax_r.set_xlabel("ε$_F$ = Δ$_F$ / s$_H$ (objective's feasible range ÷ largest coefficient)")
+    ax_r.set_ylabel("runs above the uniform feasible draw (%)")
+    ax_r.set_ylim(bottom=-2)
+    _panel(ax_r, "b")
+    _title(ax_r, "Runs that exceed the control", fontsize=10)
+    ax_r.legend(loc="upper left", fontsize=8, frameon=False)
+    _save(fig, "fig_ladder_preference")
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--results-tag", default=None,
@@ -728,6 +821,11 @@ def main(argv=None) -> int:
         fig_e3_optimizer(groups)
     else:
         print("  skipped fig_e3_optimizer: E3 CSVs not found (run the E3 commands in run_e1_cross)")
+    if LADDER_CSV.exists():
+        fig_ladder_preference(_read_csv(LADDER_CSV))
+    else:
+        print(f"  skipped fig_ladder_preference: {LADDER_CSV.name} not found "
+              "(run experiments.paper01_qubo_baseline.analyze_ladder)")
     e4c = RESULTS_DIR / "paper01_e4_states_compare.csv"
     e4s = RESULTS_DIR / "paper01_e4_batches_summary.csv"
     if not suffix and e4c.exists() and e4s.exists():

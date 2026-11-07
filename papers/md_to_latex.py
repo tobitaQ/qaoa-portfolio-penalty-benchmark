@@ -32,6 +32,10 @@ import sys
 
 SRC = pathlib.Path(__file__).parent / "paper01_draft.md"
 OUT = pathlib.Path(__file__).parent / "paper01.tex"
+#: The author biography, in the journal class's own environment. Written by
+#: hand (it is not in the Markdown) and included by the ``--tqe``/``--access``
+#: builds when it exists; the IEEEtran preprint does not carry it.
+AUTHOR = pathlib.Path(__file__).parent / "author.tex"
 
 #: The supplement is converted by the same code with `--supplement`. What
 #: differs is which cross-references are local: the main text owns the Roman
@@ -39,24 +43,30 @@ OUT = pathlib.Path(__file__).parent / "paper01.tex"
 #: S-prefixed ones, and a reference to the other document is set as text
 #: rather than as a \ref that could never resolve.
 SUPPLEMENT = False
-#: ``--tqe`` sets the main text in the journal's own class (``ieeeaccess.cls``,
-#: the TQE template of 2020) instead of generic IEEEtran: the same body, a
+#: ``--tqe`` and ``--access`` set the main text in the journal's own class
+#: (``ieeeaccess.cls``: IEEE Access ships it, and the TQE template of 2020 is
+#: the same file) instead of generic IEEEtran: the same body, a
 #: different front matter, the class's ``\Figure`` macro for floats and its
 #: ``\EOD`` mark. The IEEEtran build stays the preprint; this one is what goes
 #: to the Author Portal. The class and the three images it loads by name live
 #: in ``papers/tqe_class/`` and are put on TEXINPUTS at build time.
 TQE = False
+#: ``--access`` is the same class and front matter with IEEE Access's own DOI
+#: placeholder, which is what the submission system expects to replace.
+ACCESS = False
 LOCAL_TAB = r"[IVXL]+"          # table numerals this document defines
 LOCAL_FIG = r"\d+"              # figure numbers this document defines
 OTHER_TAB = r"S\d+"
 OTHER_FIG = r"S\d+"
 
 
-def set_mode(supplement: bool, tqe: bool = False) -> None:
-    global SUPPLEMENT, TQE, SRC, OUT, LOCAL_TAB, LOCAL_FIG, OTHER_TAB, OTHER_FIG
+def set_mode(supplement: bool, tqe: bool = False, access: bool = False) -> None:
+    global SUPPLEMENT, TQE, ACCESS, SRC, OUT, LOCAL_TAB, LOCAL_FIG, OTHER_TAB, OTHER_FIG
     SUPPLEMENT = supplement
-    TQE = tqe and not supplement
-    OUT = pathlib.Path(__file__).parent / ("paper01_tqe.tex" if TQE else "paper01.tex")
+    ACCESS = access and not supplement
+    TQE = (tqe or ACCESS) and not supplement
+    OUT = pathlib.Path(__file__).parent / (
+        "paper01_access.tex" if ACCESS else "paper01_tqe.tex" if TQE else "paper01.tex")
     if supplement:
         SRC = pathlib.Path(__file__).parent / "paper01_supplement.md"
         OUT = pathlib.Path(__file__).parent / "paper01_supplement.tex"
@@ -68,7 +78,7 @@ def set_mode(supplement: bool, tqe: bool = False) -> None:
 #: rather than a default: en dashes stay dashes, minus signs become math minus,
 #: and the bra-ket brackets get the macros they deserve.
 UNICODE = {
-    "—": "---", "–": "--", "−": "$-$", "×": r"$\times$", "·": r"$\cdot$",
+    "—": "---", "–": "--", "−": "$-$", "×": r"$\times$", "÷": r"$\div$", "·": r"$\cdot$",
     "†": r"$\dagger$", "Θ": r"$\Theta$",
     "≤": r"$\leq$", "≥": r"$\geq$", "≈": r"$\approx$", "→": r"$\rightarrow$",
     "∈": r"$\in$", "²": "$^2$", "³": "$^3$", "⟨": r"$\langle$", "⟩": r"$\rangle$",
@@ -92,6 +102,14 @@ UNICODE = {
 #: Characters LaTeX reserves. Applied only to running text, never inside math or
 #: verbatim, both of which are extracted first and restored afterwards.
 ESCAPES = {"%": r"\%", "&": r"\&", "#": r"\#", "_": r"\_", "$": r"\$"}
+
+#: A brace in the draft is a set literal -- "N ∈ {12, 16, 20}" -- and LaTeX
+#: reserves it for grouping, so it printed nothing: the PDF read "N ∈ 12, 16,
+#: 20" in every set the paper writes down. It cannot go in ESCAPES, which runs
+#: after the converter has inserted macros of its own and would escape their
+#: braces too. The source braces are held behind these sentinels for the length
+#: of the conversion and come back escaped at the end.
+BRACE_OPEN, BRACE_CLOSE = "\x0e", "\x0f"
 
 PREAMBLE = r"""\documentclass[journal]{IEEEtran}
 
@@ -205,11 +223,45 @@ PREAMBLE_TQE = r"""\documentclass{ieeeaccess}
 
 """
 
+#: The class's end-of-document bullet. It is a ``\mbox{}\newline`` and the
+#: template puts it at the end of the last paragraph -- the author biography in
+#: a normal Access article. After ``\end{thebibliography}`` it starts a
+#: paragraph of its own, which on a full page becomes an otherwise empty extra
+#: page (measured: 21 pages instead of 20). It goes at the end of the last
+#: reference instead.
 POSTAMBLE_TQE = r"""
-\EOD
-
 \end{document}
 """
+
+
+def biography() -> str:
+    """``papers/author.tex`` with ``\\EOD`` at the end of its last paragraph.
+
+    The class warns when ``\\EOD`` is missing and wants it "in the end of the
+    last para", which in an Access article is the author biography. Without a
+    biography the mark goes on the last reference instead (see below), because
+    after ``\\end{thebibliography}`` it opens a paragraph of its own and that
+    costs an otherwise empty page.
+
+    The photographs it loads are checked by ``missing_photographs()`` on the
+    command-line path, so a build cannot quietly produce a PDF without them.
+    """
+    if not AUTHOR.exists():
+        return ""
+    text = AUTHOR.read_text(encoding="utf-8").strip()
+    end = text.rindex(r"\end{IEEEbiography")
+    head, tail = text[:end].rstrip(), text[end:]
+    return head + r"\EOD" + "\n" + tail + "\n"
+
+
+def missing_photographs() -> list[str]:
+    """Images the biography loads that are not where LaTeX will look for them."""
+    if not AUTHOR.exists():
+        return []
+    text = AUTHOR.read_text(encoding="utf-8")
+    return [img for img in re.findall(r"\\includegraphics[^{]*{([^}]+)}", text)
+            if not (AUTHOR.parent / img).exists()
+            and not (AUTHOR.parent / "tqe_class" / img).exists()]
 
 
 def protect(text: str) -> tuple[str, list[str]]:
@@ -230,6 +282,7 @@ def restore(text: str, held: list[str]) -> str:
         for ch, rep in ESCAPES.items():
             body = body.replace(ch, rep)
         body = body.replace("^", r"\^{}").replace("~", r"\~{}")
+        body = body.replace("{", r"\{").replace("}", r"\}")
         # A URL set in \texttt cannot break and runs off the column; \url
         # breaks it at the slashes.
         if body.startswith(("http://", "https://")):
@@ -253,7 +306,8 @@ GREEK_MATH = {"\ue000": "\\hat{\\Sigma}", "\ue001": "\\hat{\\mu}", "\ue002": "\\
               "γ": "\\gamma", "β": "\\beta", "α": "\\alpha",
               "σ": "\\sigma", "ρ": "\\rho", "φ": "\\phi",
               "ψ": "\\psi", "ε": "\\epsilon", "Δ": "\\Delta",
-              "τ": "\\tau"}
+              "τ": "\\tau", "ℓ": "\\ell", "⊥": "\\perp",
+              "∇": "\\nabla"}
 
 #: Superscript digits and signs the draft writes as Unicode ("10⁻¹⁴"). A run is
 #: one exponent, so it is mapped as a run: per-character mapping would set
@@ -262,16 +316,26 @@ SUPERSCRIPTS = str.maketrans("⁰¹²³⁴⁵⁶⁷⁸⁹⁻⁺", "0123456789-+"
 SUPERSCRIPT_RE = re.compile(r"[⁰¹²³⁴⁵⁶⁷⁸⁹⁻⁺]+")
 
 #: Subscript indices that are words rather than symbols, and want upright type.
-WORD_SUBSCRIPTS = {"min", "max", "norm", "opt", "crit", "safe", "margin", "heur", "off", "obj"}
+WORD_SUBSCRIPTS = {"min", "max", "norm", "opt", "crit", "safe", "margin",
+                   "heur", "off", "obj", "cond"}
+
+#: Subscript digits are written as Unicode in the draft ("x_A₂"), and the
+#: subscript pass matched only ASCII, so the underscore was escaped and the
+#: digit set on its own: "f(x_A₂)" printed with a literal underscore.
+SUBSCRIPT_DIGITS = str.maketrans("₀₁₂₃₄₅₆₇₈₉", "0123456789")
 
 SUBSCRIPT_RE = re.compile(
     r"(?<![A-Za-z0-9_$])([A-Za-z" + "".join(GREEK_MATH) + r"])_"
-    r"(\d+\.\d+|[A-Za-z0-9τ]{1,6})(?![\w]|\.\w)")
+    r"(\d+\.\d+|[A-Za-z0-9τℓ⊥∇₀-₉]{1,6})(?![\w]|\.\w)")
 
 
 def _subscript(m):
     base = GREEK_MATH.get(m.group(1), m.group(1))
     idx = GREEK_MATH.get(m.group(2), m.group(2))
+    if any(c in "₀₁₂₃₄₅₆₇₈₉" for c in idx):
+        # \x06, not a literal underscore: the escape pass would turn that into
+        # "\_" and print it, which is the defect this branch exists to fix.
+        idx = "{" + idx[0] + "\x06{" + idx[1:].translate(SUBSCRIPT_DIGITS) + "}}"
     # Upright, and always defined: "\\norm" is not a LaTeX command, and emitting
     # it produced "Undefined control sequence" four times in Sec. VI-B.
     idx = "\\mathrm{" + idx + "}" if idx in WORD_SUBSCRIPTS else idx
@@ -282,17 +346,34 @@ def _subscript(m):
 #: raw LaTeX before anything else runs, keyed by their exact Markdown.
 INLINE_MATH = {
     "|⟨H⟩_SV1 − ⟨H⟩_GPU|": r"$|\langle H\rangle_{\mathrm{SV1}} - \langle H\rangle_{\mathrm{GPU}}|$",
+    "max|Q_objective|": r"$\max|Q_{\mathrm{objective}}|$",
 }
 
 
 def inline(text: str) -> str:
     """Convert one line of running Markdown to LaTeX."""
     text, held = protect(text)
+    # Before any macro of ours exists, so that only the draft's own braces are
+    # held; the ones the conversion inserts are real LaTeX grouping.
+    text = text.replace("{", BRACE_OPEN).replace("}", BRACE_CLOSE)
     raw: list[str] = []
     for src, tex in INLINE_MATH.items():
         if src in text:
             raw.append(tex)
             text = text.replace(src, f"\x04{len(raw) - 1}\x04")
+
+    # A bare URL in a reference entry was set as ordinary text, so LaTeX broke
+    # it at one of its own hyphens -- "artifact-review-and-badging-" / "current"
+    # -- and a reader copying it, or any extractor, loses the hyphen and gets a
+    # dead link. It was not clickable either. \url breaks at the punctuation
+    # without adding anything, and hyperref makes it a link; \urlstyle{rm}
+    # keeps the reference list in its own font, where a code span stays
+    # typewriter.
+    def _url(m):
+        raw.append(r"{\urlstyle{rm}\url{" + m.group(0) + "}}")
+        return f"\x04{len(raw) - 1}\x04"
+
+    text = re.sub(r"https?://[^\s)\]]*[^\s)\].,;]", _url, text)
     # Undo Markdown's own escaping before LaTeX's begins. \* and \| are the two
     # the draft uses; left in place they become a literal backslash in the output
     # and, in the case of \*, an unbalanced emphasis run.
@@ -323,6 +404,44 @@ def inline(text: str) -> str:
     # quote in the Brandhofer entry by one and reversed all of them, and left
     # the umlaut as a backtick.
     text = re.sub(r'"([^"]*)"', lambda m: "``" + m.group(1) + "''", text)
+    # "max_i" and "max_{i<j}" are operators with a subscript, not a word with
+    # an underscore: the escape pass printed them as "max_i" and, once braces
+    # stopped vanishing, as "max_{i<j}". The result goes behind the raw-math
+    # sentinel, where the relation and Unicode passes below cannot reach into
+    # it and close the math inside a subscript.
+    _IN_MATH = {"≠": r"\neq ", "≤": r"\leq ", "≥": r"\geq ", "×": r"\times ",
+                "−": "-", "∈": r"\in ", BRACE_OPEN: "{", BRACE_CLOSE: "}"}
+
+    def _operator_subscript(m):
+        inner = "".join(_IN_MATH.get(c, c) for c in (m.group(2) or m.group(3)))
+        # \max and \min are macros; "mean" is not one, and emitting \mean
+        # gave "Undefined control sequence" in Supplementary Sec. S-VIII.
+        head = ("\\" + m.group(1) if m.group(1) in ("max", "min")
+                else "\\operatorname{" + m.group(1) + "}")
+        raw.append("$" + head + "_{" + inner + "}$")
+        return f"\x04{len(raw) - 1}\x04"
+
+    text = re.sub(rf"\b(max|min|mean)_(?:[{BRACE_OPEN}]([^{BRACE_CLOSE}]*)[{BRACE_CLOSE}]"
+                  r"|([A-Za-z](?![A-Za-z])))", _operator_subscript, text)
+    # A summation with an index no character rule reaches: "Σ_{x∈F}" printed
+    # its braces and escaped its underscore, so Table I and the Dicke state
+    # read "Σ_{x∈F}" and "Σ_{|x| = K}" on the page. The display formulas spell
+    # the same sum \sum, so the inline form does too -- a bare "Σ_i" was being
+    # set as a capital Sigma while the equation above it had an operator.
+    def _sum(m):
+        inner = "".join(_IN_MATH.get(c, c) for c in (m.group(2) or m.group(3)))
+        op = "\\sum" if m.group(1) == "\u03a3" else "\\prod"
+        raw.append("$" + op + "_{" + inner + "}$")
+        return f"\x04{len(raw) - 1}\x04"
+
+    text = re.sub(rf"([\u03a3\u220f])_(?:[{BRACE_OPEN}]([^{BRACE_CLOSE}]*)[{BRACE_CLOSE}]"
+                  r"|([A-Za-z0-9](?![A-Za-z])))", _sum, text)
+    # "D^N_K" is one symbol with both a superscript and a subscript. Letting
+    # the subscript pass take "N_K" first left the caret alone, and the escape
+    # below printed the Dicke state as "|DˆNK>".
+    text = re.sub(r"(?<![A-Za-z0-9_$])([A-Za-z])\^([A-Za-z0-9]+)_([A-Za-z0-9]+)(?![\w])",
+                  lambda m: "\x05" + m.group(1) + "\x03{" + m.group(2) + "}\x06{"
+                            + m.group(3) + "}\x05", text)
     text = SUBSCRIPT_RE.sub(_subscript, text)
     for tok, mac in HATTED.items():
         text = text.replace(tok, "\x05" + mac + "\x05")
@@ -339,10 +458,15 @@ def inline(text: str) -> str:
         # Braced exponents can hold anything -- "N x N" -- so take the whole
         # group and set its operators in math rather than letting the Unicode
         # pass drop $...$ inside an exponent.
-        body = m.group(1) if m.group(1) is not None else m.group(2)
+        body = next(g for g in m.groups() if g is not None)
         body = body.replace("\u00d7", r"\times ").replace("\u2212", "-")
         return "$\x03{" + body + "}$"
-    text = re.sub(r"(?<![\\$])\^(?:\{([^{}]*)\}|([A-Za-z0-9.+-]+))", _sup, text)
+    text = re.sub(
+        rf"(?<![\\$])\^(?:[{BRACE_OPEN}{{]([^{BRACE_OPEN}{BRACE_CLOSE}{{}}]*)[{BRACE_CLOSE}}}]"
+        r"|\(([^()]*)\)|([A-Za-z0-9.+-]*[A-Za-z0-9]))", _sup, text)
+    # "~10⁻⁶" means "about", not a tilde accent on the next character: the
+    # accent form set it as a floating ˜ before the number.
+    text = re.sub(r"~(?= ?[\d(A-Z])", "\x05\\\\sim\x05", text)
     text = text.replace("^", r"\^{}").replace("~", r"\~{}")
     text = text.replace("\x03", "^").replace("\x05", "$").replace("\x06", "_")
     # A bare > or < in text mode is set as an inverted question mark by the
@@ -393,6 +517,7 @@ def inline(text: str) -> str:
     text = re.sub(rf"(Tables?|Figs?\.) ({OTHER_TAB})\b", r"\1~\2", text)
     text = text.replace("\x01", r"\$").replace("\x02", "$|$")
     text = re.sub(r"\x04(\d+)\x04", lambda m: raw[int(m.group(1))], text)
+    text = text.replace(BRACE_OPEN, r"\{").replace(BRACE_CLOSE, r"\}")
     return restore(text, held)
 
 
@@ -505,6 +630,7 @@ MANIFEST_RE = re.compile(
     r"^- \*\*Fig\. (S?\d+)\*\* — `notebooks/figures/([\w-]+)\.pdf` — (.*)$", re.S)
 
 
+
 def read_manifest(md: str) -> tuple[str, list[tuple[str, str]], str]:
     """Split the back matter off the draft.
 
@@ -519,11 +645,24 @@ def read_manifest(md: str) -> tuple[str, list[tuple[str, str]], str]:
     figs: list[tuple[str, str]] = []
     numbers: list[str] = []
     for item in re.split(r"\n(?=- \*\*Fig\. )", m.group(1)):
-        item = " ".join(item.strip().split("\n"))
+        # An item ends at the blank line after it. Joining the whole chunk
+        # instead made the *last* item absorb whatever prose closed the
+        # manifest: the note about the supplementary figures rode into Fig. 3's
+        # caption and was printed there, 19 words that belong to neither.
+        block, _, trailing = item.strip().partition("\n\n")
+        # split() rather than split("\n"): the continuation lines are indented,
+        # and joining on newlines alone left the runs of spaces in the caption.
+        item = " ".join(block.split())
         mm = MANIFEST_RE.match(item)
         if mm:
             figs.append((mm.group(2), inline(mm.group(3).strip())))
             numbers.append(mm.group(1))
+        if trailing.strip():
+            raise SystemExit(
+                "the figure manifest has prose after a figure item, which the "
+                "build would either drop or print inside the caption above it:\n"
+                f"  {' '.join(trailing.split())[:120]}\n"
+                "move it to a section the build keeps (the availability statement).")
     prefix = "S" if SUPPLEMENT else ""
     if numbers != [f"{prefix}{k}" for k in range(1, len(numbers) + 1)]:
         raise SystemExit(f"figure manifest is not numbered {prefix}1..n in order: {numbers}")
@@ -661,9 +800,9 @@ FORMULAS = {
         r"\quad\text{(the portfolio objective),}",
     "V(x) = (Σᵢ xᵢ − K)²  (the constraint violation),":
         r"V(x) = \Bigl(\sum_i x_i - K\Bigr)^2\quad\text{(the constraint violation),}",
-    "H_A(x) = f(x) + A·V(x)  (the penalised objective the QUBO encodes),":
+    "H_A(x) = f(x) + A·V(x)  (the penalized objective the QUBO encodes),":
         r"\begin{aligned} H_A(x) &= f(x) + A\, V(x) \\"
-        r" &\qquad\text{(the penalised objective the QUBO encodes),}\end{aligned}",
+        r" &\qquad\text{(the penalized objective the QUBO encodes),}\end{aligned}",
     "E_A(x) = H_A(x) − A·K²  (what xᵀQx returns once the expansion's constant is dropped).":
         r"\begin{aligned} E_A(x) &= H_A(x) - A K^2 \\"
         r" &\qquad\text{(what $x^{\mathsf{T}}Qx$ returns once the expansion's}\\"
@@ -684,6 +823,10 @@ FORMULAS["D_cond = ½ Σ_{x∈F} | p(x)/P_F − 1/|F| |,"] = (
 FORMULAS["TV(selected output under P, selected output under P′) ≤ 1 − (1 − d)^S ≤ S·d."] = (
     r"\begin{aligned} &\mathrm{TV}\bigl(\text{selected output under } P,\ \text{selected output under } P'\bigr)\\"
     r" &\qquad \le 1 - (1-d)^S \le S\,d.\end{aligned}")
+
+#: Keyed on the Markdown with its spacing collapsed, for the same reason as
+#: the lookup: a re-wrap must not cost the paper its display equations.
+FORMULAS = {" ".join(k.split()): v for k, v in FORMULAS.items()}
 
 
 def _is_table_row(line: str) -> bool:
@@ -904,7 +1047,11 @@ def convert(md: str) -> str:
             while i < len(lines) and lines[i].startswith(">"):
                 body.append(lines[i].lstrip("> ").rstrip())
                 i += 1
-            key = " ".join(body).strip()
+            # Whitespace-insensitive: the keys were written with the runs of
+            # spaces the draft used to align its formulas, and a re-wrap that
+            # collapsed them silently dropped eight of the ten equations back
+            # to the inline fallback, which sets a subscript as "Σ_{i<j}".
+            key = " ".join(" ".join(body).split())
             if key in FORMULAS:
                 out += [r"\begin{equation*}", FORMULAS[key], r"\end{equation*}", ""]
             else:
@@ -962,10 +1109,31 @@ def convert(md: str) -> str:
     close_list()
     out = place_figures(out)
     body = "\n".join(out)
+    bio = biography() if TQE else ""
     if r"\begin{thebibliography}" in body:
+        if TQE and not bio:
+            # At the end of the *last reference*, not at the end of the file: a
+            # float can be emitted after the bibliography starts, and the class
+            # macro is a paragraph of its own, so anywhere else it either
+            # attaches to a figure caption or opens a new page.
+            lines = body.split("\n")
+            entries = [i for i, l in enumerate(lines) if l.startswith(r"\bibitem{")]
+            if entries:
+                lines[entries[-1]] = lines[entries[-1]].rstrip() + r"\EOD"
+                body = "\n".join(lines)
+            else:                        # a draft with no references yet
+                body = body.rstrip() + "\n" + r"\EOD"
         body += "\n" + r"\end{thebibliography}"
+    if bio:
+        body += "\n\n" + bio
     if TQE:
-        pre = (PREAMBLE_TQE.replace("@TITLE@", inline(paper_title))
+        # The only journal-specific string in the template: the DOI placeholder
+        # the publisher replaces at production. Getting it wrong is harmless to
+        # the build and wrong on the submitted PDF, so it is set per mode.
+        PREAMBLE_TQE_J = (PREAMBLE_TQE.replace("10.1109/TQE.2020.DOI",
+                                               "10.1109/ACCESS.2017.DOI")
+                          if ACCESS else PREAMBLE_TQE)
+        pre = (PREAMBLE_TQE_J.replace("@TITLE@", inline(paper_title))
                .replace("@SHORTTITLE@", inline(paper_title)))
         return pre + body + POSTAMBLE_TQE
     pre = PREAMBLE.replace("@TITLE@", inline(paper_title))
@@ -1008,10 +1176,20 @@ def sync_figures() -> int:
 
 
 def main() -> int:
-    set_mode("--supplement" in sys.argv[1:], "--tqe" in sys.argv[1:])
+    set_mode("--supplement" in sys.argv[1:], "--tqe" in sys.argv[1:],
+             "--access" in sys.argv[1:])
     moved = sync_figures()
     if moved:
         print(f"synced {moved} figure(s) into papers/figures/")
+    if TQE:
+        # The journal builds carry the biography; a photograph LaTeX cannot find
+        # becomes a failed compile much later, with the .tex already written.
+        gone = missing_photographs()
+        if gone:
+            print(f"REFUSED to write: {AUTHOR.name} loads {', '.join(gone)}, which is "
+                  f"in neither {AUTHOR.parent.name}/ nor {AUTHOR.parent.name}/tqe_class/. "
+                  f"{OUT.name} is UNCHANGED.", file=sys.stderr)
+            return 1
     tex = convert(SRC.read_text(encoding="utf-8"))
     # Anything non-ASCII left here is a character inputenc will refuse. Better to
     # fail now, naming it, than to hand over a file whose first compile dies.

@@ -204,6 +204,8 @@ class BraketSolver(AbstractSolver):
         record_state: bool = False,
         optimizer: Literal["adam", "lbfgs"] = "adam",
         stepsize: float = 0.1,
+        mixer: Literal["transverse", "xy_ring"] = "transverse",
+        n_select: int | None = None,
     ) -> None:
         if backend not in BACKEND_DEVICE_MAP:
             raise ValueError(
@@ -252,6 +254,22 @@ class BraketSolver(AbstractSolver):
             raise ValueError("optimizer must be 'adam' or 'lbfgs'")
         self.optimizer = optimizer
         self.stepsize = float(stepsize)
+        if mixer not in ("transverse", "xy_ring"):
+            raise ValueError("mixer must be 'transverse' or 'xy_ring'")
+        if mixer == "xy_ring" and n_select is None:
+            raise ValueError(
+                "the xy_ring mixer preserves Hamming weight, so it needs the "
+                "weight to start from: pass n_select=K")
+        #: ``transverse`` is the published setting: Hadamards on every qubit and
+        #: a sum of single-qubit X terms, which moves amplitude between
+        #: cardinalities and leaves the constraint to the penalty term.
+        #: ``xy_ring`` starts from the Dicke state |D^N_K> and mixes with
+        #: nearest-neighbour XX+YY terms on a ring, each of which commutes with
+        #: the total Hamming weight, so the state stays inside the feasible set
+        #: for every angle and the constraint leaves the cost Hamiltonian
+        #: entirely [45], [46].
+        self.mixer = mixer
+        self.n_select = n_select
 
     @property
     def c_dtype(self) -> type:
@@ -314,12 +332,10 @@ class BraketSolver(AbstractSolver):
         def qaoa_layer(params):
             gammas = params[:self.p_layers]
             betas  = params[self.p_layers:]
-            # Uniform superposition
-            for i in range(n):
-                qml.Hadamard(wires=i)
+            self._prepare_initial_state(n, qml)
             for gamma, beta in zip(gammas, betas):
                 qml.ApproxTimeEvolution(cost_h, gamma, 1)
-                qml.ApproxTimeEvolution(mixer_h, beta, 1)
+                self._apply_mixer(beta, n, qml, mixer_h)
             return qml.expval(cost_h)
 
         # Optimize parameters
@@ -379,11 +395,10 @@ class BraketSolver(AbstractSolver):
             def probs_circuit(angles):
                 gammas = angles[:self.p_layers]
                 betas = angles[self.p_layers:]
-                for i in range(n):
-                    qml.Hadamard(wires=i)
+                self._prepare_initial_state(n, qml)
                 for gamma, beta in zip(gammas, betas):
                     qml.ApproxTimeEvolution(cost_h, gamma, 1)
-                    qml.ApproxTimeEvolution(mixer_h, beta, 1)
+                    self._apply_mixer(beta, n, qml, mixer_h)
                 return qml.probs(wires=range(n))
 
             best_step = int(np.argmin(energies)) if energies else None
@@ -683,6 +698,49 @@ class BraketSolver(AbstractSolver):
             coeffs, ops = [0.0], [qml.Identity(0)]
         return qml.Hamiltonian(coeffs, ops)
 
+    def _dicke_state(self, n: int) -> np.ndarray:
+        """|D^N_K>: equal amplitude on every bitstring of Hamming weight K.
+
+        Prepared by setting the amplitudes rather than by a circuit. In
+        simulation the two are the same state, and the gate cost of preparing
+        it on hardware is a separate question with a known answer in the
+        literature; reporting a rotation count for this ansatz without that
+        preparation would understate it, which is why Sec. V-G says so.
+        """
+        k = self.n_select
+        idx = np.array([i for i in range(2 ** n) if bin(i).count("1") == k], dtype=np.int64)
+        if idx.size == 0:
+            raise ValueError(f"no bitstring of weight {k} on {n} qubits")
+        psi = np.zeros(2 ** n, dtype=np.complex128)
+        psi[idx] = 1.0 / np.sqrt(idx.size)
+        return psi
+
+    def _prepare_initial_state(self, n: int, qml) -> None:
+        """The ansatz's starting state: uniform over 2^N, or over the feasible set."""
+        if self.mixer == "xy_ring":
+            qml.StatePrep(self._dicke_state(n), wires=range(n))
+        else:
+            for i in range(n):
+                qml.Hadamard(wires=i)
+
+    def _apply_mixer(self, beta, n: int, qml, mixer_h) -> None:
+        """One mixer layer.
+
+        The ring XY mixer is applied as even pairs then odd pairs. Neighbouring
+        XX+YY terms do not commute, so this is a Trotter step of
+        exp(-i beta H_XY) rather than that operator -- but every factor conserves
+        the Hamming weight, so the property the ansatz is chosen for holds
+        exactly at any angle and any ordering, which is what the test pins.
+        """
+        if self.mixer != "xy_ring":
+            qml.ApproxTimeEvolution(mixer_h, beta, 1)
+            return
+        pairs = [(i, (i + 1) % n) for i in range(0, n - 1, 2)]
+        pairs += [(i, (i + 1) % n) for i in range(1, n, 2)]
+        for i, j in pairs:
+            if i != j:
+                qml.IsingXY(2.0 * beta, wires=[i, j])
+
     def _build_mixer_hamiltonian(self, n: int, qml):
         coeffs = [-1.0] * n
         ops = [qml.PauliX(i) for i in range(n)]
@@ -878,11 +936,10 @@ class BraketSolver(AbstractSolver):
         def sample_circuit(params):
             gammas = params[:self.p_layers]
             betas  = params[self.p_layers:]
-            for i in range(n):
-                qml.Hadamard(wires=i)
+            self._prepare_initial_state(n, qml)
             for gamma, beta in zip(gammas, betas):
                 qml.ApproxTimeEvolution(cost_h, gamma, 1)
-                qml.ApproxTimeEvolution(mixer_h, beta, 1)
+                self._apply_mixer(beta, n, qml, mixer_h)
             return [qml.sample(qml.PauliZ(i)) for i in range(n)]
 
         raw = sample_circuit(params)

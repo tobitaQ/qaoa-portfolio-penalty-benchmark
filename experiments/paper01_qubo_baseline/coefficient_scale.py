@@ -81,9 +81,18 @@ def run(sizes: list[int], instances: list[int]) -> list[dict]:
     for n in sizes:
         for inst in instances:
             ref = InstanceReference(n, inst, loader, formulator, DATA_END_DATE)
-            settings = [("Aheur", ref.a_heur), ("Amargin", ref.a_margin)]
+            # A = 0 is a setting of this cross too: the nine N = 12 instances
+            # whose A_crit is 0 ran there, and E6 and its control put the whole
+            # cost on the objective. With no penalty, s_H is the objective's own
+            # largest Ising coefficient, so eps_F = Delta_F / s_H_objective_only
+            # is a measurement like every other row -- and one that exceeds 1,
+            # which is why eps_F cannot be read as a share of the Hamiltonian.
+            settings = [("A0", 0.0), ("Aheur", ref.a_heur), ("Amargin", ref.a_margin)]
+            # Every weight the cross ran, so that ε_F can be the x axis of the
+            # ladder in Sec. V-B: the three the argument first needed are not
+            # enough to show that the ordering inside F tracks it.
             if ref.a_crit > 0:
-                settings.append(("1.1xAcrit", 1.1 * ref.a_crit))
+                settings += [(f"{m:g}xAcrit", m * ref.a_crit) for m in (1.1, 2, 5, 10)]
             for label, a in settings:
                 out.append(scales_for(ref, formulator, label, a))
     return out
@@ -92,7 +101,7 @@ def run(sizes: list[int], instances: list[int]) -> list[dict]:
 def summarise(rows: list[dict]) -> list[dict]:
     out = []
     for n in sorted({r["n_assets"] for r in rows}):
-        for label in ("Aheur", "Amargin", "1.1xAcrit"):
+        for label in ("A0", "Aheur", "Amargin", "1.1xAcrit", "2xAcrit", "5xAcrit", "10xAcrit"):
             g = [r for r in rows if r["n_assets"] == n and r["penalty_label"] == label]
             if not g:
                 continue

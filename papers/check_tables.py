@@ -252,18 +252,18 @@ for r in table("II"):
         if not pending("II", f"{tag} min-energy infeasible", r["Min-energy shot infeasible"]):
             chk("II", f"{tag} min-energy infeasible", num(r["Min-energy shot infeasible"]), float(g.runs_best_shot_infeasible.sum()), 0)
         chk("II", f"{tag} GPU h", num(r["Time"]), round(float(g.gpu_hours_total.sum()), 1), 0.06)
-        # The E3 rows of Table II and the six cells of Table VI / S22 count the
+        # The E3 rows of Table II and the six cells of Table V / S22 count the
         # same runs from two result files; the manifest's no-feasible total has
         # to equal the sum of the per-cell "(no feas.)" counts.
         if tag.startswith("e3_"):
             opt = {"e3_adam003": "adam_0.03", "e3_lbfgs": "lbfgs_100grad"}[tag]
             cells = pd.read_csv(R + "paper01_e3_summary.csv")
             cells = cells[cells.optimizer == opt]
-            chk("II", f"{tag} no feasible shot = sum over Table VI cells", float(g.runs_without_feasible_shot.sum()),
+            chk("II", f"{tag} no feasible shot = sum over Table V cells", float(g.runs_without_feasible_shot.sum()),
                 float(cells.no_feasible_shot_runs.sum()), 0)
-            chk("II", f"{tag} runs done = sum over Table VI cells", done, float(cells.runs_ok.sum()), 0)
+            chk("II", f"{tag} runs done = sum over Table V cells", done, float(cells.runs_ok.sum()), 0)
 
-# Table III: E1 main effects (levels from the summary, differences from the contrasts)
+# Table IV: E1 main effects (levels from the summary, differences from the contrasts)
 summ = pd.read_csv(R + "paper01_e1_summary.csv")
 con = pd.read_csv(R + "paper01_e1_contrasts.csv")
 FIELD = {"P_F": ("final_P_F", 1.0), "P_τ": ("final_P_tau_main", 1.0),
@@ -286,7 +286,7 @@ def _half_last_digit(cell, ref, scale):
         return max(abs(ref) * 0.06, 6e-4 * scale) if scale == 100 else max(abs(ref) * 0.06, 1e-3)
     return 0.51 * 10 ** (-len(txt.split(".")[-1]))
 
-for r in table("III"):
+for r in table("IV"):
     n = int(num(r["N"])); q = r["Quantity"].split(",")[0].strip()
     if q not in FIELD:
         continue
@@ -297,14 +297,14 @@ for r in table("III"):
         # Half a unit in the last printed digit. The earlier flat 0.06-point
         # allowance for gap cells let a stale 0.0064 stand against 0.0143 for
         # five revisions.
-        chk("III", f"N={n} {q} {label} level", v, ref, _half_last_digit(r[col], ref, scale))
+        chk("IV", f"N={n} {q} {label} level", v, ref, _half_last_digit(r[col], ref, scale))
     g = con[(con.n_assets == n) & (con.treatment == "Amargin") & (con.field == field)]
     if len(g):
         d = _sci(r["Paired median diff [95 % CI]"].split("[")[0])
         ref = float(g.instance_median_diff.iloc[0]) * scale
-        chk("III", f"N={n} {q} diff", d, ref, max(abs(ref) * 0.06, 6e-3 if scale == 100 else 1e-3))
+        chk("IV", f"N={n} {q} diff", d, ref, max(abs(ref) * 0.06, 6e-3 if scale == 100 else 1e-3))
         better = num(r["Better (tied) of 30"])
-        chk("III", f"N={n} {q} better", better, float(g.instances_treatment_better.iloc[0]), 0)
+        chk("IV", f"N={n} {q} better", better, float(g.instances_treatment_better.iloc[0]), 0)
 
 # Table S13: decomposition
 dec = pd.read_csv(R + "paper01_e1_decomposition.csv")
@@ -332,7 +332,7 @@ for r in table("S14"):
     g = sh[(sh.n_assets == n) & (sh.penalty_label == "Aheur") & (sh.shots == S)]
     if not len(g):
         continue
-    for col, f in [("Optimised QAOA", "Q_tau_final_median"), ("Unoptimised (same initial angles)", "Q_tau_initial_median"),
+    for col, f in [("Optimized QAOA", "Q_tau_final_median"), ("Unoptimized (same initial angles)", "Q_tau_initial_median"),
                    ("Uniform over F", "Q_tau_uniform_F_median"), ("Uniform over 2^N", "Q_tau_uniform_all_median")]:
         ref = float(g[f].iloc[0]); v = num(r[col])
         chk("S14", f"N={n} S={S} {col}", v, ref, max(0.0006, abs(ref) * 0.02))
@@ -345,7 +345,7 @@ for r in table("S14"):
 e3 = pd.read_csv(R + "paper01_e3_summary.csv")
 e3c = pd.read_csv(R + "paper01_e3_contrasts.csv")
 OPT = {"ADAM 0.1 × 50": "adam_0.1", "ADAM 0.03 × 100": "adam_0.03", "L-BFGS-B": "lbfgs_100grad"}
-for T, r in [(t, row) for t in ("VI", "S22") for row in table(t)]:
+for T, r in [("S22", row) for row in table("S22")]:
     n = int(num(r["N"])); pen = r["A"].replace("_", ""); opt = OPT[r["Setting"]]
     g = e3[(e3.n_assets == n) & (e3.penalty_label == pen) & (e3.optimizer == opt)]
     if "⟨H_norm⟩" in r:   # the compact main-text table drops the levels
@@ -479,9 +479,6 @@ def _nums(x):
     """Every signed number in a cell, left to right (bold stripped)."""
     return [float(v.replace("−", "-")) for v in re.findall(r"[−-]?\d+\.?\d*", re.sub(r"\*\*", "", str(x)))]
 E5ROWS = {r["Quantity"]: r for r in table("S15")}
-E5COMPACT = {r["Quantity"]: r for r in table("V")}
-for q, row in E5COMPACT.items():
-    assert q in E5ROWS and row == E5ROWS[q], f"Table V row differs from Table S15: {q}"
 for n in (12, 16, 20):
     for w, tag in (("E1", "2023–26"), ("E5", "2020–23")):
         col = f"N = {n}, {tag}"; L = f"N={n} {tag}"
@@ -542,28 +539,44 @@ for r in table("S18"):
     chk("S18", f"N={n} {pen} uniform 1k", num(r["Uniform, 1,000 shots"]), round(float(g.uniform_F_1000_shot_D_cond.iloc[0]), 3), 6e-4)
     chk("S18", f"N={n} {pen} point mass", num(r["Point mass"]), round(float(g.point_mass_D_cond_median.iloc[0]), 3), 6e-4)
 
-# Table IV (main text): the D_cond summary, from the same file as S18 plus R_τ
-# from the feasibility split. Every cell is checked.
-for r in table("IV"):
-    n = int(num(r["N"]))
-    g = ct[(ct.n_assets == n) & (ct.penalty_label == "Aheur")]
-    med, mx = _nums(r["D_cond at A_heur, median (max)"])
-    chk("IV", f"N={n} Aheur D median", med, round(float(g.final_D_cond_median.iloc[0]), 3), 6e-4)
-    chk("IV", f"N={n} Aheur D max", mx, round(float(g.final_D_cond_max.iloc[0]), 3), 6e-4)
-    gm = ct[(ct.n_assets == n) & (ct.penalty_label == "Amargin")]
-    chk("IV", f"N={n} Amargin D median", num(r["D_cond at A_margin, median"]),
-        round(float(gm.final_D_cond_median.iloc[0]), 3), 6e-4)
-    chk("IV", f"N={n} |F|", num(r["|F|"]), float(g.feasible_set_size_median.iloc[0]), 0)
-    for pen, col, digits in (("Aheur", "R_τ at A_heur", 3), ("Amargin", "R_τ at A_margin", 2)):
-        gs = sp[(sp.n_assets == n) & (sp.penalty_label == pen)]
-        chk("IV", f"N={n} {pen} R", num(r[col]), round(float(gs.enrichment_R_tau_median.iloc[0]), digits), 6e-4 if digits == 3 else 6e-3)
-
-# Table S34: initial → final of the same run at a fixed A.
 SUP = str.maketrans("⁰¹²³⁴⁵⁶⁷⁸⁹", "0123456789")
 def _signed(cell):
     """Every signed number in a cell, scientific notation (a·10⁻³) included."""
     t = str(cell).replace("−", "-").replace("·10⁻", "e-").replace("·10", "e").translate(SUP)
     return [float(v) for v in re.findall(r"[+-]?\d+\.?\d*(?:e[+-]?\d+)?", t)]
+
+# Table III (main text): the penalty ladder -- the two factors of the uniform-F
+# comparison at every weight the cross ran, from analyze_ladder.py's CSV, which
+# derives them from the run rows and each instance's own reference row. Every
+# cell is checked against that file, including the two counts.
+ld = pd.read_csv(R + "paper01_e1_penalty_ladder.csv")
+LADLAB = {"A_heur": "Aheur", "A_margin": "Amargin", "1.1·A_crit": "1.1xAcrit",
+          "2·A_crit": "2xAcrit", "5·A_crit": "5xAcrit", "10·A_crit": "10xAcrit",
+          # E6: the constraint in the ansatz (XY mixer, Dicke state) and the
+          # control that removes the penalty but keeps the published ansatz.
+          "XY, A = 0": "XY", "A = 0, transverse": "A0-transverse"}
+for r in table("III"):
+    n = int(num(r["N"])); pen = LADLAB[r["A"].strip()]
+    g = ld[(ld.n_assets == n) & (ld.penalty_label == pen)]
+    assert len(g) == 1, f"Table III row N={n} {pen} has no ladder row"
+    g = g.iloc[0]
+    for col, key, digits in (("ε_F", "epsilon_F_median", 3), ("P_F", "P_F_median", 3),
+                             ("R_τ", "R_tau_median", 2), ("D_cond", "D_cond_median", 3),
+                             ("P_τ ÷ uniform-F", "P_tau_over_floor_median", 2),
+                             ("Q_τ(1000)", "Q_tau_1000_median", 3), ("g_F", "g_F_median", 3)):
+        chk("III", f"N={n} {pen} {col}", num(r[col]), round(float(g[key]), digits),
+            6e-4 if digits == 3 else 6e-3)
+    # "62/150 (41 %)" -- the count, the denominator and the percentage it prints.
+    above, runs, pct = _signed(r["Above uniform-F"])[:3]
+    chk("III", f"N={n} {pen} above floor", above, float(g.runs_above_floor), 0)
+    chk("III", f"N={n} {pen} runs", runs, float(g.runs), 0)
+    chk("III", f"N={n} {pen} above floor %", pct,
+        round(100 * float(g.runs_above_floor) / float(g.runs)), 0.5)
+    infeas, runs2 = _signed(r["Infeasible minima"])[:2]
+    chk("III", f"N={n} {pen} infeasible minima", infeas, float(g.infeasible_batch_minimum_runs), 0)
+    chk("III", f"N={n} {pen} runs (infeasible col)", runs2, float(g.runs), 0)
+
+# Table S34: initial → final of the same run at a fixed A.
 inifin = pd.read_csv(R + "paper01_e1_initial_final.csv")
 S34F = {"P_F": "P_F", "P_τ": "P_tau_main", "Q_τ(1000)": "Q_tau_main_1000", "E[V]": "expected_violation",
         "R_τ": "R_tau", "D_cond": "D_cond"}
@@ -580,7 +593,7 @@ for r in table("S34"):
 
 # Table S35: the objective's scale in the normalised Hamiltonian.
 cs = pd.read_csv(R + "paper01_coefficient_scale_summary.csv")
-PENC = {"A_heur": "Aheur", "A_margin": "Amargin", "1.1·A_crit": "1.1xAcrit"}
+PENC = {"A = 0": "A0", "A_heur": "Aheur", "A_margin": "Amargin", "1.1·A_crit": "1.1xAcrit"}
 for r in table("S35"):
     n = int(num(r["N"])); pen = PENC[r["A"].strip()]
     g = cs[(cs.n_assets == n) & (cs.penalty_label == pen)]
@@ -649,7 +662,7 @@ E4ARM = {"CPU double, 1 thread": "cpu_double", "GPU single": "gpu_single",
 def _rng(cell):
     v = [num(x) for x in re.split(r"[–-]", str(cell).replace("**", ""))]
     return (v[0], v[-1])
-for T, r in [(t, row) for t in ("VII", "S30") for row in table(t)]:
+for T, r in [("S30", row) for row in table("S30")]:
     arm = E4ARM.get(r["Arm"])
     if arm is None:
         continue
@@ -934,7 +947,7 @@ for r in table("S28"):
 # states (two-qubit 0.9905, SPAM 0.9938 per qubit, 2·C(N,2) gates at p = 2).
 # A "Circuit time / T2" column, whose gate time and T2 were stated nowhere,
 # was removed on 2026-09-14 rather than sourced.
-supp_par = s_supp[s_supp.find("**The fidelity model.**"):]
+supp_par = s_supp[s_supp.find("*The fidelity model.*"):]
 F2 = float(re.search(r"two-qubit fidelity of ([\d.]+)", supp_par).group(1))
 SPAM = float(re.search(r"SPAM at ([\d.]+) per\s+qubit", supp_par).group(1))
 for r in table("S31"):
@@ -1002,7 +1015,7 @@ for label, field in (("An optimality gap, approximation ratio or regret", "repor
     chk("S1", label, hit, float(len(audit_tally.count(_tally, field))), 0)
     chk("S1", f"{label} (population)", of, float(_n), 0)
 post = [r for r in _tally if r["post_standard"] == "yes"]
-cite = S1["Citation of [19], [20] or [21]"]
+cite = S1["Citation of [22], [23] or [24]"]
 mm = re.match(r"(\d+) of the (\d+) published after .* \((\d+) of (\d+) overall\)", cite)
 chk("S1", "cite standards: of post-standard", float(mm.group(2)), float(len(post)), 0)
 chk("S1", "cite standards: overall population", float(mm.group(4)), float(_n), 0)

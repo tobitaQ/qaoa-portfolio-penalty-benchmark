@@ -47,8 +47,9 @@ records an *inference* where a *fact* belongs. A date range stands in for the va
 the algorithm's description stands in for the circuits the service executed; a printed "done" stands
 in for how a job ended; a plausible aggregate stands in for the agreement of the records beneath it.
 The numerical study this platform served [1] — 2,565 recorded QAOA runs across three problem sizes,
-thirty instances, five seeds and six penalty settings, with control arms on a cloud simulator and a
-trapped-ion device — met seven implementation defects that changed reported numbers, and every one
+thirty instances, five seeds and six penalty settings, 900 further runs that move the constraint
+out of the cost and into the ansatz, and control arms on a cloud simulator and a trapped-ion
+device — met seven implementation defects that changed reported numbers, and every one
 of them had this shape: a window pinned by date that the provider revised underneath; a sampling call
 billed as 177 tasks because the framework, not the algorithm, decided the count; a "shot-seed
 control" that re-seeded a generator the device did not read; a device's answer replaced by a client
@@ -278,6 +279,11 @@ reference quantities and the initial angles — and explicitly not for the rest.
 **The numerical study.** The optimisation data in this paper are all from [1]: the E1 cross (2,565 runs on a
 local GPU at single precision: N ∈ {12, 16, 20} × 30 instances × seeds 42–46 × up to six penalty
 settings), its controls, the SV1 and IonQ arms, and the derived statistics of two market windows.
+A later block of that study, 900 runs with a constraint-preserving ansatz and its control, was
+recorded through the same status file, per-run artifact, reference table and evaluator, and a
+manifest that gained one column for the mixer and dropped the four that describe a penalty weight;
+the driver and the ansatz are new, the record is not. It is evidence that the design carried a new experiment rather than an evaluation of the
+design, and the three evaluations of Section 5 do not include it.
 This paper contributes no new optimisation runs; its evidence is what the record, the guards and the
 package do under injected faults, misconfigurations and a clean-room reconstruction, plus 1,249 SV1
 tasks of its own: 178 that re-observe one framework behaviour on the service, and 1,071 that measure
@@ -1244,11 +1250,11 @@ three machines without a GPU do with the same level 1.**
 | 3 | re-issue with `--resume` | 168 s | "6 rows already done"; 24 rows; 94/94 non-timing columns identical to the uninterrupted block |
 | control | level 2 without `data/derived`, network unreachable | 6 s | fails: `TypeError: '<' not supported between instances of 'int' and 'NoneType'` |
 | control | E2 aggregation without the artifacts | 1.2 s | fails: "no run artifacts under …/e1_runs" |
-| 0 (v1.1) | `git clone --branch v1.1`; `python -m venv`; `pip install -r requirements-repro.txt` | 0.3 s; 8 s; 146 s | commit a32d427, 24 MB |
-| 0 (v1.1) | `pytest -q -rs` | 102 s | 417 passed, 33 skipped: 29 need the per-run artifacts, 3 the price snapshots, 1 a host without `lightning.gpu` |
-| 1 (v1.1) | `python -m notebooks.generate_tqe_figures`; `python check_tables.py` | 26 s; 2.6 s | 5/5 byte-identical; 2,578 cells agree, 0 disagree, 0 pending |
+| 0 (v1.1) | `git clone --branch v1.1`; `python -m venv`; `pip install -r requirements-repro.txt` | 0.3 s; 8 s; 148 s | commit 38b02ce, 24 MB |
+| 0 (v1.1) | `pytest -q -rs` | 102 s | 424 passed, 33 skipped: 29 need the per-run artifacts, 3 the price snapshots, 1 a host without `lightning.gpu` |
+| 1 (v1.1) | `python -m notebooks.generate_tqe_figures`; `python check_tables.py` | 24 s; 2.6 s | 5/5 byte-identical; 2,578 cells agree, 0 disagree, 0 pending |
 | 2 (v1.1) | the level-2 command above | 17 s | energy and Sharpe identical to the committed file, to 0 |
-| 3 (v1.1) | the level-3 block with the job status record: `SIGKILL` after 5 runs | 51 s | status file `RUNNING 5/12, last N12_i00_5xAcrit_s42`, matching the 5 rows on disk, which the manifest parses with no artifact left without a row; `analyze_e1` refuses the manifest |
+| 3 (v1.1) | the level-3 block with the job status record: `SIGKILL` after 5 runs | 50 s | status file `RUNNING 5/12, last N12_i00_5xAcrit_s42`, matching the 5 rows on disk, which the manifest parses with no artifact left without a row; `analyze_e1` refuses the manifest |
 | 3 (v1.1) | re-issue with `--resume` | 70 s | driver prints "previous job: RUNNING pid … 5/12"; status `EXIT 0 12/12`; `analyze_e1` runs |
 
 The inputs the harness supplied were the repository URL and tag, a name for `--results-tag`, and
@@ -1298,7 +1304,7 @@ differ, as they must.
 *The same checks on the release this paper ships.* E-S3's three levels are an evaluation of `v1.0`,
 because that is the package a reader of the numerical study has and the one whose gaps this section
 reports. The fixes those gaps produced are in `v1.1`, so the last block of Table 9 clones `v1.1` and
-repeats what can be repeated: the suite (417 passed, 33 skipped), level 1 (5/5 figures byte-identical,
+repeats what can be repeated: the suite (424 passed, 33 skipped), level 1 (5/5 figures byte-identical,
 2,578 manuscript cells agreeing), level 2 (identical to the committed file, to zero), and the
 interruption and resumption — which `v1.0` cannot be asked for at all, since the job status record
 was written in response to this evaluation. That last step is also where the record gate of
@@ -1314,7 +1320,7 @@ fault-injection relations against real artifacts; three need the price snapshots
 third-party data the package deliberately does not redistribute (it ships the derived statistics
 instead); and one is the test that a GPU backend does not silently fall back, which has nothing to
 fall back from on a host where `lightning.gpu` is installed and runs. Every claim this paper makes about the final
-implementation is therefore a claim about a tagged commit (`a32d427`) that a reader can clone, and the
+implementation is therefore a claim about a tagged commit (`38b02ce`) that a reader can clone, and the
 `CHANGELOG` says which paper was evaluated against which release. What is *not* repeated on `v1.1` is
 level 3's full block and its column-by-column agreement (Table 10), which measures a host-and-precision
 difference the release does not change.
@@ -1560,7 +1566,7 @@ and accompanying artifacts.
 
 The code, the evaluation results and the commands that rebuild them are in one
 package, release `v1.1` (https://github.com/tobitaQ/qaoa-portfolio-penalty-benchmark,
-tag `v1.1`, commit `a32d427`, doi:[[v1.1 DOI]]): the platform; the three harnesses
+tag `v1.1`, commit `38b02ce`, doi:[[v1.1 DOI]]): the platform; the three harnesses
 (`experiments/system_paper/es1_fault_injection.py`, `es1_random_faults.py`, `es2_guard_stages.py`,
 `es2_observe_cloud.py`, `es2_observe_cost_control.py`, `es3_reconstruction.py`) and the cost-control
 aggregation (`es2_cost_control_aggregate.py`); the cost-control patch (`cdk/cost_control_patch/`); the job status module
@@ -1569,8 +1575,9 @@ aggregation (`es2_cost_control_aggregate.py`); the cost-control patch (`cdk/cost
 `papers/system_paper/check_tables.py`, which binds each cell of Tables 3–11 and 13 to one of them and
 regenerates both figures for a byte comparison. Appendix C lists the commands each
 table came from. Two inputs are not
-in it: the 2,565 per-run artifacts (`.npz`, about 100 MB), which the Zenodo deposit of [1] carries
-and which the checks that read an artifact and E-S1's injection need (Section 5.3), and the price
+in it: the per-run artifacts (`.npz`, about 100 MB for the 2,565-run cross and 34 MB for the
+900-run ansatz block), which the Zenodo deposit of [1] carries and which the checks that read an
+artifact and E-S1's injection need (Section 5.3), and the price
 snapshots behind the derived statistics, which are third-party data the package may not
 redistribute (Section 3.1). Every reproduction level starts from the statistics it does ship.
 
@@ -1603,8 +1610,8 @@ service, some counted as circuits, as Table 7 distinguishes; nobody paid them.
 
 ## References
 
-[1] H. Tobita, "Measuring metric and sampling distortions in penalty-encoded QAOA portfolio
-benchmarks," submitted to *IEEE Trans. Quantum Eng.*, 2026; reproduction package
+[1] H. Tobita, "Feasibility without preference: what QAOA contributes at the textbook penalty
+weight," manuscript, 2026; manuscript and reproduction package at
 doi:10.5281/zenodo.22743582.
 
 [2] B. Weder, J. Barzen, F. Leymann, M. Salm, and K. Wild, "QProv: A provenance system for quantum
