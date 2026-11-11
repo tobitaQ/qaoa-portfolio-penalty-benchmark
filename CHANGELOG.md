@@ -1,7 +1,28 @@
 # Changelog
 
-This package is the reproduction artefact of two papers. Each release is a frozen version with its
-own DOI, and each paper names the version it was evaluated against.
+This package is the reproduction artefact of two papers. Each deposited release is a frozen version
+with its own DOI, and each paper names the version it was evaluated against. The first paper names v1.2, the version
+submitted to IEEE Access; the second reconstructs v1.2 and ships v1.3.
+
+## v1.3 — 2026-11-10 — tag; deposited on acceptance of the system paper
+
+The release the system paper ships. The evaluation of that paper at three reconstruction levels was
+made on v1.2, which this tag leaves intact; v1.3 adds what the paper's second round of measurements
+produced and one change to the aggregation gate, and changes nothing else the evaluations read.
+
+- `experiments/system_paper/results/`: the E-S1 fault injection and mutation streams repeated on
+  two sibling records (`*_e5*`, `*_e3_lbfgs*`), the second instance pair of the re-run injection
+  (`paper02_es1_input_rerun_pair23.csv` and the `paper01_e1_*_p23*` arms), and the clause-source
+  replays (`paper02_es1_clause_sources*.csv`) that place every `identities` finding by the file its
+  clause read; `paper02_es1_tiers*.csv` is now counted by clause.
+- `experiments/system_paper/es1_clause_sources.py`: the replay driver; `--record` on the five E-S1
+  scripts, `--ladder` on the re-run injection.
+- **Fix:** the aggregation gate (`src/record_checks.py`, `analyze_e1`) runs `input-digest` whenever the
+  pinned statistics for the record's window are on disk, so a record re-run from a revised input is
+  refused before a number is read; the block-level correlation clause of `state-batch`, which has no
+  stated false-alarm rate, is reported as a warning instead of refusing. The E-S1 harness counts both
+  clauses as one check, as before. Three tests.
+- `papers/system_paper/system_paper_supplement.md` and `md_to_acm.py --supplement`: the supplement.
 
 ## v1.2 — 2026-11-07 — 10.5281/zenodo.24032941
 
@@ -46,7 +67,12 @@ re-analysis of the committed E1 record, and `papers/check_tables.py` now checks 
   conclusion, and the same treatment by hand for the other sections: one dialect (American),
   shorter sentences, and no elliptical possessives.
 
-## v1.1 — unreleased
+## v1.1 — not deposited; its contents are part of v1.2
+
+Tagged 2026-09-30, while the numerical study was still under review at IEEE Transactions on
+Quantum Engineering. That submission was declined without review and the study was revised for
+IEEE Access, so this release was never archived on its own: v1.2 is the first deposit that carries
+the material below, and it is the release the system paper ships.
 
 Adds the artefacts of the second paper (the experiment platform and its evaluation), the two fixes
 the first release's readers ran into, and three the second paper's evaluation and a review of the

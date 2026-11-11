@@ -18,15 +18,33 @@ What is *not* here, and why:
 
 * ``row-npz``, ``npz-internal``, ``identities``, ``seed-distinct`` and
   ``state-recompute`` need the artifacts, which a clone does not carry;
-* ``input-digest`` and ``reference-input`` need the pinned statistics;
+* ``reference-input`` needs the pinned statistics and re-enumerates every
+  feasible set from them, which is seconds per record but not free;
 * ``manifest`` asks whether a block holds every cell its reference prescribes,
   which a deliberate partial run (a reproduction of one block) does not.
 
-Run those with the harness. ``check_record`` is the subset that costs a second
-and applies to any run of the driver, whole or partial.
+``input-digest`` also reads the pinned statistics, but costs a second and is
+the relation that catches a record built from an input the published
+statistics no longer hold (the fault the project actually met), so it is here
+too and runs whenever the statistics for the record's window are on disk. It
+was added to the gate after the first review of the system paper showed that
+without it a record re-run from a revised input reached a table.
+
+Run the rest with the harness. ``check_record`` is the subset that costs a
+second and applies to any run of the driver, whole or partial. Its one
+statistical rule is split in two: the binomial tail on the shot counts, whose
+false-alarm rate is stated and which refuses; and the block-level correlation
+diagnostic, which has no such bound and is reported as a warning by
+``check_record_warnings``.
 """
 
 from __future__ import annotations
+
+import shutil
+import tempfile
+from contextlib import contextmanager
+from pathlib import Path
+from typing import Iterator
 
 import numpy as np
 import pandas as pd
@@ -137,7 +155,22 @@ def check_scorer(rows: pd.DataFrame, reference: pd.DataFrame) -> list[str]:
 
 
 def check_state_batch(rows: pd.DataFrame, reference: pd.DataFrame) -> list[str]:
-    """The shot batch is a draw from the *final* state, not from another one."""
+    """Two shot counts agree with the final state's probabilities for them.
+
+    Not a test of the whole batch: the feasible and optimum counts are two
+    marginals, and a fault that redistributes probability without moving either
+    leaves this check silent. What it does hold is that the counts came from a
+    state with these two probabilities, which is what the initial/final mix-up
+    of the numerical study violated. Both clauses, as the E-S1 harness counts
+    them; the gate runs the two apart (``check_state_batch_counts`` refuses,
+    ``check_state_batch_blocks`` warns).
+    """
+    return check_state_batch_counts(rows, reference) + check_state_batch_blocks(rows, reference)
+
+
+def check_state_batch_counts(rows: pd.DataFrame, reference: pd.DataFrame) -> list[str]:
+    """The binomial clause: each count against its state's probability, with the
+    false-alarm bound of ``TAIL_P``."""
     out = []
     S = rows.shots.astype(float)
     from scipy.stats import binom
@@ -155,6 +188,15 @@ def check_state_batch(rows: pd.DataFrame, reference: pd.DataFrame) -> list[str]:
         for _, r in bad.iterrows():
             out.append(f"{r.run_id}: {obs.name} {int(r[obs.name])} has binomial tail "
                        f"{tail[r.name]:.1e} under S x final_{prefix} = {n[r.name] * p[r.name]:.1f}")
+    return out
+
+
+def check_state_batch_blocks(rows: pd.DataFrame, reference: pd.DataFrame) -> list[str]:
+    """The correlation clause: within a block, the feasible fraction should
+    track the final state's P_F more closely than the initial state's. A
+    diagnostic without a stated false-alarm rate, so the gate reports it and
+    does not refuse on it."""
+    out = []
     for (n, lab), block in rows.groupby(["n_assets", "penalty_label"]):
         if len(block) < 10 or block.final_P_F.std() == 0:
             continue
@@ -197,36 +239,126 @@ def check_ranges(rows: pd.DataFrame, reference: pd.DataFrame) -> list[str]:
     return out
 
 
-#: The relations of this module, in the order the harness runs them.
+@contextmanager
+def loader_dirs(cache_dir: Path | None, derived_dir: Path) -> Iterator[None]:
+    """Point the loader at a price cache (None = an empty one) and a derived
+    directory, so that the statistics are read from the pinned file and not
+    recomputed from prices the cache may hold."""
+    from src.finance.data_loader import FinanceDataLoader
+    old = FinanceDataLoader.CACHE_DIR, FinanceDataLoader.DERIVED_DIR
+    tmp = None
+    try:
+        if cache_dir is None:
+            tmp = Path(tempfile.mkdtemp(prefix="record_checks_nocache_"))
+            cache_dir = tmp
+        FinanceDataLoader.CACHE_DIR = cache_dir
+        FinanceDataLoader.DERIVED_DIR = derived_dir
+        yield
+    finally:
+        FinanceDataLoader.CACHE_DIR, FinanceDataLoader.DERIVED_DIR = old
+        if tmp is not None:
+            shutil.rmtree(tmp, ignore_errors=True)
+
+
+def pinned_statistics_present(derived_dir: Path, end_date: str) -> bool:
+    """Whether a derived-statistics file for the record's window is on disk."""
+    return any(Path(derived_dir).glob(f"stats_*_{end_date}_*.csv"))
+
+
+def check_input_digest(rows: pd.DataFrame, reference: pd.DataFrame,
+                       derived_dir: Path | None = None, end_date: str | None = None) -> list[str]:
+    """The digest of the pinned statistics against the one every record carries.
+
+    Recomputes the content digest of μ and Σ for each instance from the
+    statistics on disk and compares it with the reference row's and every run
+    row's ``input_digest``. Reads the pinned file, never the price cache.
+    """
+    from experiments.paper01_qubo_baseline import run_e1_cross as e1
+    from experiments.paper01_qubo_baseline.run_instances import input_digest, instance_tickers
+    from src.finance.data_loader import FinanceDataLoader
+    derived_dir = Path(derived_dir) if derived_dir is not None else FinanceDataLoader.DERIVED_DIR
+    end_date = end_date or (str(rows.data_end.iloc[0]) if "data_end" in rows and len(rows)
+                            else e1.DATA_END_DATE)
+    out = []
+    with loader_dirs(cache_dir=None, derived_dir=derived_dir):
+        loader = FinanceDataLoader()
+        fresh = {}
+        for _, q in reference.iterrows():
+            data = loader.load(instance_tickers(int(q.n_assets), int(q.instance)),
+                               end_date=end_date, lookback_years=e1.LOOKBACK_YEARS)
+            fresh[(q.n_assets, q.instance)] = input_digest(data.returns, data.covariance)
+            if q.get("input_digest") != fresh[(q.n_assets, q.instance)]:
+                out.append(f"N={q.n_assets} inst {q.instance}: reference input_digest "
+                           f"{q.get('input_digest')!r} != pinned statistics {fresh[(q.n_assets, q.instance)]}")
+    for _, r in rows.iterrows():
+        want = fresh.get((r.n_assets, r.instance))
+        if r.get("input_digest") != want:
+            out.append(f"{r.run_id}: input_digest {r.get('input_digest')!r} != pinned statistics {want}")
+    return out
+
+
+#: The relations the gate refuses on, in the order it runs them. ``input-digest``
+#: runs only when the pinned statistics for the record's window are on disk
+#: (``check_record`` says so when they are not).
 RECORD_CHECKS = (
     ("schema", check_schema),
     ("penalty", check_penalty),
     ("reference-row", check_reference_row),
     ("scorer", check_scorer),
     ("ranges", check_ranges),
-    ("state-batch", check_state_batch),
+    ("state-batch", check_state_batch_counts),
+    ("input-digest", check_input_digest),
+)
+
+#: Diagnostics the gate reports without refusing: rules with no stated
+#: false-alarm rate.
+RECORD_WARNINGS = (
+    ("state-batch-blocks", check_state_batch_blocks),
 )
 
 
 def check_record(rows: pd.DataFrame, reference: pd.DataFrame,
-                 skip: tuple[str, ...] = ()) -> dict[str, list[str]]:
-    """Run every relation of this module and return the findings by name.
+                 skip: tuple[str, ...] = (), derived_dir: Path | None = None) -> dict[str, list[str]]:
+    """Run every refusing relation of this module and return the findings by name.
 
     Args:
         rows: The manifest, as the driver wrote it.
         reference: The reference table for the instances the manifest names.
         skip: Names to leave out.
+        derived_dir: Where the pinned statistics are; the loader's default
+            when None. ``input-digest`` is skipped when no statistics file for
+            the record's window is there.
 
     Returns:
         Check name to its findings; a name is present only if it found something.
     """
+    from src.finance.data_loader import FinanceDataLoader
+    derived = Path(derived_dir) if derived_dir is not None else FinanceDataLoader.DERIVED_DIR
+    end_date = str(rows.data_end.iloc[0]) if "data_end" in rows and len(rows) else None
     found = {}
     for name, fn in RECORD_CHECKS:
         if name in skip:
             continue
+        if name == "input-digest":
+            if end_date is None or not pinned_statistics_present(derived, end_date):
+                continue
+            fn = lambda r_, q_: check_input_digest(r_, q_, derived, end_date)
         try:
             messages = fn(rows, reference)
         except Exception as exc:                      # a check that cannot run is a finding
+            messages = [f"check raised {type(exc).__name__}: {exc}"]
+        if messages:
+            found[name] = messages
+    return found
+
+
+def check_record_warnings(rows: pd.DataFrame, reference: pd.DataFrame) -> dict[str, list[str]]:
+    """Run the diagnostics the gate reports but does not refuse on."""
+    found = {}
+    for name, fn in RECORD_WARNINGS:
+        try:
+            messages = fn(rows, reference)
+        except Exception as exc:
             messages = [f"check raised {type(exc).__name__}: {exc}"]
         if messages:
             found[name] = messages

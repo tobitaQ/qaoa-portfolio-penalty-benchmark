@@ -1,0 +1,6 @@
+# The declarative control of E-S1 (Section 4.1), run as an actual pandera schema.
+#
+# Kept out of requirements-repro.txt on purpose: reproducing the paper's numbers
+# must not depend on the library the paper compares itself against. Installing
+# this changes neither the pinned pandas nor the pinned numpy.
+pandera[pandas]==0.35.0

@@ -217,7 +217,7 @@ def op_input_perturb(rec, rng, tmp):
     derived = tmp / f"derived_{rng.integers(1 << 30)}"
     shutil.copytree(rec.derived_dir, derived)
     delta = float(rng.choice(DELTAS))
-    for path in derived.glob("stats_*_2026-08-05_*.csv"):
+    for path in derived.glob(f"stats_*_{rec.end_date}_*.csv"):
         frame = pd.read_csv(path, index_col=0, float_precision="round_trip")
         r = rng.integers(len(frame))
         c = rng.integers(len(frame.columns))
@@ -401,6 +401,8 @@ def main(argv=None) -> int:
     p.add_argument("--without", nargs="*", default=[],
                    help="check names to leave out (e.g. identities, for the before/after comparison)")
     p.add_argument("--tag", default="", help="suffix for the output files")
+    p.add_argument("--record", default="",
+                   help="mutate a sibling arm instead of the main record (file suffix, e.g. _e5)")
     args = p.parse_args(argv)
     rng = np.random.default_rng(args.seed)
     global CHEAP
@@ -409,8 +411,8 @@ def main(argv=None) -> int:
     cov_csv = COVERAGE_CSV.with_name(COVERAGE_CSV.stem + suffix + ".csv")
     faults_csv = FAULTS_CSV.with_name(FAULTS_CSV.stem + suffix + ".csv")
     summary_csv = SUMMARY_CSV.with_name(SUMMARY_CSV.stem + suffix + ".csv")
-    print(f"loading the record for N in {args.sizes} ...", flush=True)
-    clean = es1.load_record(tuple(args.sizes))
+    print(f"loading the E1{args.record} record for N in {args.sizes} ...", flush=True)
+    clean = es1.load_record(tuple(args.sizes), suffix=args.record)
     clean_found = run_checks(clean)
     assert not any(clean_found.values()), {k: v[:2] for k, v in clean_found.items() if v}
     print(f"  {len(clean.rows)} rows; clean record passes {len(CHEAP)} cheap checks", flush=True)

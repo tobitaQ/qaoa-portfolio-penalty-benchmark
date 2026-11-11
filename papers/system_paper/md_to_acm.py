@@ -62,7 +62,12 @@ NUMBER = re.compile(r"^[\s\d.,%$+\-−·×^⁻⁰¹²³⁴⁵⁶⁷⁸⁹e/:()|�
 
 
 def cite(text: str) -> str:
-    """[1] → \\cite{ref1}; [1, Sec. VI-C] → \\cite[Sec.~VI-C]{ref1}; [2], [3] kept separate."""
+    """[1] → \\cite{ref1}; [1, Sec. VI-C] → \\cite[Sec. VI-C]{ref1}; [2], [3] kept separate.
+
+    The locator is passed through as written. The docstring promised a tie in
+    "Sec.~VI-C" that no pass ever inserted, so it said so for two releases
+    while the built PDF had the plain space; the text, not the code, was wrong.
+    """
     def one(m):
         keys = ",".join(f"ref{k.strip()}" for k in m.group(1).split(","))
         if m.group(2):
@@ -93,14 +98,17 @@ def breakable(tex: str) -> str:
 
 
 def prose(text: str) -> str:
-    # Braces are set literally (sets such as N ∈ {12, 16, 20}); the draft
-    # writes no LaTeX groups of its own.
-    text = text.replace("{", "\\{").replace("}", "\\}")
+    # The shared inline() pass holds the draft's own braces (sets such as
+    # N ∈ {12, 16, 20}) behind sentinels and returns them escaped, so this
+    # converter neither escapes them itself nor inserts a macro of its own
+    # before that pass: cite() ran before inline() for two releases and the
+    # bibliography keys came out as literal "\cite\{ref1\}" in the body.
+    # Macros go in after it, where breakable() already worked.
     # The shared Unicode map reads § as a cross-reference and sets it "Sec.~",
     # which is right for the numerical paper and wrong for the third provenance
     # mark of Table 7. A § not followed by a number is the sign itself.
     text = re.sub(r"§(?!\s*\d)", "\x1f", text)
-    return breakable(inline(cite(verify_notes(text)))).replace("\x1f", r"\S{}")
+    return breakable(cite(inline(verify_notes(text)))).replace("\x1f", r"\S{}")
 
 
 def is_row(line: str) -> bool:
@@ -429,9 +437,22 @@ def check_references(md: str, tex: str) -> list[str]:
     return bad
 
 
-def main() -> int:
-    md = SRC.read_text(encoding="utf-8")
+#: Appended after \begin{document} for the supplement: its sections and tables
+#: are S1, S2, ... so that the main text can point at them without ambiguity.
+SUPPLEMENT_NUMBERING = (r"\renewcommand{\thesection}{S\arabic{section}}"
+                        r"\renewcommand{\thetable}{S\arabic{table}}"
+                        r"\renewcommand{\thefigure}{S\arabic{figure}}")
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = sys.argv[1:] if argv is None else argv
+    supplement = "--supplement" in args
+    src = HERE / "system_paper_supplement.md" if supplement else SRC
+    out = HERE / "system_paper_supplement.tex" if supplement else OUT
+    md = src.read_text(encoding="utf-8")
     tex = convert(md)
+    if supplement:
+        tex = tex.replace(r"\begin{document}", r"\begin{document}" + "\n" + SUPPLEMENT_NUMBERING, 1)
     # A character the text font does not carry is dropped by pdflatex with an
     # inputenc error nobody reads, and the sentence loses a word silently: a
     # subset sign went missing from "optimum within tau feasible" for two
@@ -454,8 +475,8 @@ def main() -> int:
     if problems:
         print("refusing to write: " + "; ".join(problems), file=sys.stderr)
         return 1
-    OUT.write_text(tex)
-    print(f"wrote {OUT}")
+    out.write_text(tex)
+    print(f"wrote {out}")
     return 0
 
 

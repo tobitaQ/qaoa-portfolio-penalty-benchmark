@@ -1,0 +1,12 @@
+fault,description,schema,manifest,penalty,reference-row,input-digest,reference-input,scorer,row-npz,npz-internal,identities,state-batch,seed-distinct,state-recompute,detected_by_naive,detected_by_declarative,declarative_families,detected_by_relations,first_failing_check,stage,n_findings,headline_numbers_moved,headline_total
+clean,the committed record,pass,pass,pass,pass,pass,pass,pass,pass,pass,pass,pass,pass,pass,no,no,,no,,,0,0,30
+price_perturbation,one mean return in the derived statistics moved by 1e-6 relative,pass,pass,pass,pass,FAIL,FAIL,pass,pass,pass,FAIL,pass,pass,pass,no,no,,yes,input-digest,input,471,0,30
+window_mixin,one run from the other market window pasted into the file,pass,FAIL,pass,FAIL,FAIL,pass,pass,pass,pass,FAIL,pass,pass,FAIL,no,yes,single;fk,yes,manifest,file,31,2,30
+optimizer_mixin,one run from another optimizer arm pasted into the file,pass,FAIL,pass,pass,pass,pass,pass,pass,pass,pass,pass,pass,pass,no,yes,single,yes,manifest,file,2,2,30
+label_swap,A_margin and A_heur rows of one cell relabelled,pass,pass,FAIL,pass,pass,pass,pass,pass,pass,pass,pass,pass,pass,no,yes,conditional,yes,penalty,row,2,6,30
+angle_swap,initial and final angles exchanged in row and artifact,pass,pass,pass,pass,pass,pass,pass,pass,FAIL,pass,pass,pass,FAIL,no,no,,yes,npz-internal,artifact,3,0,30
+batch_from_initial,every batch summary drawn from the initial state (E3 L-BFGS-B defect),pass,pass,pass,pass,pass,pass,pass,FAIL,pass,FAIL,FAIL,pass,pass,no,yes,band,yes,row-npz,artifact,726,10,30
+evaluator_from_Q,f of the best feasible shot replaced by its penalised energy,pass,pass,pass,pass,pass,pass,FAIL,FAIL,pass,FAIL,pass,pass,pass,no,yes,range;pair,yes,scorer,row,1503,6,30
+column_drop,final_P_F column missing (E4 write_csv defect),FAIL,pass,pass,pass,pass,pass,pass,FAIL,pass,pass,FAIL,pass,pass,yes,yes,schema,yes,schema,file,302,6,30
+shot_seed_noop,seed 43's batch replaced by seed 42's (3 instances),pass,pass,pass,pass,pass,pass,pass,pass,pass,pass,FAIL,FAIL,pass,no,yes,unique;band,yes,state-batch,statistical,6,2,30
+reference_stale,reference f* of one instance off by 1e-9 relative,pass,pass,pass,FAIL,pass,FAIL,pass,pass,pass,pass,pass,pass,pass,no,yes,fk,yes,reference-row,row,11,0,30

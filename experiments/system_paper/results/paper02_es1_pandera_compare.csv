@@ -1,0 +1,12 @@
+fault,description,detected_by_handwritten,detected_by_pandera,agree,handwritten_findings,pandera_findings,handwritten_families,pandera_families,handwritten_seconds,pandera_seconds
+clean,the committed record,no,no,yes,0,0,,,0.12,0.16
+price_perturbation,one mean return in the derived statistics moved by 1e-6 relative,no,no,yes,0,0,,,0.09,0.12
+window_mixin,one E5 (prior-window) run pasted into the main file,yes,yes,yes,8,3,fk;single,fk;single,0.09,0.13
+optimizer_mixin,one E3 L-BFGS-B run pasted into the main file,yes,yes,yes,2,2,single,single,0.09,0.13
+label_swap,A_margin and A_heur rows of one cell relabelled,yes,yes,yes,2,1,conditional,conditional,0.09,0.12
+angle_swap,initial and final angles exchanged in row and artifact,no,no,yes,0,0,,,0.09,0.12
+batch_from_initial,every batch summary drawn from the initial state (E3 L-BFGS-B defect),yes,yes,yes,1,1,band,band,0.09,0.12
+evaluator_from_Q,f of the best feasible shot replaced by its penalised energy,yes,yes,yes,2,2,pair;range,pair;range,0.09,0.38
+column_drop,final_P_F column missing (E4 write_csv defect),yes,yes,yes,1,1,schema,schema,0.08,0.12
+shot_seed_noop,seed 43's batch replaced by seed 42's (3 instances),yes,yes,yes,2,2,band;unique,band;unique,0.09,0.12
+reference_stale,reference f* of one instance off by 1e-9 relative,yes,yes,yes,1,1,fk,fk,0.09,0.12

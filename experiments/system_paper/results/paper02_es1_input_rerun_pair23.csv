@@ -1,0 +1,6 @@
+tag,delta,perturbed_cell,n,instances,rows_rerun,inputs_changed,rows_with_changed_state,state_columns_changed,rows_replaced,headline_total,headline_moved,largest_relative_change,relations_firing,detected_by_relations,detected_by_declarative,detected_by_pandera,gate_routines,gate_findings,gate_input_digest_findings,gate_refuses,gate_seconds,gate_warnings
+p23d0,0.0,mu[7011.T],12,2 3,45.0,False,0.0,0.0,0,10,0,0.0,,no,no,no,7.0,0.0,0.0,no,2.15,0.0
+p23d1e9,1e-09,mu[7011.T],12,2 3,45.0,True,32.0,6.0,0,10,0,0.0,input-digest;reference-input,yes,no,no,7.0,47.0,47.0,yes,2.19,0.0
+p23d1e6,1e-06,mu[7011.T],12,2 3,45.0,True,45.0,6.0,0,10,1,2.5060772e-05,input-digest;reference-input;identities,yes,no,no,7.0,47.0,47.0,yes,2.16,0.0
+p23d1e3,0.001,mu[7011.T],12,2 3,45.0,True,45.0,6.0,0,10,2,0.000551336992,input-digest;reference-input;identities,yes,no,no,7.0,47.0,47.0,yes,2.16,0.0
+p23d1e1,0.1,mu[7011.T],12,2 3,45.0,True,45.0,6.0,0,10,5,0.010910736375,input-digest;reference-input;identities,yes,no,no,7.0,47.0,47.0,yes,2.27,0.0

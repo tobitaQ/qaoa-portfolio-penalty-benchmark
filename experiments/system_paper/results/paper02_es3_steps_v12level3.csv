@@ -1,0 +1,5 @@
+step,level,command,seconds,exit_code,outcome,metric,manual_inputs
+clone,0-setup,git clone --quiet --branch v1.2 https://github.com/tobitaQ/qaoa-portfolio-penalty-benchmark.git <clone>,3.0,0,ok,commit cdf72a9; 28 MB of files,repository URL and release tag from the availability statement
+venv,0-setup,<repo>/.venv/bin/python -m venv <work>/venv,7.5,0,ok,,
+pip,0-setup,<work>/venv/bin/python -m pip install -q -r requirements-repro.txt,149.7,0,ok,pennylane/numpy/matplotlib 0.45.1 2.4.6 3.11.1,none; the README names the file (CUDA 12 Linux host)
+level3-block,3-cross,<work>/venv/bin/python -m experiments.paper01_qubo_baseline.run_e1_cross --backend lightning_cpu --precision double --n 12 --instances 0 1 --seeds 42 43 --results-tag es3block,227.1,0,ok,"24 runs, 9.2 s/run on the CPU at N=12; the committed cross records 13.9 h of run time for 2565 runs on the GPU | 24 rows matched; initial_angles identical in 24; state columns max |diff| 1.4e-04; shot columns identical in 0/5",a --results-tag; the backend/precision to use (README states the GPU ones)

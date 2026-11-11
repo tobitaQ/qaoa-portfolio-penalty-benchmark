@@ -1,0 +1,11 @@
+fault,identities_table,identities_input,identities_artifact
+price_perturbation,0,294,0
+window_mixin,3,13,3
+optimizer_mixin,3,13,3
+label_swap,0,0,0
+angle_swap,0,0,0
+batch_from_initial,0,0,174
+evaluator_from_Q,309,0,289
+column_drop,0,0,0
+shot_seed_noop,0,0,0
+reference_stale,0,0,0

@@ -302,23 +302,8 @@ def check_reference_input(rec: Record) -> list[str]:
 
 
 def check_input_digest(rec: Record) -> list[str]:
-    """The digest of the pinned statistics against the one every record carries."""
-    out = []
-    with _loader_dirs(cache_dir=None, derived_dir=rec.derived_dir):
-        loader = FinanceDataLoader()
-        fresh = {}
-        for _, q in rec.reference.iterrows():
-            data = loader.load(instance_tickers(int(q.n_assets), int(q.instance)),
-                               end_date=rec.end_date, lookback_years=e1.LOOKBACK_YEARS)
-            fresh[(q.n_assets, q.instance)] = input_digest(data.returns, data.covariance)
-            if q.get("input_digest") != fresh[(q.n_assets, q.instance)]:
-                out.append(f"N={q.n_assets} inst {q.instance}: reference input_digest "
-                           f"{q.get('input_digest')!r} != pinned statistics {fresh[(q.n_assets, q.instance)]}")
-    for _, r in rec.rows.iterrows():
-        want = fresh.get((r.n_assets, r.instance))
-        if r.get("input_digest") != want:
-            out.append(f"{r.run_id}: input_digest {r.get('input_digest')!r} != pinned statistics {want}")
-    return out
+    """One expression per fact, and it lives in ``src/record_checks.py``."""
+    return record_checks.check_input_digest(rec.rows, rec.reference, rec.derived_dir, rec.end_date)
 
 
 def check_scorer(rec: Record) -> list[str]:
@@ -547,8 +532,22 @@ def check_identities(rec: Record) -> list[str]:
     for (n, inst), block in rows.groupby(["n_assets", "instance"]):
         if block.sharpe_optimum.nunique() > 1:
             out.append(f"N={n} inst {inst}: sharpe_optimum is not constant across the instance's runs")
-    out += _portfolio_metric_identities(rec)
-    return out
+    # Each finding names what its clause read, because the check is one name
+    # over three kinds of record: a column recomputed from other columns of the
+    # same table, a column compared with the stored artifact, or a portfolio
+    # metric recomputed from the pinned statistics. The tier count of
+    # es1_tiers.py places a finding by that prefix and not by the check's name.
+    return ([_clause_source(m) for m in out]
+            + ["[input] " + m for m in _portfolio_metric_identities(rec)])
+
+
+#: Substrings that mark an identities finding as a comparison with the artifact.
+_ARTIFACT_WORDS = ("stored f", "stored convergence", "stored feasible set", "stored shot indices",
+                   "stored batch", "stored probabilities")
+
+
+def _clause_source(msg: str) -> str:
+    return ("[artifact] " if any(w in msg for w in _ARTIFACT_WORDS) else "[table] ") + msg
 
 
 def _portfolio_metric_identities(rec: Record) -> list[str]:
@@ -897,7 +896,7 @@ def fault_price_perturbation(rec: Record, tmp: Path) -> Record:
     out = rec.copy("price_perturbation")
     derived = tmp / "derived"
     shutil.copytree(rec.derived_dir, derived)
-    for path in derived.glob("stats_*_2026-08-05_*.csv"):
+    for path in derived.glob(f"stats_*_{rec.end_date}_*.csv"):
         frame = pd.read_csv(path, index_col=0, float_precision="round_trip")
         tick = frame.index[0]
         frame.loc[tick, "mu"] *= 1 + 1e-6
@@ -924,14 +923,34 @@ def _mixin(rec: Record, source_csv: Path, source_npz_dir: Path, label: str) -> R
     return out
 
 
+def _other_arm(rec: Record, candidates: tuple[str, ...]) -> str:
+    """The first sibling arm the record is not, by window and optimizer.
+
+    Pasting a record's own run back into itself is not a fault, so the source
+    of a mix-in has to differ from the record under test in the attribute the
+    fault is about: the window for ``window_mixin``, the optimizer for
+    ``optimizer_mixin``. On the main record this picks E5 and E3 L-BFGS-B, as
+    before; on E5 the window mix-in comes from the main record, and on the
+    L-BFGS-B arm the optimizer mix-in does.
+    """
+    for suffix in candidates:
+        src = pd.read_csv(E1_RESULTS / f"paper01_e1_cross{suffix}.csv", nrows=1)
+        if (str(src.data_end.iloc[0]) != rec.end_date
+                or str(src.optimizer.iloc[0]) != str(rec.rows.optimizer.iloc[0])):
+            return suffix
+    raise RuntimeError("no sibling arm differs from the record")
+
+
 def fault_window_mixin(rec: Record, tmp: Path) -> Record:
-    return _mixin(rec, E1_RESULTS / "paper01_e1_cross_e5.csv",
-                  E1_RESULTS / "e1_runs_e5", "window_mixin")
+    suffix = _other_arm(rec, ("_e5", ""))
+    return _mixin(rec, E1_RESULTS / f"paper01_e1_cross{suffix}.csv",
+                  E1_RESULTS / f"e1_runs{suffix}", "window_mixin")
 
 
 def fault_optimizer_mixin(rec: Record, tmp: Path) -> Record:
-    return _mixin(rec, E1_RESULTS / "paper01_e1_cross_e3_lbfgs.csv",
-                  E1_RESULTS / "e1_runs_e3_lbfgs", "optimizer_mixin")
+    suffix = _other_arm(rec, ("_e3_lbfgs", ""))
+    return _mixin(rec, E1_RESULTS / f"paper01_e1_cross{suffix}.csv",
+                  E1_RESULTS / f"e1_runs{suffix}", "optimizer_mixin")
 
 
 def fault_label_swap(rec: Record, tmp: Path) -> Record:
@@ -1036,8 +1055,8 @@ class Fault:
 FAULTS = [
     Fault("price_perturbation", fault_price_perturbation,
           "one mean return in the derived statistics moved by 1e-6 relative"),
-    Fault("window_mixin", fault_window_mixin, "one E5 (prior-window) run pasted into the main file"),
-    Fault("optimizer_mixin", fault_optimizer_mixin, "one E3 L-BFGS-B run pasted into the main file"),
+    Fault("window_mixin", fault_window_mixin, "one run from the other market window pasted into the file"),
+    Fault("optimizer_mixin", fault_optimizer_mixin, "one run from another optimizer arm pasted into the file"),
     Fault("label_swap", fault_label_swap, "A_margin and A_heur rows of one cell relabelled"),
     Fault("angle_swap", fault_angle_swap, "initial and final angles exchanged in row and artifact"),
     Fault("batch_from_initial", fault_batch_from_initial,
@@ -1102,10 +1121,11 @@ def evaluate(rec: Record, checks: list[Check], log=print) -> dict[str, list[str]
     return findings
 
 
-def run(sizes=SIZES, recompute: bool = True, log=print):
+def run(sizes=SIZES, recompute: bool = True, log=print, record: str = ""):
+    """The detection matrix on the main record, or on a sibling arm (``record``)."""
     checks = [c for c in CHECKS if recompute or not c.expensive]
-    log(f"loading the E1 record for N in {list(sizes)} ...")
-    clean = load_record(sizes)
+    log(f"loading the E1{record} record for N in {list(sizes)} ...")
+    clean = load_record(sizes, suffix=record)
     log(f"  {len(clean.rows)} rows, {len(clean.artifacts)} artifacts")
     base_head = headline(clean)
 
@@ -1222,6 +1242,9 @@ def main(argv=None) -> int:
     p.add_argument("--clean-records", action="store_true",
                    help="run every relation on the five committed clean records and stop "
                         "(the false-positive measurement; injects nothing)")
+    p.add_argument("--record", default="",
+                   help="inject into a sibling arm instead of the main record (its file "
+                        "suffix, e.g. _e5); the outputs carry the same suffix")
     args = p.parse_args(argv)
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     if args.clean_records:
@@ -1232,14 +1255,17 @@ def main(argv=None) -> int:
             print(f"  {r['record']:<14} {r['rows']:>5} rows  "
                   f"{r['checks_failing']}/{r['checks_run']} relations flag  {r['false_positives'][:90]}")
         return 0
-    matrix, findings, heads, counts = run(tuple(args.sizes), not args.no_recompute)
-    write_csv(MATRIX_CSV, matrix)
-    write_csv(FINDINGS_CSV, findings)
-    write_csv(HEADLINE_CSV, heads)
-    write_csv(COUNTS_CSV, counts)
-    print(f"wrote {MATRIX_CSV.name} ({len(matrix)}), {FINDINGS_CSV.name} ({len(findings)}), "
-          f"{COUNTS_CSV.name} ({len(counts)}), "
-          f"{HEADLINE_CSV.name} ({len(heads)})")
+    matrix, findings, heads, counts = run(tuple(args.sizes), not args.no_recompute,
+                                          record=args.record)
+    tagged = lambda p: p.with_name(p.stem + args.record + p.suffix)
+    write_csv(tagged(MATRIX_CSV), matrix)
+    write_csv(tagged(FINDINGS_CSV), findings)
+    write_csv(tagged(HEADLINE_CSV), heads)
+    write_csv(tagged(COUNTS_CSV), counts)
+    print(f"wrote {tagged(MATRIX_CSV).name} ({len(matrix)}), "
+          f"{tagged(FINDINGS_CSV).name} ({len(findings)}), "
+          f"{tagged(COUNTS_CSV).name} ({len(counts)}), "
+          f"{tagged(HEADLINE_CSV).name} ({len(heads)})")
     cols = [c for c in matrix[0] if c not in ("description", "n_findings", "headline_total")]
     print("\t".join(cols))
     for row in matrix:

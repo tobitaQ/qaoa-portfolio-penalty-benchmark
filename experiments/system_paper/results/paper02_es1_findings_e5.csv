@@ -1,0 +1,312 @@
+fault,check,finding
+price_perturbation,input-digest,N=12 inst 7: reference input_digest '50f84dea261c9a3c' != pinned statistics fc5a2f9c41199035
+price_perturbation,input-digest,N=16 inst 3: reference input_digest '301aa438f74b1104' != pinned statistics 03146976ca75cdc2
+price_perturbation,input-digest,N=16 inst 7: reference input_digest '9f25f5f6f235a483' != pinned statistics d1abb417537a077c
+price_perturbation,input-digest,N=16 inst 9: reference input_digest 'c3cd0e66befc6338' != pinned statistics b639ae3c89cf365e
+price_perturbation,input-digest,N=20 inst 1: reference input_digest 'b4ac2f9178d9d6e9' != pinned statistics 2a4498b17951775a
+price_perturbation,input-digest,N=20 inst 2: reference input_digest '58a2d3615ab4f2cd' != pinned statistics e5b917e210a351ad
+price_perturbation,input-digest,N=20 inst 4: reference input_digest '18ffdced62da7f07' != pinned statistics 19a054eed6ff81b2
+price_perturbation,input-digest,N=20 inst 5: reference input_digest '914fa627f056982e' != pinned statistics eb0242dde32c9955
+price_perturbation,input-digest,N=20 inst 6: reference input_digest 'a0692b3f30c111f8' != pinned statistics 5591f2e23072586f
+price_perturbation,input-digest,N=20 inst 8: reference input_digest '2203625da403bc2f' != pinned statistics 7b779d60019b3576
+price_perturbation,input-digest,N=20 inst 9: reference input_digest '6aa10f90cc7156b5' != pinned statistics 040b25d3fbbeca9d
+price_perturbation,input-digest,N12_i07_Aheur_s42: input_digest '50f84dea261c9a3c' != pinned statistics fc5a2f9c41199035
+price_perturbation,input-digest,N12_i07_Aheur_s43: input_digest '50f84dea261c9a3c' != pinned statistics fc5a2f9c41199035
+price_perturbation,input-digest,N12_i07_Aheur_s44: input_digest '50f84dea261c9a3c' != pinned statistics fc5a2f9c41199035
+price_perturbation,input-digest,N12_i07_Aheur_s45: input_digest '50f84dea261c9a3c' != pinned statistics fc5a2f9c41199035
+price_perturbation,input-digest,N12_i07_Aheur_s46: input_digest '50f84dea261c9a3c' != pinned statistics fc5a2f9c41199035
+price_perturbation,input-digest,N12_i07_Amargin_s42: input_digest '50f84dea261c9a3c' != pinned statistics fc5a2f9c41199035
+price_perturbation,input-digest,N12_i07_Amargin_s43: input_digest '50f84dea261c9a3c' != pinned statistics fc5a2f9c41199035
+price_perturbation,input-digest,N12_i07_Amargin_s44: input_digest '50f84dea261c9a3c' != pinned statistics fc5a2f9c41199035
+price_perturbation,input-digest,N12_i07_Amargin_s45: input_digest '50f84dea261c9a3c' != pinned statistics fc5a2f9c41199035
+price_perturbation,reference-input,N=12 inst 7: reference f_star -0.13923445042826238 != recomputed -0.1392346752942118
+price_perturbation,reference-input,N=12 inst 7: reference delta_F 1.2812427649455675 != recomputed 1.281242989811517
+price_perturbation,reference-input,N=12 inst 7: reference a_crit 0.015504896736042884 != recomputed 0.015504671870093467
+price_perturbation,reference-input,N=12 inst 7: reference a_margin 0.23431437453905055 != recomputed 0.23431424336724674
+price_perturbation,reference-input,N=12 inst 7: reference input_digest '50f84dea261c9a3c' != recomputed 'fc5a2f9c41199035'
+price_perturbation,reference-input,N=16 inst 3: reference f_star -0.20152723531998307 != recomputed -0.2015274660962897
+price_perturbation,reference-input,N=16 inst 3: reference delta_F 2.0344214429371283 != recomputed 2.034421673713435
+price_perturbation,reference-input,N=16 inst 3: reference a_margin 0.44233389027442294 != recomputed 0.4423339840272975
+price_perturbation,reference-input,N=16 inst 3: reference input_digest '301aa438f74b1104' != recomputed '03146976ca75cdc2'
+price_perturbation,reference-input,N=16 inst 7: reference f_star -0.015622130631582132 != recomputed -0.015622355497531548
+price_perturbation,reference-input,N=16 inst 7: reference delta_F 1.6447767499233428 != recomputed 1.6447769747892922
+price_perturbation,reference-input,N=16 inst 7: reference a_margin 0.49392222342913195 != recomputed 0.49392231478092385
+price_perturbation,reference-input,N=16 inst 7: reference input_digest '9f25f5f6f235a483' != recomputed 'd1abb417537a077c'
+price_perturbation,reference-input,N=16 inst 9: reference f_star -0.05146364215208532 != recomputed -0.05146387292839205
+price_perturbation,reference-input,N=16 inst 9: reference delta_F 1.4927147908617315 != recomputed 1.4927150216380383
+price_perturbation,reference-input,N=16 inst 9: reference a_crit 0.20725917273188438 != recomputed 0.20725917273188427
+price_perturbation,reference-input,N=16 inst 9: reference a_margin 0.5892842766580809 != recomputed 0.5892843704109555
+price_perturbation,reference-input,N=16 inst 9: reference input_digest 'c3cd0e66befc6338' != recomputed 'b639ae3c89cf365e'
+price_perturbation,reference-input,N=20 inst 1: reference f_star 0.10262016608059454 != recomputed 0.10261993530428803
+price_perturbation,reference-input,N=20 inst 1: reference delta_F 2.1683393678810656 != recomputed 2.168339598657372
+price_perturbation,identities,N12_i07_Aheur_s42: sharpe_optimum 1.8641521318988898 != recomputed 1.8641527982757595
+price_perturbation,identities,N12_i07_Aheur_s43: sharpe_optimum 1.8641521318988898 != recomputed 1.8641527982757595
+price_perturbation,identities,N12_i07_Aheur_s44: sharpe_optimum 1.8641521318988898 != recomputed 1.8641527982757595
+price_perturbation,identities,N12_i07_Aheur_s45: sharpe_optimum 1.8641521318988898 != recomputed 1.8641527982757595
+price_perturbation,identities,N12_i07_Aheur_s46: sharpe_optimum 1.8641521318988898 != recomputed 1.8641527982757595
+price_perturbation,identities,N12_i07_Amargin_s42: sharpe_optimum 1.8641521318988898 != recomputed 1.8641527982757595
+price_perturbation,identities,N12_i07_Amargin_s43: sharpe_optimum 1.8641521318988898 != recomputed 1.8641527982757595
+price_perturbation,identities,N12_i07_Amargin_s44: sharpe_optimum 1.8641521318988898 != recomputed 1.8641527982757595
+price_perturbation,identities,N12_i07_Amargin_s45: sharpe_optimum 1.8641521318988898 != recomputed 1.8641527982757595
+price_perturbation,identities,N12_i07_Amargin_s46: sharpe_optimum 1.8641521318988898 != recomputed 1.8641527982757595
+price_perturbation,identities,N12_i07_Aheur_s42: sharpe_best_feasible 1.8641521318988898 != recomputed 1.8641527982757595
+price_perturbation,identities,N12_i07_Aheur_s42: return_best_feasible 0.33265274035175607 != recomputed 0.3326528589073778
+price_perturbation,identities,N12_i07_Aheur_s44: sharpe_best_feasible 1.8641521318988898 != recomputed 1.8641527982757595
+price_perturbation,identities,N12_i07_Aheur_s44: return_best_feasible 0.33265274035175607 != recomputed 0.3326528589073778
+price_perturbation,identities,N12_i07_Aheur_s45: sharpe_best_feasible 1.7581920160579434 != recomputed 1.7581927126715398
+price_perturbation,identities,N12_i07_Aheur_s45: return_best_feasible 0.30022405873611896 != recomputed 0.3002241772917407
+price_perturbation,identities,N12_i07_Aheur_s46: sharpe_best_feasible 1.8641521318988898 != recomputed 1.8641527982757595
+price_perturbation,identities,N12_i07_Aheur_s46: return_best_feasible 0.33265274035175607 != recomputed 0.3326528589073778
+price_perturbation,identities,N12_i07_Amargin_s42: sharpe_best_feasible 1.8641521318988898 != recomputed 1.8641527982757595
+price_perturbation,identities,N12_i07_Amargin_s42: return_best_feasible 0.33265274035175607 != recomputed 0.3326528589073778
+window_mixin,manifest,"data_start not uniform: ['2023-08-06', '2020-08-05']"
+window_mixin,manifest,"data_end not uniform: ['2026-08-05', '2023-08-05']"
+window_mixin,reference-row,N12_i00_Aheur_s42: f_star -0.25261168083239516 != reference np.float64(-0.3548965650544149)
+window_mixin,reference-row,N12_i00_Aheur_s42: delta_F 0.6490147388383165 != reference np.float64(1.139673185930773)
+window_mixin,reference-row,N12_i00_Aheur_s42: a_crit 0.01071663840056869 != reference np.float64(0.0)
+window_mixin,reference-row,N12_i00_Aheur_s42: a_heur 12.999999999979208 != reference np.float64(12.999999999971976)
+window_mixin,reference-row,N12_i00_Aheur_s42: a_margin 0.19822334062316602 != reference np.float64(0.20555792108109197)
+window_mixin,reference-row,N12_i00_Aheur_s42: input_digest 'd08fe57f467f4147' != reference '16959cee614223c5'
+window_mixin,input-digest,N12_i00_Aheur_s42: input_digest 'd08fe57f467f4147' != pinned statistics 16959cee614223c5
+window_mixin,identities,reference N=12 inst 0: data_start differs from its runs
+window_mixin,identities,reference N=12 inst 0: data_end differs from its runs
+window_mixin,identities,reference N=12 inst 0: f*/f_max/f_bar disagree with the stored f
+window_mixin,identities,reference N=12 inst 0: optimum_index is not the argmin of the stored f
+window_mixin,identities,reference N=12 inst 0: count_within_tau disagrees with the stored f
+window_mixin,identities,N=12 inst 0: sharpe_optimum is not constant across the instance's runs
+window_mixin,identities,N12_i00_Aheur_s42: sharpe_optimum 1.3218756853432454 != recomputed 1.4756457311275144
+window_mixin,identities,N12_i00_Aheur_s43: sharpe_optimum 1.760716408795367 != recomputed 1.4756457311275144
+window_mixin,identities,N12_i00_Aheur_s44: sharpe_optimum 1.760716408795367 != recomputed 1.4756457311275144
+window_mixin,identities,N12_i00_Aheur_s45: sharpe_optimum 1.760716408795367 != recomputed 1.4756457311275144
+window_mixin,identities,N12_i00_Aheur_s46: sharpe_optimum 1.760716408795367 != recomputed 1.4756457311275144
+window_mixin,identities,N12_i00_Amargin_s42: sharpe_optimum 1.760716408795367 != recomputed 1.4756457311275144
+window_mixin,identities,N12_i00_Amargin_s43: sharpe_optimum 1.760716408795367 != recomputed 1.4756457311275144
+window_mixin,identities,N12_i00_Amargin_s44: sharpe_optimum 1.760716408795367 != recomputed 1.4756457311275144
+window_mixin,identities,N12_i00_Amargin_s45: sharpe_optimum 1.760716408795367 != recomputed 1.4756457311275144
+window_mixin,identities,N12_i00_Amargin_s46: sharpe_optimum 1.760716408795367 != recomputed 1.4756457311275144
+window_mixin,identities,N12_i00_Aheur_s42: sharpe_best_feasible 1.3218756853432454 != recomputed 1.4756457311275144
+window_mixin,identities,N12_i00_Aheur_s42: return_best_feasible 0.3043831643149789 != recomputed 0.26514405016814147
+window_mixin,identities,N12_i00_Aheur_s42: volatility_best_feasible 0.229509603420991 != recomputed 0.17900234764770656
+window_mixin,state-recompute,N12_i00_Aheur_s42: state at the recorded final angles is 2.64e-04 from the stored probabilities
+window_mixin,declarative (control),"single: data_start takes 2 values: ['2023-08-06', '2020-08-05']"
+window_mixin,declarative (control),"single: data_end takes 2 values: ['2026-08-05', '2023-08-05']"
+window_mixin,declarative (control),fk: f_star differs from the reference row on 1 rows
+window_mixin,declarative (control),fk: delta_F differs from the reference row on 1 rows
+window_mixin,declarative (control),fk: a_crit differs from the reference row on 1 rows
+window_mixin,declarative (control),fk: a_heur differs from the reference row on 1 rows
+window_mixin,declarative (control),fk: a_margin differs from the reference row on 1 rows
+window_mixin,declarative (control),fk: input_digest differs from the reference row on 1 rows
+optimizer_mixin,manifest,"data_start not uniform: ['2023-08-06', '2020-08-05']"
+optimizer_mixin,manifest,"data_end not uniform: ['2026-08-05', '2023-08-05']"
+optimizer_mixin,manifest,"optimizer not uniform: ['lbfgs_100grad', 'adam_0.1']"
+optimizer_mixin,manifest,"steps not uniform: [100, 50]"
+optimizer_mixin,reference-row,N12_i00_Aheur_s42: f_star -0.25261168083239516 != reference np.float64(-0.3548965650544149)
+optimizer_mixin,reference-row,N12_i00_Aheur_s42: delta_F 0.6490147388383165 != reference np.float64(1.139673185930773)
+optimizer_mixin,reference-row,N12_i00_Aheur_s42: a_crit 0.01071663840056869 != reference np.float64(0.0)
+optimizer_mixin,reference-row,N12_i00_Aheur_s42: a_heur 12.999999999979208 != reference np.float64(12.999999999971976)
+optimizer_mixin,reference-row,N12_i00_Aheur_s42: a_margin 0.19822334062316602 != reference np.float64(0.20555792108109197)
+optimizer_mixin,reference-row,N12_i00_Aheur_s42: input_digest 'd08fe57f467f4147' != reference '16959cee614223c5'
+optimizer_mixin,input-digest,N12_i00_Aheur_s42: input_digest 'd08fe57f467f4147' != pinned statistics 16959cee614223c5
+optimizer_mixin,identities,reference N=12 inst 0: data_start differs from its runs
+optimizer_mixin,identities,reference N=12 inst 0: data_end differs from its runs
+optimizer_mixin,identities,reference N=12 inst 0: f*/f_max/f_bar disagree with the stored f
+optimizer_mixin,identities,reference N=12 inst 0: optimum_index is not the argmin of the stored f
+optimizer_mixin,identities,reference N=12 inst 0: count_within_tau disagrees with the stored f
+optimizer_mixin,identities,N=12 inst 0: sharpe_optimum is not constant across the instance's runs
+optimizer_mixin,identities,N12_i00_Aheur_s42: sharpe_optimum 1.3218756853432454 != recomputed 1.4756457311275144
+optimizer_mixin,identities,N12_i00_Aheur_s43: sharpe_optimum 1.760716408795367 != recomputed 1.4756457311275144
+optimizer_mixin,identities,N12_i00_Aheur_s44: sharpe_optimum 1.760716408795367 != recomputed 1.4756457311275144
+optimizer_mixin,identities,N12_i00_Aheur_s45: sharpe_optimum 1.760716408795367 != recomputed 1.4756457311275144
+optimizer_mixin,identities,N12_i00_Aheur_s46: sharpe_optimum 1.760716408795367 != recomputed 1.4756457311275144
+optimizer_mixin,identities,N12_i00_Amargin_s42: sharpe_optimum 1.760716408795367 != recomputed 1.4756457311275144
+optimizer_mixin,identities,N12_i00_Amargin_s43: sharpe_optimum 1.760716408795367 != recomputed 1.4756457311275144
+optimizer_mixin,identities,N12_i00_Amargin_s44: sharpe_optimum 1.760716408795367 != recomputed 1.4756457311275144
+optimizer_mixin,identities,N12_i00_Amargin_s45: sharpe_optimum 1.760716408795367 != recomputed 1.4756457311275144
+optimizer_mixin,identities,N12_i00_Amargin_s46: sharpe_optimum 1.760716408795367 != recomputed 1.4756457311275144
+optimizer_mixin,identities,N12_i00_Aheur_s42: sharpe_best_feasible 1.337964475552203 != recomputed 1.6584039262496015
+optimizer_mixin,identities,N12_i00_Aheur_s42: return_best_feasible 0.49124459998426784 != recomputed 0.39419419953848867
+optimizer_mixin,identities,N12_i00_Aheur_s42: volatility_best_feasible 0.36641077468214145 != recomputed 0.23709193720234242
+optimizer_mixin,state-recompute,N12_i00_Aheur_s42: state at the recorded final angles is 2.52e-04 from the stored probabilities
+optimizer_mixin,declarative (control),"single: data_start takes 2 values: ['2023-08-06', '2020-08-05']"
+optimizer_mixin,declarative (control),"single: data_end takes 2 values: ['2026-08-05', '2023-08-05']"
+optimizer_mixin,declarative (control),"single: optimizer takes 2 values: ['lbfgs_100grad', 'adam_0.1']"
+optimizer_mixin,declarative (control),"single: steps takes 2 values: [100, 50]"
+optimizer_mixin,declarative (control),fk: f_star differs from the reference row on 1 rows
+optimizer_mixin,declarative (control),fk: delta_F differs from the reference row on 1 rows
+optimizer_mixin,declarative (control),fk: a_crit differs from the reference row on 1 rows
+optimizer_mixin,declarative (control),fk: a_heur differs from the reference row on 1 rows
+optimizer_mixin,declarative (control),fk: a_margin differs from the reference row on 1 rows
+optimizer_mixin,declarative (control),fk: input_digest differs from the reference row on 1 rows
+label_swap,penalty,N12_i00_Aheur_s42: penalty 12.999999999971976 is not Amargin = 0.20555792108109197
+label_swap,penalty,N12_i00_Amargin_s42: penalty 0.20555792108109197 is not Aheur = 12.999999999971976
+label_swap,declarative (control),conditional: penalty is not a_heur on 1 rows labelled Aheur
+label_swap,declarative (control),conditional: penalty is not a_margin on 1 rows labelled Amargin
+angle_swap,npz-internal,N12_i00_Aheur_s42: trajectory does not start at the initial angles
+angle_swap,npz-internal,N12_i00_Aheur_s42: final angles equal the trajectory's first point
+angle_swap,state-recompute,N12_i00_Aheur_s42: state at the recorded final angles is 1.23e-03 from the stored probabilities
+batch_from_initial,row-npz,N12_i00_Aheur_s42: feasible_shots 119 != stored 207
+batch_from_initial,row-npz,N12_i00_Aheur_s43: feasible_shots 236 != stored 6
+batch_from_initial,row-npz,N12_i00_Aheur_s44: feasible_shots 105 != stored 513
+batch_from_initial,row-npz,N12_i00_Aheur_s45: feasible_shots 73 != stored 130
+batch_from_initial,row-npz,N12_i00_Aheur_s46: feasible_shots 10 != stored 318
+batch_from_initial,row-npz,N12_i00_Amargin_s42: feasible_shots 193 != stored 254
+batch_from_initial,row-npz,N12_i00_Amargin_s43: feasible_shots 49 != stored 180
+batch_from_initial,row-npz,N12_i00_Amargin_s44: feasible_shots 114 != stored 445
+batch_from_initial,row-npz,N12_i00_Amargin_s45: feasible_shots 113 != stored 407
+batch_from_initial,row-npz,N12_i00_Amargin_s46: feasible_shots 113 != stored 393
+batch_from_initial,row-npz,N12_i01_Aheur_s42: feasible_shots 116 != stored 194
+batch_from_initial,row-npz,N12_i01_Aheur_s43: feasible_shots 229 != stored 11
+batch_from_initial,row-npz,N12_i01_Aheur_s44: feasible_shots 122 != stored 515
+batch_from_initial,row-npz,N12_i01_Aheur_s45: feasible_shots 80 != stored 123
+batch_from_initial,row-npz,N12_i01_Aheur_s46: feasible_shots 15 != stored 312
+batch_from_initial,row-npz,N12_i01_Amargin_s42: feasible_shots 167 != stored 198
+batch_from_initial,row-npz,N12_i01_Amargin_s43: feasible_shots 195 != stored 24
+batch_from_initial,row-npz,N12_i01_Amargin_s44: feasible_shots 105 != stored 351
+batch_from_initial,row-npz,N12_i01_Amargin_s45: feasible_shots 128 != stored 79
+batch_from_initial,row-npz,N12_i01_Amargin_s46: feasible_shots 74 != stored 408
+batch_from_initial,identities,N12_i00_Aheur_s42: shots_optimal/shots_within_tau_main 2/2 != stored batch 4/4
+batch_from_initial,identities,N12_i00_Aheur_s43: shots_optimal/shots_within_tau_main 2/2 != stored batch 0/0
+batch_from_initial,identities,N12_i00_Aheur_s44: shots_optimal/shots_within_tau_main 0/0 != stored batch 11/11
+batch_from_initial,identities,N12_i00_Aheur_s45: shots_optimal/shots_within_tau_main 0/0 != stored batch 1/1
+batch_from_initial,identities,N12_i00_Aheur_s46: shots_optimal/shots_within_tau_main 0/0 != stored batch 5/5
+batch_from_initial,identities,N12_i00_Amargin_s43: shots_optimal/shots_within_tau_main 3/3 != stored batch 16/16
+batch_from_initial,identities,N12_i00_Amargin_s44: shots_optimal/shots_within_tau_main 4/4 != stored batch 22/22
+batch_from_initial,identities,N12_i00_Amargin_s45: shots_optimal/shots_within_tau_main 7/7 != stored batch 8/8
+batch_from_initial,identities,N12_i00_Amargin_s46: shots_optimal/shots_within_tau_main 14/14 != stored batch 83/83
+batch_from_initial,identities,N12_i01_Aheur_s42: shots_optimal/shots_within_tau_main 3/3 != stored batch 4/4
+batch_from_initial,identities,N12_i01_Aheur_s44: shots_optimal/shots_within_tau_main 3/3 != stored batch 5/5
+batch_from_initial,identities,N12_i01_Aheur_s45: shots_optimal/shots_within_tau_main 0/0 != stored batch 2/2
+batch_from_initial,identities,N12_i01_Aheur_s46: shots_optimal/shots_within_tau_main 0/0 != stored batch 3/3
+batch_from_initial,identities,N12_i01_Amargin_s43: shots_optimal/shots_within_tau_main 6/6 != stored batch 2/2
+batch_from_initial,identities,N12_i01_Amargin_s44: shots_optimal/shots_within_tau_main 2/2 != stored batch 4/4
+batch_from_initial,identities,N12_i01_Amargin_s46: shots_optimal/shots_within_tau_main 1/1 != stored batch 7/7
+batch_from_initial,identities,N12_i02_Aheur_s42: shots_optimal/shots_within_tau_main 0/0 != stored batch 4/4
+batch_from_initial,identities,N12_i02_Aheur_s43: shots_optimal/shots_within_tau_main 1/1 != stored batch 0/0
+batch_from_initial,identities,N12_i02_Aheur_s44: shots_optimal/shots_within_tau_main 2/2 != stored batch 4/4
+batch_from_initial,identities,N12_i02_Aheur_s45: shots_optimal/shots_within_tau_main 1/1 != stored batch 4/4
+batch_from_initial,state-batch,N12_i00_Aheur_s43: feasible_shots 236 has binomial tail 2.7e-241 under S x final_P_F = 9.9
+batch_from_initial,state-batch,N12_i00_Aheur_s44: feasible_shots 105 has binomial tail 4.1e-160 under S x final_P_F = 504.2
+batch_from_initial,state-batch,N12_i00_Aheur_s45: feasible_shots 73 has binomial tail 8.2e-11 under S x final_P_F = 137.9
+batch_from_initial,state-batch,N12_i00_Aheur_s46: feasible_shots 10 has binomial tail 3.3e-146 under S x final_P_F = 317.0
+batch_from_initial,state-batch,N12_i00_Amargin_s43: feasible_shots 49 has binomial tail 1.0e-38 under S x final_P_F = 188.6
+batch_from_initial,state-batch,N12_i00_Amargin_s44: feasible_shots 114 has binomial tail 4.0e-113 under S x final_P_F = 442.4
+batch_from_initial,state-batch,N12_i00_Amargin_s45: feasible_shots 113 has binomial tail 2.3e-94 under S x final_P_F = 407.2
+batch_from_initial,state-batch,N12_i00_Amargin_s46: feasible_shots 113 has binomial tail 1.2e-81 under S x final_P_F = 382.4
+batch_from_initial,state-batch,N12_i01_Aheur_s43: feasible_shots 229 has binomial tail 1.7e-230 under S x final_P_F = 9.9
+batch_from_initial,state-batch,N12_i01_Aheur_s44: feasible_shots 122 has binomial tail 4.3e-144 under S x final_P_F = 503.1
+batch_from_initial,state-batch,N12_i01_Aheur_s46: feasible_shots 15 has binomial tail 2.4e-127 under S x final_P_F = 298.4
+batch_from_initial,state-batch,N12_i01_Amargin_s43: feasible_shots 195 has binomial tail 9.5e-126 under S x final_P_F = 20.1
+batch_from_initial,state-batch,N12_i01_Amargin_s44: feasible_shots 105 has binomial tail 3.9e-72 under S x final_P_F = 351.5
+batch_from_initial,state-batch,N12_i01_Amargin_s46: feasible_shots 74 has binomial tail 1.8e-113 under S x final_P_F = 384.9
+batch_from_initial,state-batch,N12_i02_Aheur_s42: feasible_shots 103 has binomial tail 4.0e-12 under S x final_P_F = 181.5
+batch_from_initial,state-batch,N12_i02_Aheur_s43: feasible_shots 217 has binomial tail 2.7e-213 under S x final_P_F = 9.9
+batch_from_initial,state-batch,N12_i02_Aheur_s44: feasible_shots 132 has binomial tail 9.8e-136 under S x final_P_F = 503.2
+batch_from_initial,state-batch,N12_i02_Aheur_s45: feasible_shots 67 has binomial tail 2.7e-13 under S x final_P_F = 139.8
+batch_from_initial,state-batch,N12_i02_Aheur_s46: feasible_shots 8 has binomial tail 4.3e-142 under S x final_P_F = 304.8
+batch_from_initial,state-batch,N12_i02_Amargin_s42: feasible_shots 199 has binomial tail 9.0e-55 under S x final_P_F = 432.3
+batch_from_initial,declarative (control),band: the feasible-shot fraction is over five sigma from final_P_F on 284 rows
+evaluator_from_Q,scorer,N12_i00_Aheur_s42: g_F -45.62711542381285 != (f_bf - f*)/Delta_F = -45.62711542381285
+evaluator_from_Q,scorer,N12_i00_Aheur_s42: g_off 0.0 != formula -0.9932213300313908
+evaluator_from_Q,scorer,N12_i00_Aheur_s43: g_F -45.533627794178244 != (f_bf - f*)/Delta_F = -45.533627794178244
+evaluator_from_Q,scorer,N12_i00_Aheur_s43: g_off 0.002035059788125632 != formula -0.991186270243265
+evaluator_from_Q,scorer,N12_i00_Aheur_s44: g_F -45.62711542381285 != (f_bf - f*)/Delta_F = -45.62711542381285
+evaluator_from_Q,scorer,N12_i00_Aheur_s44: g_off 0.0 != formula -0.9932213300313908
+evaluator_from_Q,scorer,N12_i00_Aheur_s45: g_F -45.62711542381285 != (f_bf - f*)/Delta_F = -45.62711542381285
+evaluator_from_Q,scorer,N12_i00_Aheur_s45: g_off 0.0 != formula -0.9932213300313908
+evaluator_from_Q,scorer,N12_i00_Aheur_s46: g_F -45.62711542381285 != (f_bf - f*)/Delta_F = -45.62711542381285
+evaluator_from_Q,scorer,N12_i00_Aheur_s46: g_off 0.0 != formula -0.9932213300313908
+evaluator_from_Q,scorer,N12_i00_Amargin_s42: g_F -0.7214626916512472 != (f_bf - f*)/Delta_F = -0.7214626916512472
+evaluator_from_Q,scorer,N12_i00_Amargin_s42: g_off 0.0 != formula -0.698506458203082
+evaluator_from_Q,scorer,N12_i00_Amargin_s43: g_F -0.7214626916512472 != (f_bf - f*)/Delta_F = -0.7214626916512472
+evaluator_from_Q,scorer,N12_i00_Amargin_s43: g_off 0.0 != formula -0.698506458203082
+evaluator_from_Q,scorer,N12_i00_Amargin_s44: g_F -0.7214626916512472 != (f_bf - f*)/Delta_F = -0.7214626916512472
+evaluator_from_Q,scorer,N12_i00_Amargin_s44: g_off 0.0 != formula -0.698506458203082
+evaluator_from_Q,scorer,N12_i00_Amargin_s45: g_F -0.7214626916512472 != (f_bf - f*)/Delta_F = -0.7214626916512472
+evaluator_from_Q,scorer,N12_i00_Amargin_s45: g_off 0.0 != formula -0.698506458203082
+evaluator_from_Q,scorer,N12_i00_Amargin_s46: g_F -0.7214626916512472 != (f_bf - f*)/Delta_F = -0.7214626916512472
+evaluator_from_Q,scorer,N12_i00_Amargin_s46: g_off 0.0 != formula -0.698506458203082
+evaluator_from_Q,row-npz,N12_i00_Aheur_s42: f_best_feasible is not the stored f of its index
+evaluator_from_Q,row-npz,N12_i00_Aheur_s43: f_best_feasible is not the stored f of its index
+evaluator_from_Q,row-npz,N12_i00_Aheur_s44: f_best_feasible is not the stored f of its index
+evaluator_from_Q,row-npz,N12_i00_Aheur_s45: f_best_feasible is not the stored f of its index
+evaluator_from_Q,row-npz,N12_i00_Aheur_s46: f_best_feasible is not the stored f of its index
+evaluator_from_Q,row-npz,N12_i00_Amargin_s42: f_best_feasible is not the stored f of its index
+evaluator_from_Q,row-npz,N12_i00_Amargin_s43: f_best_feasible is not the stored f of its index
+evaluator_from_Q,row-npz,N12_i00_Amargin_s44: f_best_feasible is not the stored f of its index
+evaluator_from_Q,row-npz,N12_i00_Amargin_s45: f_best_feasible is not the stored f of its index
+evaluator_from_Q,row-npz,N12_i00_Amargin_s46: f_best_feasible is not the stored f of its index
+evaluator_from_Q,row-npz,N12_i01_Aheur_s42: f_best_feasible is not the stored f of its index
+evaluator_from_Q,row-npz,N12_i01_Aheur_s43: f_best_feasible is not the stored f of its index
+evaluator_from_Q,row-npz,N12_i01_Aheur_s44: f_best_feasible is not the stored f of its index
+evaluator_from_Q,row-npz,N12_i01_Aheur_s45: f_best_feasible is not the stored f of its index
+evaluator_from_Q,row-npz,N12_i01_Aheur_s46: f_best_feasible is not the stored f of its index
+evaluator_from_Q,row-npz,N12_i01_Amargin_s42: f_best_feasible is not the stored f of its index
+evaluator_from_Q,row-npz,N12_i01_Amargin_s43: f_best_feasible is not the stored f of its index
+evaluator_from_Q,row-npz,N12_i01_Amargin_s44: f_best_feasible is not the stored f of its index
+evaluator_from_Q,row-npz,N12_i01_Amargin_s45: f_best_feasible is not the stored f of its index
+evaluator_from_Q,row-npz,N12_i01_Amargin_s46: f_best_feasible is not the stored f of its index
+evaluator_from_Q,identities,N12_i00_Aheur_s42: rank 1.0/1.0 != 1/0 from stored f
+evaluator_from_Q,identities,N12_i00_Aheur_s43: rank 5.0/1.0 != 1/0 from stored f
+evaluator_from_Q,identities,N12_i00_Aheur_s43: is_optimal disagrees with f_best_feasible
+evaluator_from_Q,identities,N12_i00_Aheur_s43: within_tau disagrees with g_F
+evaluator_from_Q,identities,N12_i00_Aheur_s44: rank 1.0/1.0 != 1/0 from stored f
+evaluator_from_Q,identities,N12_i00_Aheur_s45: rank 1.0/1.0 != 1/0 from stored f
+evaluator_from_Q,identities,N12_i00_Aheur_s46: rank 1.0/1.0 != 1/0 from stored f
+evaluator_from_Q,identities,N12_i00_Amargin_s42: rank 1.0/1.0 != 1/0 from stored f
+evaluator_from_Q,identities,N12_i00_Amargin_s43: rank 1.0/1.0 != 1/0 from stored f
+evaluator_from_Q,identities,N12_i00_Amargin_s44: rank 1.0/1.0 != 1/0 from stored f
+evaluator_from_Q,identities,N12_i00_Amargin_s45: rank 1.0/1.0 != 1/0 from stored f
+evaluator_from_Q,identities,N12_i00_Amargin_s46: rank 1.0/1.0 != 1/0 from stored f
+evaluator_from_Q,identities,N12_i01_Aheur_s42: rank 1.0/1.0 != 1/0 from stored f
+evaluator_from_Q,identities,N12_i01_Aheur_s43: rank 5.0/1.0 != 1/0 from stored f
+evaluator_from_Q,identities,N12_i01_Aheur_s43: is_optimal disagrees with f_best_feasible
+evaluator_from_Q,identities,N12_i01_Aheur_s43: within_tau disagrees with g_F
+evaluator_from_Q,identities,N12_i01_Aheur_s44: rank 1.0/1.0 != 1/0 from stored f
+evaluator_from_Q,identities,N12_i01_Aheur_s45: rank 1.0/1.0 != 1/0 from stored f
+evaluator_from_Q,identities,N12_i01_Aheur_s46: rank 1.0/1.0 != 1/0 from stored f
+evaluator_from_Q,identities,N12_i01_Amargin_s42: rank 2.0/1.0 != 1/0 from stored f
+evaluator_from_Q,declarative (control),range: g_F negative on 289 rows
+evaluator_from_Q,declarative (control),pair: f_star > f_best_feasible on 289 rows (max excess 336)
+column_drop,schema,missing columns: ['final_P_F']
+column_drop,row-npz,N12_i00_Aheur_s42: final_P_F absent from the row; the stored probabilities give np.float64(0.18482168158516288)
+column_drop,row-npz,N12_i00_Aheur_s43: final_P_F absent from the row; the stored probabilities give np.float64(0.009896412637317553)
+column_drop,row-npz,N12_i00_Aheur_s44: final_P_F absent from the row; the stored probabilities give np.float64(0.5042230244725943)
+column_drop,row-npz,N12_i00_Aheur_s45: final_P_F absent from the row; the stored probabilities give np.float64(0.13790830376092345)
+column_drop,row-npz,N12_i00_Aheur_s46: final_P_F absent from the row; the stored probabilities give np.float64(0.3170041972771287)
+column_drop,row-npz,N12_i00_Amargin_s42: final_P_F absent from the row; the stored probabilities give np.float64(0.26639930391684175)
+column_drop,row-npz,N12_i00_Amargin_s43: final_P_F absent from the row; the stored probabilities give np.float64(0.18856108124600723)
+column_drop,row-npz,N12_i00_Amargin_s44: final_P_F absent from the row; the stored probabilities give np.float64(0.44243546086363494)
+column_drop,row-npz,N12_i00_Amargin_s45: final_P_F absent from the row; the stored probabilities give np.float64(0.40718413214199245)
+column_drop,row-npz,N12_i00_Amargin_s46: final_P_F absent from the row; the stored probabilities give np.float64(0.3823631797567941)
+column_drop,row-npz,N12_i01_Aheur_s42: final_P_F absent from the row; the stored probabilities give np.float64(0.17846607486717403)
+column_drop,row-npz,N12_i01_Aheur_s43: final_P_F absent from the row; the stored probabilities give np.float64(0.009940286123310216)
+column_drop,row-npz,N12_i01_Aheur_s44: final_P_F absent from the row; the stored probabilities give np.float64(0.5031240414828062)
+column_drop,row-npz,N12_i01_Aheur_s45: final_P_F absent from the row; the stored probabilities give np.float64(0.13500078674405813)
+column_drop,row-npz,N12_i01_Aheur_s46: final_P_F absent from the row; the stored probabilities give np.float64(0.2983895135112107)
+column_drop,row-npz,N12_i01_Amargin_s42: final_P_F absent from the row; the stored probabilities give np.float64(0.196844827834866)
+column_drop,row-npz,N12_i01_Amargin_s43: final_P_F absent from the row; the stored probabilities give np.float64(0.020135400962317362)
+column_drop,row-npz,N12_i01_Amargin_s44: final_P_F absent from the row; the stored probabilities give np.float64(0.3515001740306616)
+column_drop,row-npz,N12_i01_Amargin_s45: final_P_F absent from the row; the stored probabilities give np.float64(0.08076719097880414)
+column_drop,row-npz,N12_i01_Amargin_s46: final_P_F absent from the row; the stored probabilities give np.float64(0.3848516368307173)
+column_drop,state-batch,check raised KeyError: 'final_P_F'
+column_drop,declarative (control),schema: column final_P_F missing
+shot_seed_noop,state-batch,N12_i00_Aheur_s43: feasible_shots 207 has binomial tail 4.2e-199 under S x final_P_F = 9.9
+shot_seed_noop,state-batch,N12_i01_Aheur_s43: feasible_shots 194 has binomial tail 1.5e-180 under S x final_P_F = 9.9
+shot_seed_noop,state-batch,N12_i02_Aheur_s43: feasible_shots 201 has binomial tail 1.6e-190 under S x final_P_F = 9.9
+shot_seed_noop,seed-distinct,N=12 inst 0 Aheur: two seeds share an identical shot batch
+shot_seed_noop,seed-distinct,N=12 inst 1 Aheur: two seeds share an identical shot batch
+shot_seed_noop,seed-distinct,N=12 inst 2 Aheur: two seeds share an identical shot batch
+shot_seed_noop,declarative (control),band: the feasible-shot fraction is over five sigma from final_P_F on 3 rows
+shot_seed_noop,declarative (control),"unique: 6 rows of one (N, instance, penalty) share a shot summary"
+reference_stale,reference-row,N12_i00_Aheur_s42: f_star -0.3548965650544149 != reference np.float64(-0.3548965654093115)
+reference_stale,reference-row,N12_i00_Aheur_s43: f_star -0.3548965650544149 != reference np.float64(-0.3548965654093115)
+reference_stale,reference-row,N12_i00_Aheur_s44: f_star -0.3548965650544149 != reference np.float64(-0.3548965654093115)
+reference_stale,reference-row,N12_i00_Aheur_s45: f_star -0.3548965650544149 != reference np.float64(-0.3548965654093115)
+reference_stale,reference-row,N12_i00_Aheur_s46: f_star -0.3548965650544149 != reference np.float64(-0.3548965654093115)
+reference_stale,reference-row,N12_i00_Amargin_s42: f_star -0.3548965650544149 != reference np.float64(-0.3548965654093115)
+reference_stale,reference-row,N12_i00_Amargin_s43: f_star -0.3548965650544149 != reference np.float64(-0.3548965654093115)
+reference_stale,reference-row,N12_i00_Amargin_s44: f_star -0.3548965650544149 != reference np.float64(-0.3548965654093115)
+reference_stale,reference-row,N12_i00_Amargin_s45: f_star -0.3548965650544149 != reference np.float64(-0.3548965654093115)
+reference_stale,reference-row,N12_i00_Amargin_s46: f_star -0.3548965650544149 != reference np.float64(-0.3548965654093115)
+reference_stale,reference-input,N=12 inst 0: reference f_star -0.3548965654093115 != recomputed -0.3548965650544149
+reference_stale,declarative (control),fk: f_star differs from the reference row on 10 rows

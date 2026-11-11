@@ -142,3 +142,36 @@ def test_the_two_sided_rejection_region_is_within_twice_the_threshold():
     tail = np.minimum(binom.cdf(x, n, p), binom.sf(x - 1, n, p))
     rejected = binom.pmf(x[tail < record_checks.TAIL_P], n, p).sum()
     assert record_checks.TAIL_P < rejected <= 2 * record_checks.TAIL_P
+
+
+def test_the_gate_refuses_a_record_whose_digest_is_not_the_pinned_statistics(block):
+    """The fault the project met: rows computed from an input the published
+    statistics no longer hold carry a digest the pinned file does not reproduce.
+    The gate reads the pinned file (never the price cache) and refuses."""
+    rows, refs = block
+    bad = rows.copy()
+    bad.loc[0, "input_digest"] = "0" * 16
+    found = record_checks.check_record(bad, refs)
+    assert "input-digest" in found and len(found["input-digest"]) == 1
+    assert "input-digest" not in record_checks.check_record(rows, refs)
+
+
+def test_the_gate_skips_input_digest_when_the_statistics_are_not_there(block, tmp_path):
+    rows, refs = block
+    bad = rows.copy()
+    bad.loc[0, "input_digest"] = "0" * 16
+    found = record_checks.check_record(bad, refs, derived_dir=tmp_path)
+    assert "input-digest" not in found, "no pinned statistics on disk, so nothing to compare with"
+
+
+def test_the_block_correlation_is_a_warning_and_not_a_refusal(block):
+    """The binomial clause has a stated false-alarm rate and refuses; the
+    block-level correlation diagnostic has none and is reported apart."""
+    rows, refs = block
+    names = [n for n, _ in record_checks.RECORD_CHECKS]
+    assert "state-batch" in names and "state-batch-blocks" not in names
+    assert [n for n, _ in record_checks.RECORD_WARNINGS] == ["state-batch-blocks"]
+    assert record_checks.check_record_warnings(rows, refs) == {}
+    # The harness's one check is both clauses: what the gate refuses on plus what it warns about.
+    assert record_checks.check_state_batch(rows, refs) == (
+        record_checks.check_state_batch_counts(rows, refs) + record_checks.check_state_batch_blocks(rows, refs))

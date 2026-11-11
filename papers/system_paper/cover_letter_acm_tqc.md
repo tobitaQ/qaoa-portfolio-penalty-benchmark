@@ -6,7 +6,7 @@ Optimization Benchmarks*
 **Author.** Hiroaki Tobita, Advanced Institute of Industrial Technology, Tokyo, Japan
 (tobita-hiroaki@aiit.ac.jp). Single author; no co-authors to disclose.
 
-**Category.** Regular paper. 38 pages in `acmsmall`, 14 tables, 2 figures, 38 references.
+**Category.** Regular paper. 41 pages in `acmsmall`, 14 tables, 2 figures, 41 references.
 
 ---
 
@@ -41,8 +41,9 @@ record itself holds — the check that caught a defect the others missed. And wh
 legitimately differ across a reproduction is itself a fact about simulation precision.
 
 **Relationship to other submissions.** The numerical study this platform served is a separate
-manuscript, cited as [1], under review at *IEEE Transactions on Quantum Engineering*
-(TQE-26-09-REG-0575). The two papers share data and share nothing else: Section 2 ends with an
+manuscript, cited as [1], submitted to *IEEE Access* on 2026-11-08 and under review there. It had
+been submitted to *IEEE Transactions on Quantum Engineering*, which declined it without review on
+2026-10-18. The two papers share data and share nothing else: Section 2 ends with an
 explicit list of the four subjects that appear in both and states, for each, what [1] reports (a
 fact about its runs) and what this paper reports (the mechanism built in response and what that
 mechanism was measured to do). No run of [1] is repeated here and no result of [1] is restated as a
@@ -53,8 +54,9 @@ with either.
 **Artifacts.** The platform, the three evaluation harnesses, their tests and all result files are in
 the repository named in the availability statement. The package evaluated in the reconstruction
 experiment is a public release (`v1.0`, commit `c804a63`) archived at doi:10.5281/zenodo.22743582;
-the release this paper ships, `v1.1`, adds its own material and the fixes the evaluation produced,
-and the suite, level 1, level 2 and the interruption were run against it as well (Table 9).
+the release this paper ships, `v1.2` (commit `cdf72a9`, doi:10.5281/zenodo.24032941), adds its own
+material and the fixes the evaluation produced, and the suite, level 1, level 2 and the
+interruption were run against it as well (Table 9).
 Appendix C lists the commands that reproduce every number in this paper, with their run times and
 the two that need the deposited per-run artifacts (~100 MB). The availability statement maps the
 paper's three reconstruction levels onto ACM's badging terminology; the author intends to apply for
@@ -88,7 +90,7 @@ Hiroaki Tobita
 
 ## Notes for the submission form (not part of the letter)
 
-- Abstract: 200 words (ACM's guideline is 150–200).
+- Abstract: 222 words, above ACM's 150–200 guideline by 22; trim before submitting or keep.
 - CCS concepts and keywords are in the manuscript; four `\ccsdesc` lines.
 - The manuscript is in `acmsmall` with `review` enabled (line numbers); a non-review PDF can be
   supplied on request.

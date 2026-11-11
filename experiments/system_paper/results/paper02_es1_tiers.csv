@@ -1,0 +1,29 @@
+population,n,tier,detected
+injected faults,10,T1 table and reference,8
+injected faults,10,T2 + pinned inputs,9
+injected faults,10,T3 + per-run artifacts,10
+injected faults,10,T4 + recomputation,10
+"mutations, main draw",300,T1 table and reference,137
+"mutations, main draw, outside the run table",91,T1 table and reference,0
+"mutations, main draw, inside the run table",209,T1 table and reference,137
+"mutations, main draw",300,T2 + pinned inputs,166
+"mutations, main draw, outside the run table",91,T2 + pinned inputs,25
+"mutations, main draw, inside the run table",209,T2 + pinned inputs,141
+"mutations, main draw",300,T3 + per-run artifacts,236
+"mutations, main draw, outside the run table",91,T3 + per-run artifacts,71
+"mutations, main draw, inside the run table",209,T3 + per-run artifacts,165
+"mutations, main draw",300,T4 + recomputation,236
+"mutations, main draw, outside the run table",91,T4 + recomputation,71
+"mutations, main draw, inside the run table",209,T4 + recomputation,165
+"mutations, held-out draw",300,T1 table and reference,158
+"mutations, held-out draw, outside the run table",77,T1 table and reference,0
+"mutations, held-out draw, inside the run table",223,T1 table and reference,158
+"mutations, held-out draw",300,T2 + pinned inputs,194
+"mutations, held-out draw, outside the run table",77,T2 + pinned inputs,28
+"mutations, held-out draw, inside the run table",223,T2 + pinned inputs,166
+"mutations, held-out draw",300,T3 + per-run artifacts,245
+"mutations, held-out draw, outside the run table",77,T3 + per-run artifacts,64
+"mutations, held-out draw, inside the run table",223,T3 + per-run artifacts,181
+"mutations, held-out draw",300,T4 + recomputation,245
+"mutations, held-out draw, outside the run table",77,T4 + recomputation,64
+"mutations, held-out draw, inside the run table",223,T4 + recomputation,181

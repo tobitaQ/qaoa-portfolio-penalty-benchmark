@@ -110,18 +110,20 @@ def fig_record_relations() -> None:
         ("Derived statistics", ["μ, Σ of one price window; the pinned input"]),
         ("Reference row  (per N, instance)",
          ["tickers, input digest, |F|, f*, Δ_F, A_crit, A_margin",
-          "within: identities (scales from the cardinality minima)"]),
+          "within: identities (table clauses)"]),
         ("Run row  (per run, 101 columns)",
-         ["keys, digest, angles, P_F, P_τ, Q_τ(S), g_F, rank",
-          "within: schema, manifest, penalty, scorer, seed-distinct"]),
+         ["keys, digest, angles, P_F, P_τ, Q_τ(S), g_F, rank, batch counts",
+          "within: schema, manifest, penalty, scorer, state-batch,",
+          "identities (table clauses), seed-distinct (angle clause)"]),
         ("Per-run artifact  (npz)",
          ["trajectory, P over F (final, initial), shot indices", "within: npz-internal"]),
     ]
-    right = [("Naive pipeline  (control)", ["reads the run rows,", "reports the aggregate"]),
+    right = [("Controls  (Sec. 4.1)", ["schema-only: run rows;", "declarative: run rows", "+ reference row"]),
              ("Re-simulation", ["the state at the", "recorded final angles"])]
-    arrows = ["schema only", "state-recompute"]
-    between = ["input-digest, reference-input", "reference-row, input-digest",
-               "row-npz, identities, state-batch"]
+    arrows = ["two controls", "state-recompute"]
+    between = ["input-digest, reference-input,\nidentities (input clause)",
+               "reference-row, input-digest",
+               "row-npz, seed-distinct (batch),\nidentities (artifact clauses)"]
 
     # Wrap the left column's body to the width its own longest title needs, so that
     # the column is set by the titles rather than by one long enumeration.

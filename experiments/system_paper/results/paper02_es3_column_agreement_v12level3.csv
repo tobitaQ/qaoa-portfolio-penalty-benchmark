@@ -1,0 +1,21 @@
+comparison,group,column,rows,identical_rows,max_abs_diff,max_rel_diff
+level3 cpu-double vs committed gpu-single,state,final_expectation,24,0,0.00011369410508788036,2.578877638615924e-05
+level3 cpu-double vs committed gpu-single,state,expectation_at_final_angles,24,0,0.000137901974469834,3.097134442327998e-05
+level3 cpu-double vs committed gpu-single,state,final_P_F,24,0,6.191709063252393e-05,0.0001636871625979092
+level3 cpu-double vs committed gpu-single,state,final_P_opt,24,0,1.0770641568893721e-06,0.0001411173296540483
+level3 cpu-double vs committed gpu-single,state,final_P_tau_main,24,0,1.0770641568893721e-06,0.0001411173296540483
+level3 cpu-double vs committed gpu-single,state,initial_P_F,24,0,4.495125223158425e-07,2.224061751556032e-06
+level3 cpu-double vs committed gpu-single,state,final_Q_tau_main_1000,24,0,3.3337390891730045e-06,1.1824653709903956e-05
+level3 cpu-double vs committed gpu-single,state,hamiltonian_scale,24,24,0.0,0.0
+level3 cpu-double vs committed gpu-single,state,f_star,24,24,0.0,0.0
+level3 cpu-double vs committed gpu-single,state,delta_F,24,24,0.0,0.0
+level3 cpu-double vs committed gpu-single,state,a_crit,24,24,0.0,0.0
+level3 cpu-double vs committed gpu-single,state,a_heur,24,24,0.0,0.0
+level3 cpu-double vs committed gpu-single,state,a_margin,24,24,0.0,0.0
+level3 cpu-double vs committed gpu-single,shots,feasible_shots,24,0,31.0,0.6
+level3 cpu-double vs committed gpu-single,shots,shots_optimal,24,10,5.0,1.25
+level3 cpu-double vs committed gpu-single,shots,best_all_E,24,14,0.1900567565077793,0.12051959118072389
+level3 cpu-double vs committed gpu-single,shots,g_F,24,14,0.2786304769584444,3.555300175417357
+level3 cpu-double vs committed gpu-single,shots,g_off,24,14,0.11435037685965685,3.555300175417357
+level3 cpu-double vs committed gpu-single,angles,initial_angles,24,24,,
+level3 cpu-double vs committed gpu-single,angles,final_angles,24,0,,

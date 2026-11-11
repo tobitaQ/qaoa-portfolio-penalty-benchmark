@@ -38,6 +38,7 @@ Run:
 from __future__ import annotations
 
 import argparse
+import pandas as pd
 import csv
 import sys
 from collections import defaultdict
@@ -722,6 +723,10 @@ def main(argv=None) -> int:
         return 1
     print(f"record relations: {len(record_checks.RECORD_CHECKS)} run"
           + (f", {len(findings)} FAILING (allowed)" if findings else ", none failing"))
+    # Diagnostics without a stated false-alarm rate are said, not acted on.
+    warnings = record_checks.check_record_warnings(pd.read_csv(manifest_path), pd.read_csv(reference_path))
+    for name, messages in warnings.items():
+        print(f"warning ({name}, not a refusal): {len(messages)} finding(s); first: {messages[0]}")
     rows = load(manifest_path)
     refs = load(reference_path)
 
